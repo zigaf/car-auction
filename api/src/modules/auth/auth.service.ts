@@ -6,7 +6,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { createHash, randomUUID } from 'crypto';
 
 import { User } from '../../db/entities/user.entity';

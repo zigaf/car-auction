@@ -1,16 +1,27 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import { chromium, Browser, BrowserContext, Page } from 'playwright';
 import { BcaSearchResponse } from './interfaces/bca-vehicle.interface';
 
 @Injectable()
 export class BcaBrowserService implements OnModuleDestroy {
-  private browser: Browser | null = null;
-  private context: BrowserContext | null = null;
-  private page: Page | null = null;
+  private browser: any = null;
+  private context: any = null;
+  private page: any = null;
   private readonly logger = new Logger(BcaBrowserService.name);
+
+  private async getPlaywright() {
+    try {
+      return await import('playwright');
+    } catch {
+      throw new Error(
+        'Playwright is not installed. Run: npx playwright install chromium',
+      );
+    }
+  }
 
   async initialize(): Promise<void> {
     this.logger.log('Launching browser with Oxylabs proxy...');
+
+    const { chromium } = await this.getPlaywright();
 
     this.browser = await chromium.launch({
       headless: true,
