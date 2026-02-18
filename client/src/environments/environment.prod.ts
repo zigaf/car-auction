@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: '/api',
-  wsUrl: '',
+  apiUrl: 'https://just-art-production-cbad.up.railway.app/api',
+  wsUrl: 'https://just-art-production-cbad.up.railway.app',
   telegramBotName: '',
 };

@@ -12,7 +12,9 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   app.enableCors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:4200',
+    origin: process.env.CORS_ORIGIN
+      ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
+      : ['http://localhost:4200', 'http://localhost:4000'],
     credentials: true,
   });
 
