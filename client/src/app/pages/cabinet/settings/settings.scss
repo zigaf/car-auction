@@ -211,3 +211,131 @@
     }
   }
 }
+
+// Scraper section
+.scraper__desc {
+  font-size: $fs-sm;
+  color: $text-tertiary;
+  margin: 0 0 $space-lg;
+  line-height: 1.5;
+}
+
+.scraper__controls {
+  display: flex;
+  align-items: flex-end;
+  gap: $space-lg;
+  flex-wrap: wrap;
+}
+
+.scraper__pages-input {
+  width: 100px;
+}
+
+.scraper__buttons {
+  display: flex;
+  gap: $space-sm;
+}
+
+.scraper__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-xs;
+  padding: $space-md $space-lg;
+  border: 1px solid $border-color;
+  border-radius: $radius-base;
+  font-family: $font-ui;
+  font-size: $fs-sm;
+  font-weight: $fw-semibold;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  .material-symbols-rounded {
+    font-size: 18px;
+  }
+
+  &--start {
+    background: $accent;
+    border-color: $accent;
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      opacity: 0.9;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &--status {
+    background: $bg-input;
+    color: $text-secondary;
+
+    &:hover {
+      border-color: $text-tertiary;
+      color: $text-primary;
+    }
+  }
+}
+
+.scraper__result {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  margin-top: $space-lg;
+  padding: $space-md $space-lg;
+  border-radius: $radius-base;
+  font-size: $fs-sm;
+
+  &--success {
+    background: rgba(76, 175, 80, 0.1);
+    color: #4caf50;
+    border: 1px solid rgba(76, 175, 80, 0.3);
+  }
+
+  &--error {
+    background: rgba(244, 67, 54, 0.1);
+    color: #f44336;
+    border: 1px solid rgba(244, 67, 54, 0.3);
+  }
+
+  &--running {
+    background: rgba(255, 152, 0, 0.1);
+    color: #ff9800;
+    border: 1px solid rgba(255, 152, 0, 0.3);
+  }
+}
+
+.scraper__result-icon {
+  font-size: 20px;
+}
+
+.scraper__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: $space-md;
+  margin-top: $space-lg;
+  padding-top: $space-lg;
+  border-top: 1px solid $divider;
+}
+
+.scraper__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $space-xs;
+}
+
+.scraper__stat-value {
+  font-size: $fs-lg;
+  font-weight: $fw-bold;
+  color: $text-primary;
+}
+
+.scraper__stat-label {
+  font-size: $fs-xs;
+  color: $text-tertiary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}

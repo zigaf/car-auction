@@ -147,6 +147,80 @@
   margin-top: $space-sm;
 }
 
+.social-divider {
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+  margin: $space-lg 0;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: $divider;
+  }
+
+  span {
+    font-size: $fs-sm;
+    color: $text-tertiary;
+    white-space: nowrap;
+  }
+}
+
+.social-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $space-sm;
+}
+
+.social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-xs;
+  background: transparent;
+  border: 1px solid $border-color;
+  border-radius: $radius-base;
+  padding: $space-sm $space-md;
+  color: $text-secondary;
+  font-size: $fs-sm;
+  font-family: $font-ui;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all $transition-fast;
+
+  &__icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    background: rgba(white, 0.04);
+  }
+
+  &--google:hover {
+    border-color: #4285f4;
+    color: $text-primary;
+  }
+
+  &--yandex:hover {
+    border-color: #fc3f1d;
+    color: $text-primary;
+  }
+
+  &--vk:hover {
+    border-color: #0077ff;
+    color: $text-primary;
+  }
+
+  &--telegram:hover {
+    border-color: #26a5e4;
+    color: $text-primary;
+  }
+}
+
 .auth-card__footer {
   text-align: center;
   margin-top: $space-lg;

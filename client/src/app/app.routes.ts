@@ -77,6 +77,10 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'auth/callback',
+    loadComponent: () => import('./pages/auth/callback/callback').then((m) => m.AuthCallbackComponent),
+  },
+  {
     path: '**',
     redirectTo: '',
   },

@@ -1,0 +1,12 @@
+<div class="callback-page">
+  <div class="callback-card">
+    @if (error) {
+      <span class="material-symbols-rounded callback-icon error">error</span>
+      <p class="callback-message">{{ error }}</p>
+      <p class="callback-redirect">Перенаправление на страницу входа...</p>
+    } @else {
+      <div class="spinner"></div>
+      <p class="callback-message">Завершение входа...</p>
+    }
+  </div>
+</div>

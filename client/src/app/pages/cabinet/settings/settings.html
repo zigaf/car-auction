@@ -93,4 +93,86 @@
       </div>
     </div>
   </section>
+
+  <!-- Scraper Section (Admin/Test) -->
+  <section class="settings__section">
+    <h2 class="section-title">BCA Парсер (тест)</h2>
+    <div class="settings__panel">
+      <div class="scraper">
+        <p class="scraper__desc">
+          Запуск парсинга автомобилей с BCA Europe. Дубли не записываются -- если лот уже есть в базе, он будет обновлён.
+        </p>
+
+        <div class="scraper__controls">
+          <div class="form-group">
+            <label class="form-label">Кол-во страниц (50 авто/стр.)</label>
+            <input
+              type="number"
+              class="form-input scraper__pages-input"
+              [(ngModel)]="scraperMaxPages"
+              min="1"
+              max="200"
+            />
+          </div>
+
+          <div class="scraper__buttons">
+            <button
+              class="scraper__btn scraper__btn--start"
+              (click)="startScraper()"
+              [disabled]="scraperLoading"
+            >
+              <span class="material-symbols-rounded">play_arrow</span>
+              {{ scraperLoading ? 'Парсинг...' : 'Запустить парсинг' }}
+            </button>
+
+            <button
+              class="scraper__btn scraper__btn--status"
+              (click)="checkScraperStatus()"
+            >
+              <span class="material-symbols-rounded">refresh</span>
+              Проверить статус
+            </button>
+          </div>
+        </div>
+
+        @if (scraperMessage) {
+          <div class="scraper__result" [class.scraper__result--success]="scraperStatus === 'success'" [class.scraper__result--error]="scraperStatus === 'error'" [class.scraper__result--running]="scraperStatus === 'running'">
+            <span class="material-symbols-rounded scraper__result-icon">
+              {{ scraperStatus === 'success' ? 'check_circle' : scraperStatus === 'error' ? 'error' : 'hourglass_top' }}
+            </span>
+            <span>{{ scraperMessage }}</span>
+          </div>
+        }
+
+        @if (scraperRun) {
+          <div class="scraper__stats">
+            <div class="scraper__stat">
+              <span class="scraper__stat-value">{{ scraperRun.lotsFound }}</span>
+              <span class="scraper__stat-label">Найдено</span>
+            </div>
+            <div class="scraper__stat">
+              <span class="scraper__stat-value">{{ scraperRun.lotsCreated }}</span>
+              <span class="scraper__stat-label">Создано</span>
+            </div>
+            <div class="scraper__stat">
+              <span class="scraper__stat-value">{{ scraperRun.lotsUpdated }}</span>
+              <span class="scraper__stat-label">Обновлено</span>
+            </div>
+            <div class="scraper__stat">
+              <span class="scraper__stat-value">{{ scraperRun.imagesDownloaded }}</span>
+              <span class="scraper__stat-label">Фото</span>
+            </div>
+            <div class="scraper__stat">
+              <span class="scraper__stat-value">{{ scraperRun.pagesScraped }}/{{ scraperRun.totalPages }}</span>
+              <span class="scraper__stat-label">Страниц</span>
+            </div>
+            <div class="scraper__stat">
+              <span class="scraper__stat-value">{{ scraperRun.errorsCount }}</span>
+              <span class="scraper__stat-label">Ошибок</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
 </div>

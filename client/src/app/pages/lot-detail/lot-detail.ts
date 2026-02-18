@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, inject, afterNextRender } from '@angular/core';
+import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-lot-detail',
@@ -11,73 +12,56 @@ import { DecimalPipe } from '@angular/common';
   styleUrl: './lot-detail.scss',
 })
 export class LotDetailComponent {
-  selectedImageTab: 'main' | 'damage' = 'main';
-  customBidAmount: number | null = null;
+  private route = inject(ActivatedRoute);
 
-  lot = {
-    id: 1,
-    brand: 'BMW',
-    model: '5 Series',
-    trim: '530d xDrive M Sport',
-    year: 2021,
-    mileage: 45200,
-    mileageStatus: 'actual',
-    fuelType: 'Дизель',
-    engineVolume: '3.0L',
-    enginePower: '286 л.с.',
-    transmission: 'Автомат (ZF 8HP)',
-    drivetrain: 'Полный (xDrive)',
-    bodyType: 'Седан',
-    exteriorColor: 'Sophisto Grey',
-    interiorColor: 'Cognac Dakota Leather',
-    countryOfOrigin: 'Германия',
-    vin: 'WBAPH5C55BA123456',
-    documentStatus: 'Clean Title',
-    damageType: 'Фронтальный удар',
-    condition: 'Run & Drive',
-    startPrice: 15000,
-    currentBid: 18500,
-    buyNowPrice: 24000,
-    bidStep: 100,
-    bidsCount: 12,
-    endTime: new Date(Date.now() + 7200000),
-    videoUrl: 'https://youtube.com/watch?v=example',
-  };
+  loading = true;
+  lot: any = null;
+  selectedImageIndex = 0;
 
-  bidHistory = [
-    { flag: '🇺🇦', bidderId: 'Bidder 7', amount: 18500, time: '2 мин назад' },
-    { flag: '🇩🇪', bidderId: 'Bidder 3', amount: 18200, time: '5 мин назад' },
-    { flag: '🇵🇱', bidderId: 'Bidder 12', amount: 18000, time: '8 мин назад' },
-    { flag: '🇱🇹', bidderId: 'Bidder 5', amount: 17500, time: '12 мин назад' },
-    { flag: '🇺🇦', bidderId: 'Bidder 7', amount: 17200, time: '15 мин назад' },
-  ];
-
-  calculator = {
-    carPrice: 18500,
-    commission: 925,
-    delivery: 1200,
-    customs: 4800,
-    get total(): number { return this.carPrice + this.commission + this.delivery + this.customs; }
-  };
-
-  quickBid(increment: number): void {
-    this.customBidAmount = this.lot.currentBid + increment;
+  constructor() {
+    afterNextRender(() => {
+      const id = this.route.snapshot.paramMap.get('id');
+      if (id) this.loadLot(id);
+    });
   }
 
-  getTimeLeft(): string {
-    const diff = this.lot.endTime.getTime() - Date.now();
-    if (diff <= 0) return '0:00';
-    const h = Math.floor(diff / 3600000);
-    const m = Math.floor((diff % 3600000) / 60000);
-    const s = Math.floor((diff % 60000) / 1000);
-    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    return `${m}:${String(s).padStart(2, '0')}`;
+  async loadLot(id: string): Promise<void> {
+    this.loading = true;
+    try {
+      const resp = await fetch(`${environment.apiUrl}/lots/${id}`);
+      if (!resp.ok) throw new Error('Not found');
+      this.lot = await resp.json();
+    } catch {
+      this.lot = null;
+    } finally {
+      this.loading = false;
+    }
   }
 
-  getTimerClass(): string {
-    const diff = this.lot.endTime.getTime() - Date.now();
-    if (diff < 30000) return 'timer--red';
-    if (diff < 120000) return 'timer--yellow';
-    return 'timer--green';
+  get images(): any[] {
+    return this.lot?.images || [];
+  }
+
+  get currentImage(): string | null {
+    if (this.images.length === 0) return null;
+    return this.getImageUrl(this.images[this.selectedImageIndex]?.url);
+  }
+
+  selectImage(index: number): void {
+    this.selectedImageIndex = index;
+  }
+
+  getImageUrl(path: string): string {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+    return `${environment.apiUrl.replace('/api', '')}${path}`;
+  }
+
+  getFuelLabel(fuelType: string): string {
+    const map: Record<string, string> = {
+      petrol: 'Бензин', diesel: 'Дизель', hybrid: 'Гибрид',
+      electric: 'Электро', lpg: 'Газ', other: 'Другое',
+    };
+    return map[fuelType] || fuelType || '-';
   }
 }
