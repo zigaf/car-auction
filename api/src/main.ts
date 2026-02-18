@@ -12,9 +12,11 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   app.enableCors({
-    origin: process.env.CORS_ORIGIN
-      ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
-      : ['http://localhost:4200', 'http://localhost:4000'],
+    origin: [
+      'http://localhost:4200',
+      'http://localhost:4000',
+      'https://car-auction-production-5f48.up.railway.app',
+    ],
     credentials: true,
   });
 
