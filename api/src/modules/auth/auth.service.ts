@@ -7,8 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { v4 as uuidv4 } from 'uuid';
-import { createHash } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 
 import { User } from '../../db/entities/user.entity';
 import { RefreshToken } from '../../db/entities/refresh-token.entity';
@@ -34,7 +33,7 @@ export class AuthService {
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
-    const referralCode = uuidv4().slice(0, 8).toUpperCase();
+    const referralCode = randomUUID().slice(0, 8).toUpperCase();
 
     const user = this.userRepository.create({
       email: dto.email,
@@ -168,7 +167,7 @@ export class AuthService {
     }
 
     // 3. Create new user
-    const referralCode = uuidv4().slice(0, 8).toUpperCase();
+    const referralCode = randomUUID().slice(0, 8).toUpperCase();
     const newUser = this.userRepository.create({
       email: profile.email || `${provider}_${profile.providerId}@oauth.placeholder`,
       passwordHash: null as any,
