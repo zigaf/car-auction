@@ -5,14 +5,11 @@ import {
   Body,
   Param,
   Query,
-  UseGuards,
 } from '@nestjs/common';
 import { ScraperService } from './scraper.service';
 import { TriggerScraperDto } from './dto/trigger-scraper.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('scraper')
-@UseGuards(JwtAuthGuard)
 export class ScraperController {
   constructor(private readonly scraperService: ScraperService) {}
 

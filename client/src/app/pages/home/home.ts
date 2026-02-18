@@ -17,6 +17,10 @@ export class HomeComponent {
   brands: { brand: string; count: number }[] = [];
   stats = { totalLots: 0, totalBrands: 0, countries: 0, withPhotos: 0 };
 
+  scraperLoading = false;
+  scraperMessage = '';
+  scraperStatus: 'idle' | 'success' | 'error' = 'idle';
+
   steps = [
     { title: 'Регистрация', desc: 'Создайте аккаунт и пройдите верификацию' },
     { title: 'Пополните баланс', desc: 'Внесите депозит для участия в торгах' },
@@ -79,6 +83,33 @@ export class HomeComponent {
     if (!path) return '';
     if (path.startsWith('http')) return path;
     return `${environment.apiUrl.replace('/api', '')}${path}`;
+  }
+
+  async startScraper(): Promise<void> {
+    this.scraperLoading = true;
+    this.scraperMessage = '';
+    this.scraperStatus = 'idle';
+    try {
+      const resp = await fetch(`${environment.apiUrl}/scraper/run`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ maxPages: 2 }),
+      });
+      const data = await resp.json();
+      if (resp.ok) {
+        this.scraperStatus = 'success';
+        this.scraperMessage = `Парсер запущен! Найдено: ${data.lotsFound ?? '—'}, создано: ${data.lotsCreated ?? '—'}, обновлено: ${data.lotsUpdated ?? '—'}`;
+        await this.loadData();
+      } else {
+        this.scraperStatus = 'error';
+        this.scraperMessage = data.message || 'Ошибка запуска парсера';
+      }
+    } catch {
+      this.scraperStatus = 'error';
+      this.scraperMessage = 'Не удалось подключиться к серверу';
+    } finally {
+      this.scraperLoading = false;
+    }
   }
 
   getFuelLabel(fuelType: string): string {

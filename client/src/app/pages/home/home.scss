@@ -128,11 +128,17 @@
   gap: $space-sm;
   padding: $space-md $space-xl;
   border-radius: $radius-base;
+  border: none;
   font-size: $fs-md;
   font-weight: $fw-semibold;
   text-decoration: none;
   transition: all $transition-fast;
   cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 
   .material-symbols-rounded { font-size: 20px; }
 
@@ -160,6 +166,26 @@
 
   &--wide {
     flex: 1;
+  }
+}
+
+.hero__scraper-msg {
+  margin-top: $space-md;
+  padding: $space-sm $space-md;
+  border-radius: $radius-base;
+  font-size: $fs-sm;
+  text-align: center;
+
+  &--success {
+    background: rgba(34, 197, 94, 0.1);
+    color: #16a34a;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+  }
+
+  &--error {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.2);
   }
 }
 

@@ -17,7 +17,19 @@
             <span class="material-symbols-rounded">search</span>
             Смотреть каталог
           </a>
+          <button
+            class="hero__btn hero__btn--secondary"
+            (click)="startScraper()"
+            [disabled]="scraperLoading">
+            <span class="material-symbols-rounded">sync</span>
+            @if (scraperLoading) { Парсинг... } @else { Запустить парсер }
+          </button>
         </div>
+        @if (scraperMessage) {
+          <div class="hero__scraper-msg" [class.hero__scraper-msg--success]="scraperStatus === 'success'" [class.hero__scraper-msg--error]="scraperStatus === 'error'">
+            {{ scraperMessage }}
+          </div>
+        }
       </div>
 
       <div class="hero__tags">
