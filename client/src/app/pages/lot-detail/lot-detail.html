@@ -1,0 +1,231 @@
+<div class="lot-detail">
+  <div class="container">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+      <a routerLink="/">Главная</a>
+      <span class="material-symbols-rounded">chevron_right</span>
+      <a routerLink="/catalog">Каталог</a>
+      <span class="material-symbols-rounded">chevron_right</span>
+      <span>{{ lot.brand }} {{ lot.model }} {{ lot.year }}</span>
+    </nav>
+
+    <div class="lot-detail__grid">
+      <!-- Left Column -->
+      <div class="lot-detail__left">
+        <!-- Gallery -->
+        <div class="gallery">
+          <div class="gallery__main">
+            <div class="gallery__placeholder">
+              <span class="material-symbols-rounded">directions_car</span>
+              <span>Фото автомобиля</span>
+            </div>
+            <button class="gallery__like">
+              <span class="material-symbols-rounded">favorite</span>
+            </button>
+          </div>
+          <div class="gallery__tabs">
+            <button [class.active]="selectedImageTab === 'main'" (click)="selectedImageTab = 'main'">
+              <span class="material-symbols-rounded">photo_library</span>
+              Основные
+            </button>
+            <button [class.active]="selectedImageTab === 'damage'" (click)="selectedImageTab = 'damage'">
+              <span class="material-symbols-rounded">car_crash</span>
+              Повреждения
+            </button>
+            <a [href]="lot.videoUrl" target="_blank" class="gallery__video-link">
+              <span class="material-symbols-rounded">play_circle</span>
+              Видео
+            </a>
+          </div>
+          <div class="gallery__thumbs">
+            @for (i of [1,2,3,4,5,6]; track i) {
+              <div class="gallery__thumb">
+                <span class="material-symbols-rounded">image</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Specs -->
+        <div class="specs-section">
+          <h2 class="section-title">Характеристики</h2>
+          <div class="specs-grid">
+            <div class="spec-item">
+              <span class="material-symbols-rounded spec-item__icon">speed</span>
+              <div class="spec-item__content">
+                <span class="spec-item__label">Двигатель</span>
+                <span class="spec-item__value">{{ lot.engineVolume }} {{ lot.enginePower }}</span>
+              </div>
+            </div>
+            <div class="spec-item">
+              <span class="material-symbols-rounded spec-item__icon">settings</span>
+              <div class="spec-item__content">
+                <span class="spec-item__label">КПП</span>
+                <span class="spec-item__value">{{ lot.transmission }}</span>
+              </div>
+            </div>
+            <div class="spec-item">
+              <span class="material-symbols-rounded spec-item__icon">swap_driving_apps</span>
+              <div class="spec-item__content">
+                <span class="spec-item__label">Привод</span>
+                <span class="spec-item__value">{{ lot.drivetrain }}</span>
+              </div>
+            </div>
+            <div class="spec-item">
+              <span class="material-symbols-rounded spec-item__icon">speed</span>
+              <div class="spec-item__content">
+                <span class="spec-item__label">Пробег</span>
+                <span class="spec-item__value">{{ lot.mileage | number }} км <span class="spec-badge">{{ lot.mileageStatus }}</span></span>
+              </div>
+            </div>
+            <div class="spec-item">
+              <span class="material-symbols-rounded spec-item__icon">local_gas_station</span>
+              <div class="spec-item__content">
+                <span class="spec-item__label">Топливо</span>
+                <span class="spec-item__value">{{ lot.fuelType }}</span>
+              </div>
+            </div>
+            <div class="spec-item">
+              <span class="material-symbols-rounded spec-item__icon">palette</span>
+              <div class="spec-item__content">
+                <span class="spec-item__label">Цвет</span>
+                <span class="spec-item__value">{{ lot.exteriorColor }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="vin-block">
+            <span class="vin-block__label">VIN:</span>
+            <code class="vin-block__value mono">{{ lot.vin }}</code>
+            <a href="#" class="vin-block__check">Проверить историю</a>
+          </div>
+        </div>
+
+        <!-- Status badges -->
+        <div class="status-section">
+          <div class="status-badges">
+            <span class="status-badge status-badge--docs">
+              <span class="material-symbols-rounded">verified</span>
+              {{ lot.documentStatus }}
+            </span>
+            <span class="status-badge status-badge--damage">
+              <span class="material-symbols-rounded">car_crash</span>
+              {{ lot.damageType }}
+            </span>
+            <span class="status-badge status-badge--condition">
+              <span class="material-symbols-rounded">bolt</span>
+              {{ lot.condition }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Damage Diagram placeholder -->
+        <div class="damage-diagram">
+          <h2 class="section-title">Схема повреждений</h2>
+          <div class="damage-diagram__placeholder">
+            <span class="material-symbols-rounded">directions_car</span>
+            <span>Интерактивная схема повреждений</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Auction Panel -->
+      <div class="lot-detail__right">
+        <div class="auction-panel">
+          <div class="auction-panel__header">
+            <h1 class="auction-panel__title">{{ lot.brand }} {{ lot.model }}</h1>
+            <span class="auction-panel__trim">{{ lot.trim }}, {{ lot.year }}</span>
+          </div>
+
+          <!-- Price & Timer -->
+          <div class="auction-panel__price-row">
+            <div class="auction-panel__price">
+              <span class="auction-panel__price-label">Текущая ставка</span>
+              <span class="auction-panel__price-value mono">{{ lot.currentBid | number }} EUR</span>
+            </div>
+            <div class="auction-panel__timer" [class]="getTimerClass()">
+              <span class="material-symbols-rounded">timer</span>
+              <span class="mono">{{ getTimeLeft() }}</span>
+            </div>
+          </div>
+
+          <div class="auction-panel__bids-count">
+            <span class="material-symbols-rounded">gavel</span>
+            {{ lot.bidsCount }} ставок
+          </div>
+
+          <!-- Quick Bid -->
+          <div class="auction-panel__quick-bids">
+            <button class="quick-bid" (click)="quickBid(100)">+100</button>
+            <button class="quick-bid" (click)="quickBid(250)">+250</button>
+            <button class="quick-bid" (click)="quickBid(500)">+500</button>
+            <button class="quick-bid" (click)="quickBid(1000)">+1 000</button>
+          </div>
+
+          <!-- Custom bid -->
+          <div class="auction-panel__bid-input">
+            <input type="number" [(ngModel)]="customBidAmount" [placeholder]="'Мін. ' + (lot.currentBid + lot.bidStep)" class="bid-input">
+            <span class="bid-input__currency mono">EUR</span>
+          </div>
+
+          <button class="auction-panel__bid-btn">
+            <span class="material-symbols-rounded">gavel</span>
+            Сделать ставку
+          </button>
+
+          <button class="auction-panel__buynow-btn">
+            <span class="material-symbols-rounded">bolt</span>
+            Buy Now — {{ lot.buyNowPrice | number }} EUR
+          </button>
+
+          <!-- Bid History -->
+          <div class="bid-history">
+            <h3 class="bid-history__title">
+              <span class="material-symbols-rounded">history</span>
+              История ставок
+            </h3>
+            @for (bid of bidHistory; track bid.amount) {
+              <div class="bid-history__item">
+                <span class="bid-history__flag">{{ bid.flag }}</span>
+                <span class="bid-history__bidder">{{ bid.bidderId }}</span>
+                <span class="bid-history__amount mono">{{ bid.amount | number }} EUR</span>
+                <span class="bid-history__time">{{ bid.time }}</span>
+              </div>
+            }
+            <button class="bid-history__more">Вся история</button>
+          </div>
+        </div>
+
+        <!-- Calculator -->
+        <div class="calculator-panel">
+          <h3 class="calculator-panel__title">
+            <span class="material-symbols-rounded">calculate</span>
+            Калькулятор полной стоимости
+          </h3>
+          <div class="calculator-panel__rows">
+            <div class="calc-row">
+              <span>Текущая ставка</span>
+              <span class="mono">{{ calculator.carPrice | number }} EUR</span>
+            </div>
+            <div class="calc-row">
+              <span>Комиссия аукциона (5%)</span>
+              <span class="mono">{{ calculator.commission | number }} EUR</span>
+            </div>
+            <div class="calc-row">
+              <span>Доставка до СВХ</span>
+              <span class="mono">{{ calculator.delivery | number }} EUR</span>
+            </div>
+            <div class="calc-row">
+              <span>Растаможка</span>
+              <span class="mono">{{ calculator.customs | number }} EUR</span>
+            </div>
+            <div class="calc-row calc-row--total">
+              <span>Итого «под ключ»</span>
+              <span class="mono">{{ calculator.total | number }} EUR</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

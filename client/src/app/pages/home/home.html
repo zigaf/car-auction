@@ -1,0 +1,208 @@
+<!-- Hero with Search -->
+<section class="hero">
+  <div class="container">
+    <div class="hero__content">
+      <h1 class="hero__title">Найдите автомобиль мечты</h1>
+      <p class="hero__subtitle">Более 2,500 уникальных автомобилей на аукционе прямо сейчас</p>
+
+      <div class="hero__search-box">
+        <div class="hero__search-row">
+          <span class="material-symbols-rounded hero__search-icon">search</span>
+          <input type="text" placeholder="Поиск: 1967 Porsche 911, BMW M3, Ferrari..." class="hero__search-input">
+        </div>
+        <div class="hero__filters-row">
+          <select class="hero__filter-select">
+            <option>Все марки</option>
+            <option>BMW</option>
+            <option>Mercedes</option>
+            <option>Audi</option>
+            <option>Porsche</option>
+          </select>
+          <select class="hero__filter-select">
+            <option>Любой год</option>
+            <option>2024</option>
+            <option>2023</option>
+            <option>2022</option>
+            <option>2021</option>
+          </select>
+          <select class="hero__filter-select">
+            <option>Любой кузов</option>
+            <option>Седан</option>
+            <option>Внедорожник</option>
+            <option>Купе</option>
+            <option>Универсал</option>
+          </select>
+        </div>
+        <div class="hero__search-actions">
+          <a routerLink="/catalog" class="hero__btn hero__btn--primary hero__btn--wide">
+            <span class="material-symbols-rounded">search</span>
+            Найти автомобили
+          </a>
+          <a routerLink="/catalog" class="hero__btn hero__btn--secondary">
+            <span class="material-symbols-rounded">tune</span>
+            Все фильтры
+          </a>
+        </div>
+      </div>
+
+      <div class="hero__tags">
+        <span class="hero__tags-label">Популярное:</span>
+        <a *ngFor="let tag of popularTags" routerLink="/catalog" class="hero__tag">{{ tag }}</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Активные аукционы -->
+<section class="auctions">
+  <div class="container">
+    <div class="auctions__header">
+      <div>
+        <h2 class="auctions__title">Активные аукционы</h2>
+        <p class="auctions__count">2,547 автомобилей</p>
+      </div>
+      <div class="auctions__controls">
+        <select class="auctions__sort">
+          <option>Завершающиеся скоро</option>
+          <option>Новые лоты</option>
+          <option>Цена: по возрастанию</option>
+          <option>Цена: по убыванию</option>
+        </select>
+      </div>
+    </div>
+    <div class="auctions__layout">
+      <aside class="auctions__sidebar">
+        <div class="auctions__sidebar-section">
+          <h3 class="auctions__sidebar-title">Категории</h3>
+          <ul class="auctions__categories">
+            <li *ngFor="let cat of categories"
+                class="auctions__category"
+                [class.auctions__category--active]="cat.active">
+              <span>{{ cat.name }}</span>
+              <span class="auctions__category-count">{{ cat.count }}</span>
+            </li>
+          </ul>
+        </div>
+        <div class="auctions__sidebar-section">
+          <h3 class="auctions__sidebar-title">Популярные марки</h3>
+          <ul class="auctions__brands">
+            <li *ngFor="let brand of popularBrands" class="auctions__brand">
+              <span class="auctions__brand-name">{{ brand.name }}</span>
+              <span class="auctions__brand-count">{{ brand.count }}</span>
+            </li>
+          </ul>
+        </div>
+      </aside>
+      <div class="auctions__grid">
+        <div class="auctions__card" *ngFor="let car of activeAuctions">
+          <a [routerLink]="['/catalog', car.id]" class="auctions__card-image">
+            <img [src]="car.image" [alt]="car.brand + ' ' + car.model">
+            <span class="auctions__card-badge" *ngIf="car.noReserve">Без резерва</span>
+            <button class="auctions__card-fav" aria-label="В избранное">
+              <span class="material-symbols-rounded">favorite</span>
+            </button>
+          </a>
+          <div class="auctions__card-body">
+            <a [routerLink]="['/catalog', car.id]" class="auctions__card-title">{{ car.year }} {{ car.brand }} {{ car.model }}</a>
+            <div class="auctions__card-specs">
+              <span>{{ car.mileage | number }} км</span>
+              <span>{{ car.transmission }}</span>
+              <span>{{ car.city }}</span>
+            </div>
+            <div class="auctions__card-footer">
+              <div class="auctions__card-bid">
+                <span class="auctions__card-bid-label">Текущая ставка</span>
+                <span class="auctions__card-bid-value">${{ car.currentBid | number }}</span>
+              </div>
+              <div class="auctions__card-meta">
+                <span class="auctions__card-bids">{{ car.bidsCount }} ставок</span>
+                <span class="auctions__card-timer" [class]="getTimerClass(car.endTime)">
+                  <span class="material-symbols-rounded">schedule</span>
+                  {{ getTimeLeft(car.endTime) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="auctions__more">
+      <a routerLink="/catalog" class="auctions__more-btn">
+        Смотреть все аукционы
+        <span class="material-symbols-rounded">arrow_forward</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Завершающиеся скоро -->
+<section class="ending-soon">
+  <div class="container">
+    <div class="ending-soon__header">
+      <div class="ending-soon__header-left">
+        <span class="material-symbols-rounded ending-soon__header-icon">schedule</span>
+        <div>
+          <h2 class="ending-soon__title">Завершающиеся скоро</h2>
+          <p class="ending-soon__subtitle">Не упустите свой шанс</p>
+        </div>
+      </div>
+      <a routerLink="/catalog" class="ending-soon__all">
+        Все завершающиеся
+        <span class="material-symbols-rounded">arrow_forward</span>
+      </a>
+    </div>
+    <div class="ending-soon__track">
+      <div class="ending-soon__card" *ngFor="let lot of endingSoon">
+        <a [routerLink]="['/catalog', lot.id]" class="ending-soon__image-wrap">
+          <img [src]="lot.image" [alt]="lot.brand + ' ' + lot.model">
+          <span class="ending-soon__timer" [class]="getTimerClass(lot.endTime)">
+            <span class="material-symbols-rounded">schedule</span>
+            {{ getTimeLeft(lot.endTime) }}
+          </span>
+        </a>
+        <div class="ending-soon__info">
+          <div class="ending-soon__car-name">{{ lot.year }} {{ lot.brand }} {{ lot.model }}</div>
+          <div class="ending-soon__bottom">
+            <div class="ending-soon__price">
+              <span class="ending-soon__price-label">Текущая ставка</span>
+              <span class="ending-soon__price-value">${{ lot.currentBid | number }}</span>
+            </div>
+            <a [routerLink]="['/catalog', lot.id]" class="ending-soon__bid-btn">Ставка</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Статистика платформы -->
+<section class="platform-stats">
+  <div class="container">
+    <h2 class="platform-stats__title">Крупнейшая площадка автоаукционов</h2>
+    <p class="platform-stats__subtitle">Присоединяйтесь к тысячам коллекционеров и энтузиастов</p>
+    <div class="platform-stats__grid">
+      <div class="platform-stats__card" *ngFor="let stat of platformStats">
+        <div class="platform-stats__icon" [style.color]="stat.color">
+          <span class="material-symbols-rounded">{{ stat.icon }}</span>
+        </div>
+        <div class="platform-stats__value">{{ stat.value }}</div>
+        <div class="platform-stats__label">{{ stat.label }}</div>
+        <div class="platform-stats__sublabel">{{ stat.sublabel }}</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Как это работает -->
+<section class="section section--gray">
+  <div class="container">
+    <h2 class="section__title">Как это работает</h2>
+    <div class="steps">
+      <div class="step" *ngFor="let step of steps; let i = index">
+        <div class="step__number">{{ i + 1 }}</div>
+        <h3 class="step__title">{{ step.title }}</h3>
+        <p class="step__desc">{{ step.desc }}</p>
+      </div>
+    </div>
+  </div>
+</section>

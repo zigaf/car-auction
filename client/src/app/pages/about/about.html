@@ -1,0 +1,72 @@
+<div class="about">
+  <div class="container">
+    <!-- Hero -->
+    <section class="about__hero">
+      <span class="about__badge">О компании</span>
+      <h1>AutoBid — <span class="accent-text">ваш путь</span> к автомобилю из Европы</h1>
+      <p>Мы создали платформу, которая делает покупку автомобилей на европейских аукционах простой, прозрачной и доступной для каждого.</p>
+    </section>
+
+    <!-- Stats -->
+    <section class="about__stats">
+      @for (stat of stats; track stat.label) {
+        <div class="about__stat">
+          <span class="about__stat-value mono">{{ stat.value }}</span>
+          <span class="about__stat-label">{{ stat.label }}</span>
+        </div>
+      }
+    </section>
+
+    <!-- Mission -->
+    <section class="about__section">
+      <div class="about__content-grid">
+        <div class="about__text">
+          <h2>Наша миссия</h2>
+          <p>Предоставить покупателям из СНГ прямой доступ к европейскому авторынку с полным сопровождением — от торгов до доставки автомобиля к порогу.</p>
+          <p>Мы объединяем технологии реального времени, прозрачную аукционную механику и профессиональную логистику, чтобы каждый клиент мог приобрести автомобиль по лучшей цене.</p>
+        </div>
+        <div class="about__image-placeholder">
+          <span class="material-symbols-rounded">apartment</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Values -->
+    <section class="about__section">
+      <h2>Наши ценности</h2>
+      <div class="about__values">
+        <div class="value-card">
+          <span class="material-symbols-rounded">visibility</span>
+          <h3>Прозрачность</h3>
+          <p>Открытые торги, честные цены, полная история каждого автомобиля</p>
+        </div>
+        <div class="value-card">
+          <span class="material-symbols-rounded">bolt</span>
+          <h3>Скорость</h3>
+          <p>Торги в реальном времени, оперативная доставка, быстрая растаможка</p>
+        </div>
+        <div class="value-card">
+          <span class="material-symbols-rounded">verified</span>
+          <h3>Надёжность</h3>
+          <p>Проверенные автомобили, гарантированная доставка, юридическая чистота</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Team -->
+    <section class="about__section">
+      <h2>Команда</h2>
+      <div class="about__team">
+        @for (member of team; track member.name) {
+          <div class="team-card">
+            <div class="team-card__avatar">
+              <span class="material-symbols-rounded">{{ member.icon }}</span>
+            </div>
+            <h3>{{ member.name }}</h3>
+            <p>{{ member.role }}</p>
+          </div>
+        }
+      </div>
+    </section>
+  </div>
+</div>

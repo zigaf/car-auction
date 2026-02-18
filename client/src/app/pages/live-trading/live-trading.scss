@@ -1,0 +1,594 @@
+@use 'styles/variables' as *;
+@use 'styles/mixins' as *;
+
+.live {
+  height: calc(100vh - #{$header-height});
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+// --- Stats ---
+.live__stats {
+  display: flex;
+  align-items: center;
+  gap: $space-lg;
+  padding: $space-sm $space-lg;
+  background: $bg-panel;
+  border-bottom: 1px solid $border-color;
+  flex-shrink: 0;
+
+  @include mobile {
+    gap: $space-md;
+    padding: $space-sm $space-base;
+    overflow-x: auto;
+    @include custom-scrollbar;
+  }
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+  font-size: $fs-sm;
+  color: $text-secondary;
+  white-space: nowrap;
+
+  .material-symbols-rounded {
+    font-size: 16px;
+    color: $text-tertiary;
+  }
+}
+
+.stat__dot {
+  width: 6px;
+  height: 6px;
+  background: $status-green;
+  border-radius: $radius-round;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.stat__value {
+  color: $text-primary;
+  font-weight: $fw-semibold;
+}
+
+.stat__label {
+  color: $text-tertiary;
+}
+
+// --- Columns ---
+.live__columns {
+  display: grid;
+  grid-template-columns: 1fr 340px 280px;
+  flex: 1;
+  overflow: hidden;
+
+  @media (min-width: $bp-mobile) and (max-width: #{$bp-tablet - 1}) {
+    grid-template-columns: 1fr 300px;
+
+    .live__feed { display: none; }
+  }
+
+  @include mobile {
+    grid-template-columns: 1fr;
+
+    .live__list,
+    .live__feed {
+      display: none;
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      background: $bg-primary;
+    }
+
+    .live__list--show,
+    .live__feed--show {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+}
+
+// --- Left: Active Lot ---
+.live__lot {
+  overflow-y: auto;
+  padding: $space-base;
+  border-right: 1px solid $border-color;
+  @include custom-scrollbar;
+
+  @include mobile {
+    border-right: none;
+  }
+}
+
+.lot__image {
+  position: relative;
+  height: 280px;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  margin-bottom: $space-base;
+
+  @include mobile {
+    height: 200px;
+  }
+}
+
+.lot__image-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, $bg-panel, $bg-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .material-symbols-rounded {
+    font-size: 64px;
+    color: $text-tertiary;
+  }
+}
+
+.lot__image-badges {
+  position: absolute;
+  top: $space-sm;
+  left: $space-sm;
+  display: flex;
+  gap: $space-xs;
+}
+
+.lot__badge {
+  padding: 2px $space-sm;
+  border-radius: $radius-chip;
+  font-size: $fs-xs;
+  font-weight: $fw-semibold;
+  backdrop-filter: blur(8px);
+
+  &--docs { background: $status-green; color: #FFFFFF; }
+  &--damage { background: $status-red; color: #FFFFFF; }
+}
+
+// --- Price & Timer ---
+.lot__price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: $space-base;
+}
+
+.lot__timer {
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+  font-size: $fs-2xl;
+
+  .material-symbols-rounded { font-size: 24px; }
+
+  &.timer--green { color: $status-green; }
+  &.timer--yellow { color: $status-yellow; animation: pulse-timer 1.2s infinite; }
+  &.timer--red { color: $status-red; animation: pulse-timer 0.6s infinite; }
+}
+
+@keyframes pulse-timer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.lot__bid-label {
+  display: block;
+  font-size: $fs-xs;
+  color: $text-tertiary;
+  text-align: right;
+}
+
+.lot__bid-value {
+  font-size: $fs-2xl;
+  font-weight: $fw-bold;
+  color: $accent;
+}
+
+// --- Specs ---
+.lot__specs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $space-sm;
+  margin-bottom: $space-base;
+
+  @include mobile {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.lot__spec {
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+  font-size: $fs-sm;
+  color: $text-secondary;
+  padding: $space-sm;
+  background: $bg-panel;
+  border-radius: $radius-base;
+  border: 1px solid $border-color;
+
+  .material-symbols-rounded {
+    font-size: 16px;
+    color: $accent;
+  }
+}
+
+// --- Bidder strip ---
+.lot__bidder-strip {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-sm $space-md;
+  background: $accent-subtle;
+  border-radius: $radius-base;
+  margin-bottom: $space-base;
+}
+
+.lot__bidder-flag {
+  font-size: 20px;
+}
+
+.lot__bidder-id {
+  color: $text-secondary;
+  font-size: $fs-sm;
+}
+
+.lot__bidder-increment {
+  margin-left: auto;
+  font-size: $fs-sm;
+  font-weight: $fw-semibold;
+}
+
+// --- Quick bids ---
+.lot__quick-bids {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $space-sm;
+  margin-bottom: $space-md;
+}
+
+.qbid {
+  background: $bg-panel;
+  border: 1px solid $border-color;
+  border-radius: $radius-base;
+  color: $text-primary;
+  font-family: $font-mono;
+  font-size: $fs-sm;
+  padding: $space-sm;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: $accent;
+    color: $accent;
+    background: $accent-subtle;
+  }
+}
+
+// --- Bid form ---
+.lot__bid-form {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: $space-sm;
+  margin-bottom: $space-base;
+
+  @include mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lot__bid-input-wrap {
+  position: relative;
+}
+
+.lot__bid-input {
+  width: 100%;
+  background: $bg-input;
+  border: 1px solid $border-color;
+  border-radius: $radius-base;
+  color: $text-primary;
+  font-size: $fs-md;
+  padding: $space-md;
+  padding-right: 48px;
+
+  &:focus {
+    outline: none;
+    border-color: $accent;
+    box-shadow: 0 0 12px $accent-muted;
+  }
+
+  &::placeholder { color: $text-tertiary; }
+}
+
+.lot__bid-currency {
+  position: absolute;
+  right: $space-md;
+  top: 50%;
+  transform: translateY(-50%);
+  color: $text-tertiary;
+  font-size: $fs-sm;
+}
+
+.lot__bid-btn {
+  @include btn-primary;
+  white-space: nowrap;
+}
+
+.lot__buynow-btn {
+  background: transparent;
+  border: 1px solid rgba($status-yellow, 0.3);
+  border-radius: $radius-base;
+  color: $status-yellow;
+  font-family: $font-ui;
+  font-size: $fs-sm;
+  font-weight: $fw-semibold;
+  padding: $space-md $space-base;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+  transition: all $transition-fast;
+
+  .material-symbols-rounded { font-size: 18px; }
+
+  &:hover {
+    background: rgba($status-yellow, 0.08);
+    border-color: $status-yellow;
+  }
+}
+
+// --- Bid history ---
+.lot__history {
+  border-top: 1px solid $divider;
+  padding-top: $space-sm;
+}
+
+.lot__history-item {
+  display: grid;
+  grid-template-columns: 24px 1fr auto auto;
+  gap: $space-sm;
+  align-items: center;
+  padding: $space-xs 0;
+  font-size: $fs-sm;
+
+  & + & { border-top: 1px solid $divider; }
+}
+
+.lot__history-flag { font-size: 14px; }
+.lot__history-bidder { color: $text-secondary; }
+.lot__history-amount { color: $text-primary; font-weight: $fw-medium; }
+.lot__history-time { color: $text-tertiary; font-size: $fs-xs; }
+
+// --- Middle: Auction List ---
+.live__list {
+  border-right: 1px solid $border-color;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.live__list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $space-md $space-base;
+  border-bottom: 1px solid $border-color;
+  flex-shrink: 0;
+
+  h3 {
+    margin: 0;
+    font-size: $fs-base;
+    font-weight: $fw-semibold;
+    color: $text-primary;
+  }
+}
+
+.live__list-count {
+  font-size: $fs-sm;
+  color: $text-tertiary;
+}
+
+.live__list-scroll {
+  flex: 1;
+  overflow-y: auto;
+  @include custom-scrollbar;
+}
+
+.auction-row {
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  gap: $space-sm;
+  padding: $space-sm $space-base;
+  border-bottom: 1px solid $divider;
+  cursor: pointer;
+  transition: background $transition-fast;
+  position: relative;
+
+  &:hover {
+    background: $bg-elevated;
+  }
+
+  &--active {
+    background: $bg-card;
+    border-left: 3px solid $accent;
+
+    &:hover { background: $bg-card; }
+  }
+}
+
+.auction-row__thumb {
+  width: 72px;
+  height: 54px;
+  background: $bg-elevated;
+  border-radius: $radius-sm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .material-symbols-rounded {
+    font-size: 24px;
+    color: $text-tertiary;
+  }
+}
+
+.auction-row__info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+
+.auction-row__name {
+  font-size: $fs-sm;
+  font-weight: $fw-semibold;
+  color: $text-primary;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.auction-row__meta {
+  font-size: $fs-xs;
+  color: $text-tertiary;
+}
+
+.auction-row__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+}
+
+.auction-row__price {
+  font-size: $fs-sm;
+  font-weight: $fw-medium;
+  color: $text-primary;
+}
+
+.auction-row__timer {
+  font-size: 10.5px;
+
+  &.timer--green { color: $status-green; }
+  &.timer--yellow { color: $status-yellow; }
+  &.timer--red { color: $status-red; }
+}
+
+.auction-row__bottom {
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+}
+
+.auction-row__bids {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: $fs-xs;
+  color: $text-tertiary;
+
+  .material-symbols-rounded { font-size: 12px; }
+}
+
+.auction-row__flag {
+  font-size: 12px;
+}
+
+// --- Right: Live Feed ---
+.live__feed {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.live__feed-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $space-md $space-base;
+  border-bottom: 1px solid $border-color;
+  flex-shrink: 0;
+
+  h3 {
+    margin: 0;
+    font-size: $fs-base;
+    font-weight: $fw-semibold;
+    color: $text-primary;
+  }
+}
+
+.live__feed-dot {
+  width: 8px;
+  height: 8px;
+  background: $status-red;
+  border-radius: $radius-round;
+  animation: pulse-dot 1s ease-in-out infinite;
+}
+
+.live__feed-scroll {
+  flex: 1;
+  overflow-y: auto;
+  @include custom-scrollbar;
+}
+
+.feed-item {
+  display: grid;
+  grid-template-columns: 24px 1fr auto auto;
+  gap: $space-xs;
+  align-items: center;
+  padding: $space-sm $space-base;
+  font-size: $fs-sm;
+  border-bottom: 1px solid $divider;
+  transition: background 300ms ease;
+
+  &:first-child {
+    background: $accent-subtle;
+  }
+}
+
+.feed-item__flag { font-size: 14px; }
+.feed-item__car { color: $text-secondary; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.feed-item__increment { font-size: $fs-xs; font-weight: $fw-semibold; }
+.feed-item__time { font-size: $fs-xs; color: $text-tertiary; }
+
+// --- Mobile tabs ---
+.live__mobile-tabs {
+  display: none;
+  border-top: 1px solid $border-color;
+  background: $bg-panel;
+  flex-shrink: 0;
+
+  @include mobile {
+    display: flex;
+  }
+
+  button {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-xs;
+    padding: $space-md;
+    background: none;
+    border: none;
+    color: $text-tertiary;
+    font-size: $fs-sm;
+    font-family: $font-ui;
+    cursor: pointer;
+
+    .material-symbols-rounded { font-size: 18px; }
+
+    &.active {
+      color: $accent;
+      border-top: 2px solid $accent;
+    }
+  }
+}

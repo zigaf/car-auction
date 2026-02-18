@@ -1,0 +1,466 @@
+@use 'styles/variables' as *;
+@use 'styles/mixins' as *;
+
+.catalog {
+  min-height: calc(100vh - #{$header-height});
+  padding: $space-xl 0 $space-3xl;
+}
+
+// --- Header ---
+.catalog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $space-lg;
+  flex-wrap: wrap;
+  gap: $space-md;
+}
+
+.catalog__title-row {
+  display: flex;
+  align-items: baseline;
+  gap: $space-md;
+}
+
+.catalog__title {
+  @include heading($fs-xl);
+  margin: 0;
+}
+
+.catalog__count {
+  color: $text-tertiary;
+  font-size: $fs-sm;
+}
+
+.catalog__toolbar {
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+}
+
+.catalog__sort {
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+  color: $text-secondary;
+
+  .material-symbols-rounded {
+    font-size: 18px;
+  }
+
+  select {
+    background: $bg-panel;
+    border: 1px solid $border-color;
+    border-radius: $radius-base;
+    color: $text-primary;
+    padding: $space-xs $space-md;
+    font-size: $fs-sm;
+    font-family: $font-ui;
+    cursor: pointer;
+
+    &:focus {
+      outline: none;
+      border-color: $accent;
+    }
+  }
+}
+
+.catalog__view-toggle {
+  display: flex;
+  border: 1px solid $border-color;
+  border-radius: $radius-base;
+  overflow: hidden;
+
+  button {
+    background: transparent;
+    border: none;
+    color: $text-tertiary;
+    padding: $space-xs $space-sm;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: all $transition-fast;
+
+    .material-symbols-rounded {
+      font-size: 20px;
+    }
+
+    &.active {
+      background: $accent-muted;
+      color: $accent;
+    }
+
+    &:hover:not(.active) {
+      color: $text-primary;
+    }
+  }
+}
+
+// --- Body ---
+.catalog__body {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: $space-lg;
+
+  @include tablet {
+    grid-template-columns: 220px 1fr;
+  }
+
+  @include mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+// --- Filters ---
+.catalog__filters {
+  @include panel;
+  padding: $space-lg;
+  height: fit-content;
+  position: sticky;
+  top: calc(#{$header-height} + #{$space-lg});
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+
+  @include mobile {
+    position: static;
+  }
+}
+
+.filters__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h3 {
+    margin: 0;
+    font-size: $fs-md;
+    font-weight: $fw-semibold;
+    color: $text-primary;
+  }
+}
+
+.filters__reset {
+  background: none;
+  border: none;
+  color: $text-tertiary;
+  font-size: $fs-sm;
+  cursor: pointer;
+  font-family: $font-ui;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: $accent;
+  }
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: $space-xs;
+}
+
+.filter-label {
+  color: $text-secondary;
+  font-size: $fs-sm;
+  font-weight: $fw-medium;
+}
+
+.filter-select,
+.filter-input {
+  background: $bg-input;
+  border: 1px solid $border-color;
+  border-radius: $radius-base;
+  color: $text-primary;
+  padding: $space-sm $space-md;
+  font-size: $fs-sm;
+  font-family: $font-ui;
+  transition: border-color $transition-fast;
+  width: 100%;
+
+  &:focus {
+    outline: none;
+    border-color: $accent;
+  }
+
+  &::placeholder {
+    color: $text-tertiary;
+  }
+}
+
+.filter-range {
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+}
+
+.filter-range__sep {
+  color: $text-tertiary;
+  flex-shrink: 0;
+}
+
+.filters__toggle {
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+  background: none;
+  border: none;
+  color: $text-secondary;
+  font-size: $fs-sm;
+  font-family: $font-ui;
+  cursor: pointer;
+  padding: $space-xs 0;
+  transition: color $transition-fast;
+
+  .material-symbols-rounded {
+    font-size: 18px;
+  }
+
+  &:hover {
+    color: $accent;
+  }
+}
+
+.filters__apply {
+  @include btn-primary;
+  width: 100%;
+  margin-top: $space-sm;
+}
+
+// --- Grid ---
+.catalog__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax($catalog-card-min-width, 1fr));
+  gap: $space-lg;
+
+  &--list {
+    grid-template-columns: 1fr;
+
+    .lot-card {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+    }
+
+    .lot-card__image {
+      height: 200px;
+      border-radius: $radius-md $radius-md 0 0;
+    }
+  }
+}
+
+// --- Lot Card ---
+.lot-card {
+  @include card;
+  text-decoration: none;
+  color: inherit;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    .lot-card__placeholder .material-symbols-rounded {
+      color: $accent;
+    }
+  }
+}
+
+.lot-card__image {
+  position: relative;
+  height: 200px;
+  background: $bg-elevated;
+  overflow: hidden;
+}
+
+.lot-card__placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, $bg-panel, $bg-elevated);
+
+  .material-symbols-rounded {
+    font-size: 48px;
+    color: $text-tertiary;
+    transition: color $transition-base;
+  }
+}
+
+.lot-card__badges {
+  position: absolute;
+  top: $space-sm;
+  left: $space-sm;
+  display: flex;
+  gap: $space-xs;
+  flex-wrap: wrap;
+}
+
+.lot-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px $space-sm;
+  border-radius: $radius-chip;
+  font-size: $fs-xs;
+  font-weight: $fw-semibold;
+  backdrop-filter: blur(8px);
+
+  .material-symbols-rounded {
+    font-size: 13px;
+  }
+
+  &--damage {
+    background: rgba($status-red, 0.85);
+    color: #fff;
+  }
+
+  &--docs {
+    background: rgba($accent, 0.85);
+    color: #FFFFFF;
+  }
+}
+
+.lot-card__buynow-tag {
+  position: absolute;
+  top: $space-sm;
+  right: $space-sm;
+  @include badge(rgba($status-yellow, 0.9), #FFFFFF);
+  font-weight: $fw-bold;
+}
+
+.lot-card__like {
+  position: absolute;
+  bottom: $space-sm;
+  right: $space-sm;
+  background: rgba(0, 0, 0, 0.4);
+  border: none;
+  border-radius: $radius-round;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all $transition-fast;
+
+  .material-symbols-rounded {
+    font-size: 18px;
+    color: $text-secondary;
+  }
+
+  &:hover {
+    background: rgba($status-red, 0.3);
+
+    .material-symbols-rounded {
+      color: $status-red;
+    }
+  }
+}
+
+// --- Card Body ---
+.lot-card__body {
+  padding: $space-md;
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+  flex: 1;
+}
+
+.lot-card__title {
+  margin: 0;
+  font-size: $fs-base;
+  font-weight: $fw-semibold;
+  color: $text-primary;
+}
+
+.lot-card__specs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $space-xs;
+  color: $text-tertiary;
+  font-size: $fs-sm;
+
+  .dot {
+    width: 3px;
+    height: 3px;
+    background: $text-tertiary;
+    border-radius: $radius-round;
+    flex-shrink: 0;
+  }
+}
+
+.lot-card__auction {
+  margin-top: auto;
+  padding-top: $space-sm;
+  border-top: 1px solid $divider;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.lot-card__price {
+  display: flex;
+  flex-direction: column;
+}
+
+.lot-card__price-label {
+  font-size: $fs-xs;
+  color: $text-tertiary;
+}
+
+.lot-card__price-value {
+  font-size: $fs-md;
+  font-weight: $fw-bold;
+  color: $accent;
+}
+
+.lot-card__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.lot-card__timer {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: $fs-sm;
+
+  .material-symbols-rounded {
+    font-size: 14px;
+  }
+
+  &.timer--green {
+    color: $status-green;
+  }
+
+  &.timer--yellow {
+    color: $status-yellow;
+    animation: pulse-timer 1.2s ease-in-out infinite;
+  }
+
+  &.timer--red {
+    color: $status-red;
+    animation: pulse-timer 0.6s ease-in-out infinite;
+  }
+}
+
+@keyframes pulse-timer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.lot-card__bids {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: $text-tertiary;
+  font-size: $fs-sm;
+
+  .material-symbols-rounded {
+    font-size: 14px;
+  }
+}

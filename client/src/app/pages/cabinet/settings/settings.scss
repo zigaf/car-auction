@@ -1,0 +1,213 @@
+@use 'styles/variables' as *;
+@use 'styles/mixins' as *;
+
+.page-title {
+  @include heading($fs-xl);
+  margin: 0 0 $space-xl;
+}
+
+.section-title {
+  font-size: $fs-lg;
+  font-weight: $fw-semibold;
+  color: $text-primary;
+  margin: 0 0 $space-md;
+}
+
+.settings__section {
+  margin-bottom: $space-xl;
+}
+
+.settings__panel {
+  @include panel;
+  padding: $space-lg;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $space-lg;
+
+  @include mobile { grid-template-columns: 1fr; }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+}
+
+.form-label {
+  font-size: $fs-sm;
+  font-weight: $fw-medium;
+  color: $text-tertiary;
+}
+
+.form-input {
+  padding: $space-md;
+  background: $bg-input;
+  border: 1px solid $border-color;
+  border-radius: $radius-base;
+  font-family: $font-ui;
+  font-size: $fs-sm;
+  color: $text-primary;
+
+  &--readonly {
+    opacity: 0.7;
+    cursor: default;
+  }
+}
+
+.select-wrapper {
+  position: relative;
+}
+
+.form-select {
+  width: 100%;
+  padding: $space-md;
+  padding-right: $space-xl;
+  background: $bg-input;
+  border: 1px solid $border-color;
+  border-radius: $radius-base;
+  font-family: $font-ui;
+  font-size: $fs-sm;
+  color: $text-primary;
+  appearance: none;
+  cursor: pointer;
+  transition: border-color $transition-fast;
+
+  &:focus {
+    outline: none;
+    border-color: $accent;
+  }
+
+  option {
+    background: $bg-panel;
+    color: $text-primary;
+  }
+}
+
+.select-arrow {
+  position: absolute;
+  right: $space-md;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px;
+  color: $text-tertiary;
+  pointer-events: none;
+}
+
+.lang-selector,
+.currency-selector {
+  display: flex;
+  gap: $space-xs;
+}
+
+.lang-btn,
+.currency-btn {
+  padding: $space-sm $space-md;
+  background: $bg-input;
+  border: 1px solid $border-color;
+  border-radius: $radius-base;
+  font-family: $font-ui;
+  font-size: $fs-sm;
+  font-weight: $fw-medium;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    color: $text-primary;
+    border-color: $text-tertiary;
+  }
+
+  &--active {
+    color: $accent;
+    border-color: $accent;
+    background: $accent-subtle;
+  }
+}
+
+.currency-btn__symbol {
+  font-weight: $fw-bold;
+  margin-right: $space-xs;
+}
+
+// Notification matrix
+.notif-matrix {
+  display: flex;
+  flex-direction: column;
+}
+
+.notif-matrix__header {
+  display: grid;
+  grid-template-columns: 1fr 60px 60px;
+  gap: $space-md;
+  padding: $space-sm 0;
+  border-bottom: 1px solid $border-color;
+}
+
+.notif-matrix__col-label {
+  font-size: $fs-xs;
+  font-weight: $fw-semibold;
+  color: $text-tertiary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.notif-matrix__row {
+  display: grid;
+  grid-template-columns: 1fr 60px 60px;
+  gap: $space-md;
+  align-items: center;
+  padding: $space-md 0;
+  border-bottom: 1px solid $divider;
+
+  &:last-child { border-bottom: none; }
+}
+
+.notif-matrix__label {
+  font-size: $fs-sm;
+  color: $text-secondary;
+}
+
+// Toggle switch
+.toggle {
+  display: flex;
+  justify-content: center;
+  cursor: pointer;
+
+  input { display: none; }
+}
+
+.toggle__track {
+  width: 36px;
+  height: 20px;
+  background: $bg-elevated;
+  border: 1px solid $border-color;
+  border-radius: 10px;
+  position: relative;
+  transition: all $transition-fast;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: $radius-round;
+    background: $text-tertiary;
+    transition: all $transition-fast;
+  }
+
+  input:checked + & {
+    background: $accent;
+    border-color: $accent;
+
+    &::after {
+      left: 18px;
+      background: $bg-primary;
+    }
+  }
+}

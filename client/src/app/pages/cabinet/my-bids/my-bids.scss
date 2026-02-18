@@ -1,0 +1,122 @@
+@use 'styles/variables' as *;
+@use 'styles/mixins' as *;
+
+.page-title {
+  @include heading($fs-xl);
+  margin: 0 0 $space-xl;
+}
+
+.tabs {
+  display: flex;
+  gap: $space-xs;
+  margin-bottom: $space-lg;
+  border-bottom: 1px solid $border-color;
+  padding-bottom: $space-xs;
+
+  button {
+    background: none;
+    border: none;
+    color: $text-secondary;
+    font-family: $font-ui;
+    font-size: $fs-sm;
+    font-weight: $fw-medium;
+    padding: $space-sm $space-md;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all $transition-fast;
+
+    &:hover { color: $text-primary; }
+    &.active { color: $accent; border-bottom-color: $accent; }
+  }
+}
+
+.tabs__count {
+  background: $bg-elevated;
+  border-radius: $radius-chip;
+  padding: 1px 6px;
+  font-size: $fs-xs;
+  margin-left: $space-xs;
+}
+
+.bids-list {
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+}
+
+.bid-row {
+  @include card;
+  display: grid;
+  grid-template-columns: 64px 1fr auto auto;
+  gap: $space-md;
+  align-items: center;
+  padding: $space-md $space-lg;
+  text-decoration: none;
+  color: inherit;
+
+  @include mobile {
+    grid-template-columns: 48px 1fr;
+    gap: $space-sm;
+  }
+}
+
+.bid-row__thumb {
+  width: 64px;
+  height: 48px;
+  background: $bg-elevated;
+  border-radius: $radius-sm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .material-symbols-rounded { font-size: 24px; color: $text-tertiary; }
+
+  @include mobile { width: 48px; height: 36px; }
+}
+
+.bid-row__name {
+  font-size: $fs-base;
+  font-weight: $fw-semibold;
+  color: $text-primary;
+  display: block;
+}
+
+.bid-row__timer {
+  font-size: $fs-sm;
+  color: $status-green;
+}
+
+.bid-row__payment {
+  font-size: $fs-sm;
+  color: $status-yellow;
+}
+
+.bid-row__amounts {
+  text-align: right;
+
+  @include mobile { grid-column: 1 / -1; text-align: left; }
+}
+
+.bid-row__my-bid,
+.bid-row__current {
+  display: block;
+  font-size: $fs-sm;
+  color: $text-secondary;
+
+  strong { color: $text-primary; }
+}
+
+.bid-status {
+  padding: $space-xs $space-md;
+  border-radius: $radius-chip;
+  font-size: $fs-xs;
+  font-weight: $fw-semibold;
+  text-align: center;
+
+  &--leading { background: rgba($status-green, 0.12); color: $status-green; }
+  &--outbid { background: rgba($status-red, 0.12); color: $status-red; }
+  &--won { background: rgba($accent, 0.12); color: $accent; }
+  &--lost { background: $accent-subtle; color: $text-tertiary; }
+
+  @include mobile { grid-column: 1 / -1; justify-self: start; }
+}

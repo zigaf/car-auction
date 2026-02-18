@@ -1,0 +1,207 @@
+<div class="catalog">
+  <div class="container">
+    <!-- Header -->
+    <div class="catalog__header">
+      <div class="catalog__title-row">
+        <h1 class="catalog__title">Каталог автомобилей</h1>
+        <span class="catalog__count">{{ lots.length }} лотов</span>
+      </div>
+      <div class="catalog__toolbar">
+        <div class="catalog__sort">
+          <span class="material-symbols-rounded">sort</span>
+          <select [(ngModel)]="sortBy">
+            @for (opt of sortOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="catalog__view-toggle">
+          <button [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'">
+            <span class="material-symbols-rounded">grid_view</span>
+          </button>
+          <button [class.active]="viewMode === 'list'" (click)="viewMode = 'list'">
+            <span class="material-symbols-rounded">view_list</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="catalog__body">
+      <!-- Filters sidebar -->
+      <aside class="catalog__filters">
+        <div class="filters__header">
+          <h3>Фильтры</h3>
+          <button class="filters__reset" (click)="resetFilters()">Сбросить</button>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Марка</label>
+          <select [(ngModel)]="filters.brand" class="filter-select">
+            <option value="">Все марки</option>
+            @for (b of brands; track b) {
+              <option [value]="b">{{ b }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Год выпуска</label>
+          <div class="filter-range">
+            <input type="number" [(ngModel)]="filters.yearFrom" placeholder="От" class="filter-input">
+            <span class="filter-range__sep">—</span>
+            <input type="number" [(ngModel)]="filters.yearTo" placeholder="До" class="filter-input">
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Цена, EUR</label>
+          <div class="filter-range">
+            <input type="number" [(ngModel)]="filters.priceFrom" placeholder="От" class="filter-input">
+            <span class="filter-range__sep">—</span>
+            <input type="number" [(ngModel)]="filters.priceTo" placeholder="До" class="filter-input">
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Топливо</label>
+          <select [(ngModel)]="filters.fuelType" class="filter-select">
+            <option value="">Все</option>
+            @for (f of fuelTypes; track f) {
+              <option [value]="f">{{ f }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">КПП</label>
+          <select [(ngModel)]="filters.transmission" class="filter-select">
+            <option value="">Все</option>
+            @for (t of transmissions; track t) {
+              <option [value]="t">{{ t }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Кузов</label>
+          <select [(ngModel)]="filters.bodyType" class="filter-select">
+            <option value="">Все</option>
+            @for (bt of bodyTypes; track bt) {
+              <option [value]="bt">{{ bt }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Пробег, км</label>
+          <div class="filter-range">
+            <input type="number" [(ngModel)]="filters.mileageFrom" placeholder="От" class="filter-input">
+            <span class="filter-range__sep">—</span>
+            <input type="number" [(ngModel)]="filters.mileageTo" placeholder="До" class="filter-input">
+          </div>
+        </div>
+
+        <!-- Advanced -->
+        <button class="filters__toggle" (click)="showAdvancedFilters = !showAdvancedFilters">
+          <span class="material-symbols-rounded">{{ showAdvancedFilters ? 'expand_less' : 'expand_more' }}</span>
+          {{ showAdvancedFilters ? 'Скрыть' : 'Расширенные фильтры' }}
+        </button>
+
+        @if (showAdvancedFilters) {
+          <div class="filter-group">
+            <label class="filter-label">Повреждения</label>
+            <select [(ngModel)]="filters.damageType" class="filter-select">
+              <option value="">Все</option>
+              @for (d of damageTypes; track d) {
+                <option [value]="d">{{ d }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Документы</label>
+            <select [(ngModel)]="filters.documentStatus" class="filter-select">
+              <option value="">Все</option>
+              @for (ds of documentStatuses; track ds) {
+                <option [value]="ds">{{ ds }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Состояние</label>
+            <select [(ngModel)]="filters.condition" class="filter-select">
+              <option value="">Все</option>
+              @for (c of conditions; track c) {
+                <option [value]="c">{{ c }}</option>
+              }
+            </select>
+          </div>
+        }
+
+        <button class="filters__apply">
+          <span class="material-symbols-rounded">search</span>
+          Найти
+        </button>
+      </aside>
+
+      <!-- Lot cards grid -->
+      <div class="catalog__grid" [class.catalog__grid--list]="viewMode === 'list'">
+        @for (lot of lots; track lot.id) {
+          <a [routerLink]="['/catalog', lot.id]" class="lot-card">
+            <div class="lot-card__image">
+              <div class="lot-card__placeholder">
+                <span class="material-symbols-rounded">directions_car</span>
+              </div>
+              <div class="lot-card__badges">
+                @if (lot.damageType !== 'none') {
+                  <span class="lot-badge lot-badge--damage">
+                    <span class="material-symbols-rounded">car_crash</span>
+                    {{ getDamageLabel(lot.damageType) }}
+                  </span>
+                }
+                <span class="lot-badge lot-badge--docs">{{ lot.documentStatus }}</span>
+              </div>
+              @if (lot.hasBuyNow) {
+                <span class="lot-card__buynow-tag">Buy Now</span>
+              }
+              <button class="lot-card__like" (click)="$event.preventDefault(); $event.stopPropagation()">
+                <span class="material-symbols-rounded">favorite</span>
+              </button>
+            </div>
+
+            <div class="lot-card__body">
+              <h3 class="lot-card__title">{{ lot.brand }} {{ lot.model }}</h3>
+              <div class="lot-card__specs">
+                <span>{{ lot.year }}</span>
+                <span class="dot"></span>
+                <span>{{ lot.mileage | number }} км</span>
+                <span class="dot"></span>
+                <span>{{ lot.fuelType }}</span>
+                <span class="dot"></span>
+                <span>{{ lot.transmission }}</span>
+              </div>
+
+              <div class="lot-card__auction">
+                <div class="lot-card__price">
+                  <span class="lot-card__price-label">Текущая ставка</span>
+                  <span class="lot-card__price-value mono">{{ lot.currentBid | number }} EUR</span>
+                </div>
+                <div class="lot-card__meta">
+                  <span class="lot-card__timer mono" [class]="getTimerClass(lot.endTime)">
+                    <span class="material-symbols-rounded">timer</span>
+                    {{ getTimeLeft(lot.endTime) }}
+                  </span>
+                  <span class="lot-card__bids">
+                    <span class="material-symbols-rounded">gavel</span>
+                    {{ lot.bidsCount }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </a>
+        }
+      </div>
+    </div>
+  </div>
+</div>

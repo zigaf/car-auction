@@ -1,0 +1,70 @@
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-card__header">
+      <span class="material-symbols-rounded auth-card__icon">person_add</span>
+      <h1>Регистрация</h1>
+      <p>Создайте аккаунт для участия в аукционах</p>
+    </div>
+
+    <form class="auth-form" (ngSubmit)="$event.preventDefault()">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Имя</label>
+          <div class="input-wrap">
+            <span class="material-symbols-rounded">person</span>
+            <input type="text" [(ngModel)]="firstName" name="firstName" placeholder="Ваше имя">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Фамилия</label>
+          <div class="input-wrap">
+            <span class="material-symbols-rounded">person</span>
+            <input type="text" [(ngModel)]="lastName" name="lastName" placeholder="Ваша фамилия">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Email</label>
+        <div class="input-wrap">
+          <span class="material-symbols-rounded">mail</span>
+          <input type="email" [(ngModel)]="email" name="email" placeholder="your@email.com">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Телефон</label>
+        <div class="input-wrap">
+          <span class="material-symbols-rounded">phone</span>
+          <input type="tel" [(ngModel)]="phone" name="phone" placeholder="+380 __ ___ __ __">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Пароль</label>
+        <div class="input-wrap">
+          <span class="material-symbols-rounded">lock</span>
+          <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="password" name="password" placeholder="Минимум 8 символов">
+          <button type="button" class="input-toggle" (click)="showPassword = !showPassword">
+            <span class="material-symbols-rounded">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Подтверждение пароля</label>
+        <div class="input-wrap">
+          <span class="material-symbols-rounded">lock</span>
+          <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="confirmPassword" name="confirmPassword" placeholder="Повторите пароль">
+        </div>
+      </div>
+
+      <button type="submit" class="auth-form__submit">Зарегистрироваться</button>
+    </form>
+
+    <div class="auth-card__footer">
+      <span>Уже есть аккаунт?</span>
+      <a routerLink="/login">Войти</a>
+    </div>
+  </div>
+</div>

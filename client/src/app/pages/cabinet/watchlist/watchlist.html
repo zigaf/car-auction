@@ -1,0 +1,67 @@
+<div class="watchlist">
+  <h1 class="page-title">Отслеживаемые</h1>
+
+  <div class="watchlist__brands">
+    <h2 class="section-title">Отслеживаемые бренды</h2>
+    <div class="brand-chips">
+      @for (brand of trackedBrands; track brand.id) {
+        <span class="brand-chip">
+          {{ brand.name }}
+          <button class="brand-chip__remove" (click)="removeBrand(brand.id)">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </span>
+      }
+      <button class="brand-chip brand-chip--add">
+        <span class="material-symbols-rounded">add</span>
+        Добавить
+      </button>
+    </div>
+  </div>
+
+  <div class="watchlist__lots">
+    <h2 class="section-title">Совпадения ({{ watchedLots.length }})</h2>
+    <div class="lot-grid">
+      @for (lot of watchedLots; track lot.id) {
+        <div class="lot-card">
+          <button class="lot-card__remove" (click)="removeLot(lot.id)" title="Убрать из отслеживаемых">
+            <span class="material-symbols-rounded">favorite</span>
+          </button>
+          <div class="lot-card__image">
+            <span class="material-symbols-rounded">directions_car</span>
+          </div>
+          <div class="lot-card__body">
+            <a [routerLink]="['/catalog', lot.id]" class="lot-card__title">{{ lot.brand }} {{ lot.model }} {{ lot.year }}</a>
+            <div class="lot-card__specs">
+              <span class="lot-card__spec">
+                <span class="material-symbols-rounded">speed</span>
+                {{ lot.mileage | number }} км
+              </span>
+              <span class="lot-card__spec">
+                <span class="material-symbols-rounded">local_gas_station</span>
+                {{ lot.fuel }}
+              </span>
+            </div>
+            <div class="lot-card__footer">
+              <div class="lot-card__bid">
+                <span class="lot-card__bid-label">Текущая ставка</span>
+                <span class="lot-card__bid-value mono">{{ lot.currentBid | number }} EUR</span>
+              </div>
+              <div class="lot-card__meta">
+                <span class="lot-card__timer mono">{{ lot.endTime }}</span>
+                <span class="lot-card__bids">{{ lot.bids }} ставок</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (watchedLots.length === 0) {
+    <div class="empty-state">
+      <span class="material-symbols-rounded">favorite_border</span>
+      <p>Вы ещё не добавили лоты в отслеживаемые</p>
+    </div>
+  }
+</div>

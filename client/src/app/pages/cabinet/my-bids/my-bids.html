@@ -1,0 +1,78 @@
+<div class="my-bids">
+  <h1 class="page-title">Мои ставки</h1>
+
+  <div class="tabs">
+    <button [class.active]="activeTab === 'active'" (click)="activeTab = 'active'">
+      Активные <span class="tabs__count">{{ activeBids.length }}</span>
+    </button>
+    <button [class.active]="activeTab === 'won'" (click)="activeTab = 'won'">
+      Выигранные <span class="tabs__count">{{ wonBids.length }}</span>
+    </button>
+    <button [class.active]="activeTab === 'lost'" (click)="activeTab = 'lost'">
+      Проигранные <span class="tabs__count">{{ lostBids.length }}</span>
+    </button>
+  </div>
+
+  @if (activeTab === 'active') {
+    <div class="bids-list">
+      @for (bid of activeBids; track bid.id) {
+        <a [routerLink]="['/catalog', bid.id]" class="bid-row">
+          <div class="bid-row__thumb">
+            <span class="material-symbols-rounded">directions_car</span>
+          </div>
+          <div class="bid-row__info">
+            <span class="bid-row__name">{{ bid.brand }} {{ bid.model }} {{ bid.year }}</span>
+            <span class="bid-row__timer mono">{{ bid.endTime }}</span>
+          </div>
+          <div class="bid-row__amounts">
+            <span class="bid-row__my-bid">Моя: <strong class="mono">{{ bid.myBid | number }} EUR</strong></span>
+            <span class="bid-row__current">Текущая: <strong class="mono">{{ bid.currentBid | number }} EUR</strong></span>
+          </div>
+          <span class="bid-status" [class.bid-status--leading]="bid.status === 'leading'" [class.bid-status--outbid]="bid.status === 'outbid'">
+            {{ bid.status === 'leading' ? 'Лидирую' : 'Перебит' }}
+          </span>
+        </a>
+      }
+    </div>
+  }
+
+  @if (activeTab === 'won') {
+    <div class="bids-list">
+      @for (bid of wonBids; track bid.id) {
+        <div class="bid-row">
+          <div class="bid-row__thumb">
+            <span class="material-symbols-rounded">directions_car</span>
+          </div>
+          <div class="bid-row__info">
+            <span class="bid-row__name">{{ bid.brand }} {{ bid.model }} {{ bid.year }}</span>
+            <span class="bid-row__payment">{{ bid.paymentStatus }}</span>
+          </div>
+          <div class="bid-row__amounts">
+            <span class="bid-row__current">Итого: <strong class="mono">{{ bid.finalPrice | number }} EUR</strong></span>
+          </div>
+          <span class="bid-status bid-status--won">Выигран</span>
+        </div>
+      }
+    </div>
+  }
+
+  @if (activeTab === 'lost') {
+    <div class="bids-list">
+      @for (bid of lostBids; track bid.id) {
+        <div class="bid-row">
+          <div class="bid-row__thumb">
+            <span class="material-symbols-rounded">directions_car</span>
+          </div>
+          <div class="bid-row__info">
+            <span class="bid-row__name">{{ bid.brand }} {{ bid.model }} {{ bid.year }}</span>
+          </div>
+          <div class="bid-row__amounts">
+            <span class="bid-row__my-bid">Моя: <strong class="mono">{{ bid.myBid | number }} EUR</strong></span>
+            <span class="bid-row__current">Итого: <strong class="mono">{{ bid.finalPrice | number }} EUR</strong></span>
+          </div>
+          <span class="bid-status bid-status--lost">Проигран</span>
+        </div>
+      }
+    </div>
+  }
+</div>

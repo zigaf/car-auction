@@ -1,0 +1,171 @@
+@use 'styles/variables' as *;
+@use 'styles/mixins' as *;
+
+.about {
+  min-height: calc(100vh - #{$header-height});
+  padding: $space-2xl 0 $space-3xl;
+}
+
+.about__hero {
+  max-width: 680px;
+  margin-bottom: $space-3xl;
+}
+
+.about__badge {
+  @include badge;
+  margin-bottom: $space-lg;
+}
+
+.about__hero h1 {
+  @include heading($fs-3xl);
+  margin: 0 0 $space-lg;
+  line-height: 1.15;
+
+  @include mobile { font-size: $fs-xl; }
+}
+
+.about__hero p {
+  color: $text-secondary;
+  font-size: $fs-lg;
+  line-height: 1.6;
+  margin: 0;
+
+  @include mobile { font-size: $fs-base; }
+}
+
+.about__stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $space-lg;
+  margin-bottom: $space-3xl;
+
+  @include tablet { grid-template-columns: repeat(2, 1fr); }
+  @include mobile { grid-template-columns: repeat(2, 1fr); }
+}
+
+.about__stat {
+  @include panel;
+  padding: $space-lg;
+  text-align: center;
+}
+
+.about__stat-value {
+  display: block;
+  font-size: $fs-2xl;
+  font-weight: $fw-bold;
+  color: $accent;
+  margin-bottom: $space-xs;
+}
+
+.about__stat-label {
+  font-size: $fs-sm;
+  color: $text-tertiary;
+}
+
+.about__section {
+  margin-bottom: $space-3xl;
+
+  h2 {
+    @include heading($fs-xl);
+    margin: 0 0 $space-xl;
+  }
+}
+
+.about__content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $space-xl;
+  align-items: center;
+
+  @include mobile { grid-template-columns: 1fr; }
+}
+
+.about__text p {
+  color: $text-secondary;
+  font-size: $fs-base;
+  line-height: 1.7;
+  margin: 0 0 $space-base;
+}
+
+.about__image-placeholder {
+  height: 300px;
+  @include panel;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .material-symbols-rounded { font-size: 64px; color: $text-tertiary; }
+}
+
+.about__values {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $space-lg;
+
+  @include mobile { grid-template-columns: 1fr; }
+}
+
+.value-card {
+  @include card;
+  padding: $space-lg;
+
+  .material-symbols-rounded {
+    font-size: 32px;
+    color: $accent;
+    margin-bottom: $space-md;
+  }
+
+  h3 {
+    margin: 0 0 $space-sm;
+    font-size: $fs-md;
+    font-weight: $fw-semibold;
+    color: $text-primary;
+  }
+
+  p {
+    margin: 0;
+    font-size: $fs-sm;
+    color: $text-secondary;
+    line-height: 1.6;
+  }
+}
+
+.about__team {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $space-lg;
+
+  @include mobile { grid-template-columns: 1fr; }
+}
+
+.team-card {
+  @include card;
+  padding: $space-lg;
+  text-align: center;
+}
+
+.team-card__avatar {
+  width: 72px;
+  height: 72px;
+  background: $accent-muted;
+  border-radius: $radius-round;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto $space-md;
+
+  .material-symbols-rounded { font-size: 32px; color: $accent; }
+}
+
+.team-card h3 {
+  margin: 0 0 $space-xs;
+  font-size: $fs-base;
+  font-weight: $fw-semibold;
+  color: $text-primary;
+}
+
+.team-card p {
+  margin: 0;
+  font-size: $fs-sm;
+  color: $text-tertiary;
+}

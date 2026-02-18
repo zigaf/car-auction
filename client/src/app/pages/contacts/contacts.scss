@@ -1,0 +1,133 @@
+@use 'styles/variables' as *;
+@use 'styles/mixins' as *;
+
+.contacts-page {
+  min-height: calc(100vh - #{$header-height});
+  padding: $space-2xl 0 $space-3xl;
+}
+
+.contacts-page__header {
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto $space-2xl;
+}
+
+.contacts-page__badge {
+  @include badge;
+  margin-bottom: $space-lg;
+}
+
+.contacts-page__header h1 {
+  @include heading($fs-3xl);
+  margin: 0 0 $space-md;
+
+  @include mobile { font-size: $fs-xl; }
+}
+
+.contacts-page__header p {
+  color: $text-secondary;
+  font-size: $fs-md;
+  margin: 0;
+}
+
+.contacts__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $space-2xl;
+  max-width: 960px;
+  margin: 0 auto;
+
+  @include mobile { grid-template-columns: 1fr; }
+}
+
+.contacts__info {
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+}
+
+.contact-card {
+  @include card;
+  padding: $space-lg;
+  display: flex;
+  align-items: flex-start;
+  gap: $space-md;
+
+  .material-symbols-rounded {
+    font-size: 28px;
+    color: $accent;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  h3 {
+    margin: 0 0 $space-xs;
+    font-size: $fs-base;
+    font-weight: $fw-semibold;
+    color: $text-primary;
+  }
+
+  a, span {
+    font-size: $fs-sm;
+    color: $text-secondary;
+  }
+
+  a:hover { color: $accent; }
+}
+
+.contacts__form-wrap {
+  @include panel;
+  padding: $space-xl;
+
+  h2 {
+    @include heading($fs-lg);
+    margin: 0 0 $space-lg;
+  }
+}
+
+.contacts__form {
+  display: flex;
+  flex-direction: column;
+  gap: $space-base;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: $space-xs;
+
+  label {
+    font-size: $fs-sm;
+    font-weight: $fw-medium;
+    color: $text-secondary;
+  }
+}
+
+.form-input {
+  background: $bg-input;
+  border: 1px solid $border-color;
+  border-radius: $radius-base;
+  color: $text-primary;
+  font-family: $font-ui;
+  font-size: $fs-base;
+  padding: $space-md;
+  transition: border-color $transition-fast;
+
+  &:focus {
+    outline: none;
+    border-color: $accent;
+    box-shadow: 0 0 12px $accent-muted;
+  }
+
+  &::placeholder { color: $text-tertiary; }
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.contacts__submit {
+  @include btn-primary;
+  align-self: flex-start;
+}

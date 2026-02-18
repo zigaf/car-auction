@@ -1,0 +1,36 @@
+<div class="orders">
+  <h1 class="page-title">Мои заказы</h1>
+
+  @for (order of orders; track order.id) {
+    <div class="order-card">
+      <div class="order-card__header">
+        <div class="order-card__info">
+          <span class="order-card__id mono">{{ order.id }}</span>
+          <h3>{{ order.brand }} {{ order.model }} {{ order.year }}</h3>
+        </div>
+        <span class="order-card__total mono">{{ order.total | number }} EUR</span>
+      </div>
+
+      <!-- Progress -->
+      <div class="order-progress">
+        @for (status of order.statuses; track status.label; let i = $index) {
+          <div class="progress-step" [class.progress-step--done]="status.done" [class.progress-step--active]="i === order.currentStatus">
+            <div class="progress-step__dot">
+              @if (status.done) {
+                <span class="material-symbols-rounded">check</span>
+              }
+            </div>
+            <span class="progress-step__label">{{ status.label }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  @if (orders.length === 0) {
+    <div class="empty-state">
+      <span class="material-symbols-rounded">local_shipping</span>
+      <p>У вас пока нет заказов</p>
+    </div>
+  }
+</div>

@@ -1,0 +1,171 @@
+@use 'styles/variables' as *;
+@use 'styles/mixins' as *;
+
+.page-title {
+  @include heading($fs-xl);
+  margin: 0 0 $space-xl;
+}
+
+.section-title {
+  font-size: $fs-lg;
+  font-weight: $fw-semibold;
+  color: $text-primary;
+  margin: 0 0 $space-lg;
+}
+
+.balance__header {
+  @include panel;
+  padding: $space-xl;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $space-xl;
+
+  @include mobile {
+    flex-direction: column;
+    gap: $space-lg;
+    align-items: flex-start;
+  }
+}
+
+.balance__label {
+  display: block;
+  font-size: $fs-sm;
+  color: $text-tertiary;
+  margin-bottom: $space-xs;
+}
+
+.balance__amount {
+  font-size: 32px;
+  font-weight: $fw-bold;
+  color: $accent;
+}
+
+.balance__actions {
+  display: flex;
+  gap: $space-md;
+}
+
+.balance__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-md $space-lg;
+  border-radius: $radius-base;
+  font-family: $font-ui;
+  font-size: $fs-sm;
+  font-weight: $fw-semibold;
+  cursor: pointer;
+  transition: all $transition-fast;
+  border: none;
+
+  .material-symbols-rounded { font-size: 18px; }
+
+  &--deposit {
+    @include btn-primary;
+  }
+
+  &--withdraw {
+    @include btn-secondary;
+  }
+}
+
+.balance__table-wrapper {
+  @include panel;
+  padding: $space-lg;
+}
+
+.balance__table {
+  @include custom-scrollbar;
+  overflow-x: auto;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 100px 120px 1fr 140px 140px;
+  gap: $space-md;
+  padding: $space-sm $space-md;
+  font-size: $fs-xs;
+  font-weight: $fw-semibold;
+  color: $text-tertiary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid $border-color;
+
+  @include mobile {
+    display: none;
+  }
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 100px 120px 1fr 140px 140px;
+  gap: $space-md;
+  padding: $space-md;
+  align-items: center;
+  border-bottom: 1px solid $divider;
+  transition: background $transition-fast;
+
+  &:hover { background: $accent-subtle; }
+  &:last-child { border-bottom: none; }
+
+  @include mobile {
+    grid-template-columns: 1fr 1fr;
+    gap: $space-sm;
+  }
+}
+
+.table-row__date {
+  font-size: $fs-sm;
+  color: $text-tertiary;
+}
+
+.table-row__type {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  font-size: $fs-sm;
+  color: $text-secondary;
+}
+
+.type-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: $radius-round;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  .material-symbols-rounded { font-size: 16px; }
+
+  &--deposit { background: rgba(94, 237, 181, 0.12); color: $status-green; }
+  &--payment { background: rgba(240, 112, 112, 0.12); color: $status-red; }
+  &--commission { background: rgba(232, 192, 90, 0.12); color: $status-yellow; }
+  &--refund { background: rgba(91, 156, 245, 0.12); color: $status-blue; }
+}
+
+.table-row__desc {
+  font-size: $fs-sm;
+  color: $text-secondary;
+  @include truncate;
+
+  @include mobile { grid-column: 1 / -1; }
+}
+
+.table-row__amount {
+  font-size: $fs-sm;
+  font-weight: $fw-semibold;
+
+  &.positive { color: $status-green; }
+  &.negative { color: $status-red; }
+}
+
+.table-row__balance {
+  font-size: $fs-sm;
+  color: $text-primary;
+}
+
+.text-right {
+  text-align: right;
+}

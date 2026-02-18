@@ -1,0 +1,96 @@
+<div class="settings">
+  <h1 class="page-title">Настройки</h1>
+
+  <!-- Profile Section -->
+  <section class="settings__section">
+    <h2 class="section-title">Профиль</h2>
+    <div class="settings__panel">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Имя</label>
+          <div class="form-input form-input--readonly">{{ profile.firstName }}</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Фамилия</label>
+          <div class="form-input form-input--readonly">{{ profile.lastName }}</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <div class="form-input form-input--readonly">{{ profile.email }}</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Телефон</label>
+          <div class="form-input form-input--readonly">{{ profile.phone }}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Regional Section -->
+  <section class="settings__section">
+    <h2 class="section-title">Региональные настройки</h2>
+    <div class="settings__panel">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Страна</label>
+          <div class="select-wrapper">
+            <select class="form-select" [(ngModel)]="selectedCountry">
+              @for (country of countries; track country.code) {
+                <option [value]="country.code">{{ country.flag }} {{ country.name }}</option>
+              }
+            </select>
+            <span class="material-symbols-rounded select-arrow">expand_more</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Язык</label>
+          <div class="lang-selector">
+            @for (lang of languages; track lang.code) {
+              <button class="lang-btn" [class.lang-btn--active]="selectedLanguage === lang.code" (click)="selectedLanguage = lang.code">
+                {{ lang.label }}
+              </button>
+            }
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Валюта</label>
+          <div class="currency-selector">
+            @for (cur of currencies; track cur.code) {
+              <button class="currency-btn" [class.currency-btn--active]="selectedCurrency === cur.code" (click)="selectedCurrency = cur.code">
+                <span class="currency-btn__symbol">{{ cur.symbol }}</span>
+                {{ cur.code }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Notifications Section -->
+  <section class="settings__section">
+    <h2 class="section-title">Уведомления</h2>
+    <div class="settings__panel">
+      <div class="notif-matrix">
+        <div class="notif-matrix__header">
+          <span></span>
+          <span class="notif-matrix__col-label">Email</span>
+          <span class="notif-matrix__col-label">Push</span>
+        </div>
+        @for (setting of notificationSettings; track setting.label; let i = $index) {
+          <div class="notif-matrix__row">
+            <span class="notif-matrix__label">{{ setting.label }}</span>
+            <label class="toggle">
+              <input type="checkbox" [checked]="setting.email" (change)="toggleNotification(i, 'email')" />
+              <span class="toggle__track"></span>
+            </label>
+            <label class="toggle">
+              <input type="checkbox" [checked]="setting.push" (change)="toggleNotification(i, 'push')" />
+              <span class="toggle__track"></span>
+            </label>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+</div>

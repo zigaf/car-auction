@@ -1,0 +1,133 @@
+@use 'styles/variables' as *;
+@use 'styles/mixins' as *;
+
+.page-title {
+  @include heading($fs-xl);
+  margin: 0 0 $space-xl;
+}
+
+.order-card {
+  @include panel;
+  padding: $space-lg;
+  margin-bottom: $space-lg;
+}
+
+.order-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: $space-xl;
+
+  @include mobile { flex-direction: column; gap: $space-sm; }
+}
+
+.order-card__id {
+  font-size: $fs-sm;
+  color: $text-tertiary;
+}
+
+.order-card__info h3 {
+  margin: $space-xs 0 0;
+  font-size: $fs-lg;
+  font-weight: $fw-semibold;
+  color: $text-primary;
+}
+
+.order-card__total {
+  font-size: $fs-xl;
+  font-weight: $fw-bold;
+  color: $accent;
+}
+
+.order-progress {
+  display: flex;
+  gap: 0;
+
+  @include mobile {
+    flex-direction: column;
+    gap: $space-sm;
+  }
+}
+
+.progress-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    width: 100%;
+    height: 2px;
+    background: $border-color;
+    z-index: 0;
+  }
+
+  &:last-child::before { display: none; }
+
+  &--done::before { background: $accent; }
+  &--active::before { background: linear-gradient(90deg, $accent 50%, $border-color 50%); }
+
+  @include mobile {
+    flex-direction: row;
+    gap: $space-md;
+    align-items: center;
+
+    &::before {
+      top: auto;
+      left: 12px;
+      width: 2px;
+      height: 100%;
+    }
+  }
+}
+
+.progress-step__dot {
+  width: 24px;
+  height: 24px;
+  border-radius: $radius-round;
+  background: $bg-elevated;
+  border: 2px solid $border-color;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  transition: all $transition-base;
+
+  .material-symbols-rounded { font-size: 14px; color: #FFFFFF; }
+
+  .progress-step--done & {
+    background: $accent;
+    border-color: $accent;
+  }
+
+  .progress-step--active & {
+    border-color: $accent;
+    box-shadow: 0 0 12px rgba($accent, 0.3);
+  }
+}
+
+.progress-step__label {
+  font-size: $fs-xs;
+  color: $text-tertiary;
+  margin-top: $space-sm;
+  text-align: center;
+
+  .progress-step--done & { color: $accent; }
+  .progress-step--active & { color: $text-primary; font-weight: $fw-semibold; }
+
+  @include mobile { margin-top: 0; }
+}
+
+.empty-state {
+  text-align: center;
+  padding: $space-3xl;
+  color: $text-tertiary;
+
+  .material-symbols-rounded { font-size: 48px; margin-bottom: $space-md; }
+  p { margin: 0; font-size: $fs-base; }
+}

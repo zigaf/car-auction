@@ -1,0 +1,49 @@
+<div class="dashboard">
+  <h1 class="page-title">Обзор</h1>
+
+  <div class="dashboard__cards">
+    <div class="dash-card dash-card--accent">
+      <span class="material-symbols-rounded">account_balance_wallet</span>
+      <div class="dash-card__content">
+        <span class="dash-card__value mono">{{ balance | number }} EUR</span>
+        <span class="dash-card__label">Баланс</span>
+      </div>
+    </div>
+    <a routerLink="/cabinet/bids" class="dash-card">
+      <span class="material-symbols-rounded">gavel</span>
+      <div class="dash-card__content">
+        <span class="dash-card__value mono">{{ activeBids }}</span>
+        <span class="dash-card__label">Активные ставки</span>
+      </div>
+    </a>
+    <a routerLink="/cabinet/orders" class="dash-card">
+      <span class="material-symbols-rounded">local_shipping</span>
+      <div class="dash-card__content">
+        <span class="dash-card__value mono">{{ pendingOrders }}</span>
+        <span class="dash-card__label">Текущие заказы</span>
+      </div>
+    </a>
+    <a routerLink="/cabinet/notifications" class="dash-card">
+      <span class="material-symbols-rounded">notifications</span>
+      <div class="dash-card__content">
+        <span class="dash-card__value mono">{{ notifications }}</span>
+        <span class="dash-card__label">Уведомления</span>
+      </div>
+    </a>
+  </div>
+
+  <div class="dashboard__actions">
+    <a routerLink="/catalog" class="action-btn action-btn--primary">
+      <span class="material-symbols-rounded">directions_car</span>
+      Каталог
+    </a>
+    <a routerLink="/live" class="action-btn action-btn--secondary">
+      <span class="material-symbols-rounded">gavel</span>
+      Live торги
+    </a>
+    <a routerLink="/cabinet/documents" class="action-btn action-btn--secondary">
+      <span class="material-symbols-rounded">description</span>
+      Документы
+    </a>
+  </div>
+</div>

@@ -1,0 +1,40 @@
+<header class="header">
+  <div class="header__inner">
+    <a routerLink="/" class="header__logo">
+      <span class="header__logo-badge">CA</span>
+      <span class="header__logo-text">Car<span class="accent">Auction</span></span>
+    </a>
+
+    <nav class="header__nav">
+      <a routerLink="/catalog" routerLinkActive="active" class="header__nav-link">Аукционы</a>
+      <a routerLink="/live" routerLinkActive="active" class="header__nav-link">Результаты</a>
+      <a routerLink="/about" routerLinkActive="active" class="header__nav-link">О нас</a>
+    </nav>
+
+    <div class="header__search">
+      <span class="material-symbols-rounded header__search-icon">search</span>
+      <input type="text" placeholder="Поиск по марке, модели..." class="header__search-input">
+    </div>
+
+    <div class="header__actions">
+      <button class="header__icon-btn" aria-label="Уведомления">
+        <span class="material-symbols-rounded">notifications</span>
+        <span class="header__icon-badge">3</span>
+      </button>
+
+      <button class="header__icon-btn" aria-label="Избранное">
+        <span class="material-symbols-rounded">favorite</span>
+      </button>
+
+      <a routerLink="/login" class="header__login-btn">
+        <span class="material-symbols-rounded">person</span>
+        <span>Войти</span>
+      </a>
+
+    </div>
+
+    <button class="header__burger" (click)="toggleMenu()">
+      <span class="material-symbols-rounded">menu</span>
+    </button>
+  </div>
+</header>

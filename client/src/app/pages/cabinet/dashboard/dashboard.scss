@@ -1,0 +1,79 @@
+@use 'styles/variables' as *;
+@use 'styles/mixins' as *;
+
+.page-title {
+  @include heading($fs-xl);
+  margin: 0 0 $space-xl;
+}
+
+.dashboard__cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $space-md;
+  margin-bottom: $space-xl;
+
+  @include tablet { grid-template-columns: repeat(2, 1fr); }
+  @include mobile { grid-template-columns: 1fr; }
+}
+
+.dash-card {
+  @include card;
+  padding: $space-lg;
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+  text-decoration: none;
+  color: inherit;
+
+  .material-symbols-rounded {
+    font-size: 28px;
+    color: $text-tertiary;
+  }
+
+  &--accent {
+    border-color: $accent-muted;
+    background: $accent-subtle;
+
+    .material-symbols-rounded { color: $accent; }
+  }
+}
+
+.dash-card__value {
+  display: block;
+  font-size: $fs-xl;
+  font-weight: $fw-bold;
+  color: $text-primary;
+}
+
+.dash-card__label {
+  font-size: $fs-sm;
+  color: $text-tertiary;
+}
+
+.dashboard__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-md;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-md $space-lg;
+  border-radius: $radius-base;
+  font-size: $fs-sm;
+  font-weight: $fw-semibold;
+  text-decoration: none;
+  transition: all $transition-fast;
+
+  .material-symbols-rounded { font-size: 20px; }
+
+  &--primary {
+    @include btn-primary;
+  }
+
+  &--secondary {
+    @include btn-secondary;
+  }
+}

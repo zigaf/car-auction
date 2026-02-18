@@ -1,0 +1,31 @@
+<div class="faq-page">
+  <div class="container">
+    <div class="faq-page__header">
+      <span class="faq-page__badge">Помощь</span>
+      <h1>Часто задаваемые вопросы</h1>
+      <p>Ответы на самые популярные вопросы о работе платформы</p>
+    </div>
+
+    <div class="faq-list">
+      @for (faq of faqs; track faq.question) {
+        <div class="faq-item" [class.faq-item--open]="faq.open">
+          <button class="faq-item__header" (click)="toggle(faq)">
+            <span class="faq-item__question">{{ faq.question }}</span>
+            <span class="material-symbols-rounded faq-item__icon">{{ faq.open ? 'expand_less' : 'expand_more' }}</span>
+          </button>
+          @if (faq.open) {
+            <div class="faq-item__answer">
+              <p>{{ faq.answer }}</p>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="faq-page__cta">
+      <h3>Не нашли ответ?</h3>
+      <p>Свяжитесь с нами, и мы поможем</p>
+      <a routerLink="/contacts" class="faq-page__cta-btn">Связаться</a>
+    </div>
+  </div>
+</div>

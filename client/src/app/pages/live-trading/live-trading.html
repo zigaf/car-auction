@@ -1,0 +1,186 @@
+<div class="live">
+  <!-- Stats bar -->
+  <div class="live__stats">
+    <div class="stat">
+      <span class="stat__dot"></span>
+      <span class="stat__value mono">{{ stats.activeAuctions }}</span>
+      <span class="stat__label">аукционов</span>
+    </div>
+    <div class="stat">
+      <span class="material-symbols-rounded">group</span>
+      <span class="stat__value mono">{{ stats.usersOnline }}</span>
+      <span class="stat__label">онлайн</span>
+    </div>
+    <div class="stat">
+      <span class="material-symbols-rounded">payments</span>
+      <span class="stat__value mono">{{ stats.dailyVolume | number }}</span>
+      <span class="stat__label">EUR за день</span>
+    </div>
+    <div class="stat">
+      <span class="material-symbols-rounded">gavel</span>
+      <span class="stat__value mono">{{ stats.dailyBids }}</span>
+      <span class="stat__label">ставок</span>
+    </div>
+  </div>
+
+  <div class="live__columns">
+    <!-- Left: Active Lot -->
+    <div class="live__lot">
+      <!-- Car image -->
+      <div class="lot__image">
+        <div class="lot__image-placeholder">
+          <span class="material-symbols-rounded">directions_car</span>
+        </div>
+        <div class="lot__image-badges">
+          <span class="lot__badge lot__badge--docs">{{ activeLot.documentStatus }}</span>
+          <span class="lot__badge lot__badge--damage">{{ activeLot.damageType }}</span>
+        </div>
+      </div>
+
+      <!-- Timer + Price -->
+      <div class="lot__price-row">
+        <div class="lot__timer" [class]="getTimerClass(activeLot.endTime)">
+          <span class="material-symbols-rounded">timer</span>
+          <span class="mono">{{ getTimeLeft(activeLot.endTime) }}</span>
+        </div>
+        <div class="lot__current-bid">
+          <span class="lot__bid-label">Текущая ставка</span>
+          <span class="lot__bid-value mono">{{ activeLot.currentBid | number }} EUR</span>
+        </div>
+      </div>
+
+      <!-- Specs mini grid -->
+      <div class="lot__specs">
+        <div class="lot__spec">
+          <span class="material-symbols-rounded">speed</span>
+          <span>{{ activeLot.engine }}</span>
+        </div>
+        <div class="lot__spec">
+          <span class="material-symbols-rounded">settings</span>
+          <span>{{ activeLot.transmission }}</span>
+        </div>
+        <div class="lot__spec">
+          <span class="material-symbols-rounded">swap_driving_apps</span>
+          <span>{{ activeLot.drivetrain }}</span>
+        </div>
+        <div class="lot__spec">
+          <span class="material-symbols-rounded">speed</span>
+          <span>{{ activeLot.mileage | number }} км</span>
+        </div>
+        <div class="lot__spec">
+          <span class="material-symbols-rounded">local_gas_station</span>
+          <span>{{ activeLot.fuel }}</span>
+        </div>
+        <div class="lot__spec">
+          <span class="material-symbols-rounded">palette</span>
+          <span>{{ activeLot.color }}</span>
+        </div>
+      </div>
+
+      <!-- Bidder strip -->
+      <div class="lot__bidder-strip">
+        <span class="lot__bidder-flag">{{ activeLot.leaderFlag }}</span>
+        <span class="lot__bidder-id">{{ activeLot.leaderId }}</span>
+        <span class="lot__bidder-increment mono accent-text">+{{ activeLot.lastIncrement }} EUR</span>
+      </div>
+
+      <!-- Quick bid buttons -->
+      <div class="lot__quick-bids">
+        <button class="qbid" (click)="quickBid(100)">+100</button>
+        <button class="qbid" (click)="quickBid(250)">+250</button>
+        <button class="qbid" (click)="quickBid(500)">+500</button>
+        <button class="qbid" (click)="quickBid(1000)">+1 000</button>
+      </div>
+
+      <!-- Bid input -->
+      <div class="lot__bid-form">
+        <div class="lot__bid-input-wrap">
+          <input type="number" [(ngModel)]="customBidAmount" [placeholder]="'Мін. ' + (activeLot.currentBid + activeLot.bidStep)" class="lot__bid-input mono">
+          <span class="lot__bid-currency mono">EUR</span>
+        </div>
+        <button class="lot__bid-btn">
+          <span class="material-symbols-rounded">gavel</span>
+          Ставка
+        </button>
+        <button class="lot__buynow-btn">
+          <span class="material-symbols-rounded">bolt</span>
+          Buy Now {{ activeLot.buyNowPrice | number }}
+        </button>
+      </div>
+
+      <!-- Bid history (last 5) -->
+      <div class="lot__history">
+        @for (bid of bidHistory; track bid.amount) {
+          <div class="lot__history-item">
+            <span class="lot__history-flag">{{ bid.flag }}</span>
+            <span class="lot__history-bidder">{{ bid.bidderId }}</span>
+            <span class="lot__history-amount mono">{{ bid.amount | number }}</span>
+            <span class="lot__history-time">{{ bid.time }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Middle: Auction List -->
+    <div class="live__list" [class.live__list--show]="activeTab === 'list'">
+      <div class="live__list-header">
+        <h3>Аукционы</h3>
+        <span class="live__list-count mono">{{ auctionList.length }}</span>
+      </div>
+      <div class="live__list-scroll">
+        @for (item of auctionList; track item.id) {
+          <div class="auction-row" [class.auction-row--active]="item.active" (click)="selectLot(item)">
+            <div class="auction-row__thumb">
+              <span class="material-symbols-rounded">directions_car</span>
+            </div>
+            <div class="auction-row__info">
+              <span class="auction-row__name">{{ item.brand }} {{ item.model }}</span>
+              <span class="auction-row__meta">{{ item.year }} · {{ item.mileage | number }} км · {{ item.fuel }}</span>
+            </div>
+            <div class="auction-row__right">
+              <span class="auction-row__price mono">{{ item.currentBid | number }}</span>
+              <span class="auction-row__timer mono" [class]="getTimerClass(item.endTime)">{{ getTimeLeft(item.endTime) }}</span>
+              <div class="auction-row__bottom">
+                <span class="auction-row__bids">
+                  <span class="material-symbols-rounded">gavel</span>
+                  {{ item.bidsCount }}
+                </span>
+                <span class="auction-row__flag">{{ item.leaderFlag }}</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Right: Live Feed -->
+    <div class="live__feed" [class.live__feed--show]="activeTab === 'feed'">
+      <div class="live__feed-header">
+        <h3>Live Feed</h3>
+        <span class="live__feed-dot"></span>
+      </div>
+      <div class="live__feed-scroll">
+        @for (entry of liveFeed; track $index) {
+          <div class="feed-item">
+            <span class="feed-item__flag">{{ entry.flag }}</span>
+            <span class="feed-item__car">{{ entry.car }}</span>
+            <span class="feed-item__increment mono accent-text">{{ entry.increment }}</span>
+            <span class="feed-item__time">{{ entry.time }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile tabs -->
+  <div class="live__mobile-tabs">
+    <button [class.active]="activeTab === 'list'" (click)="activeTab = 'list'">
+      <span class="material-symbols-rounded">list</span>
+      Аукционы
+    </button>
+    <button [class.active]="activeTab === 'feed'" (click)="activeTab = 'feed'">
+      <span class="material-symbols-rounded">rss_feed</span>
+      Live Feed
+    </button>
+  </div>
+</div>
