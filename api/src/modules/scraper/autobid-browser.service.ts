@@ -159,7 +159,7 @@ export class AutobidBrowserService implements OnModuleDestroy {
       let totalPages: number | null = null;
 
       // Look for total count text (e.g., "Найдено: 1234" or "1234 результатов")
-      const bodyText = document.body.innerText;
+      const bodyText = document.body?.innerText || '';
       const countMatch = bodyText.match(
         /(?:Найдено|Результат|Gefunden|Results?)[:\s]*(\d[\d\s.,]*)/i,
       );
