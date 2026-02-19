@@ -38,6 +38,11 @@ export class BcaBrowserService implements OnModuleDestroy {
         '--disable-blink-features=AutomationControlled',
         '--no-sandbox',
         '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--disable-extensions',
+        '--single-process',
+        '--no-zygote',
       ],
     });
 
