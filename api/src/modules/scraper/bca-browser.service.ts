@@ -83,9 +83,15 @@ export class BcaBrowserService implements OnModuleDestroy {
         VehicleResults: json.VehicleResults,
         TotalVehicleCount: json.TotalVehicleCount,
         PageSize: json.PageSize,
+        _topLevelKeys: Object.keys(json),
+        _sampleVehicle: json.VehicleResults?.[0] ? JSON.stringify(json.VehicleResults[0]).substring(0, 2000) : null,
       };
     }, pageNumber);
 
+    this.logger.log(`API top-level keys: ${JSON.stringify((result as any)._topLevelKeys)}`);
+    if ((result as any)._sampleVehicle) {
+      this.logger.log(`Sample vehicle: ${(result as any)._sampleVehicle}`);
+    }
     this.logger.log(
       `Page ${pageNumber}: ${result.VehicleResults?.length || 0} vehicles (total: ${result.TotalVehicleCount})`,
     );
