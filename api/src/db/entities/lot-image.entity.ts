@@ -27,8 +27,8 @@ export class LotImage {
   @Column({ name: 'original_url', type: 'varchar', nullable: true })
   originalUrl: string | null;
 
-  @Column({ name: 'bca_doc_id', type: 'varchar', nullable: true })
-  bcaDocId: string | null;
+  @Column({ name: 'source_image_id', type: 'varchar', nullable: true })
+  sourceImageId: string | null;
 
   @Column({ type: 'enum', enum: ImageCategory, default: ImageCategory.EXTERIOR })
   category: ImageCategory;

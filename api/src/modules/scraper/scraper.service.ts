@@ -10,10 +10,10 @@ import { Lot } from '../../db/entities/lot.entity';
 import { LotImage } from '../../db/entities/lot-image.entity';
 import { ScraperRun } from '../../db/entities/scraper-run.entity';
 import { ScraperRunStatus } from '../../common/enums/scraper-run-status.enum';
-import { BcaBrowserService } from './bca-browser.service';
-import { BcaDataMapperService } from './bca-data-mapper.service';
+import { AutobidBrowserService } from './autobid-browser.service';
+import { AutobidDataMapperService } from './autobid-data-mapper.service';
 import { PhotoDownloadService } from './photo-download.service';
-import { BcaVehicle } from './interfaces/bca-vehicle.interface';
+import { AutobidVehicleCard } from './interfaces/autobid-vehicle.interface';
 
 @Injectable()
 export class ScraperService {
@@ -27,8 +27,8 @@ export class ScraperService {
     private readonly lotImageRepository: Repository<LotImage>,
     @InjectRepository(ScraperRun)
     private readonly scraperRunRepository: Repository<ScraperRun>,
-    private readonly browserService: BcaBrowserService,
-    private readonly dataMapper: BcaDataMapperService,
+    private readonly browserService: AutobidBrowserService,
+    private readonly dataMapper: AutobidDataMapperService,
     private readonly photoService: PhotoDownloadService,
   ) {}
 
@@ -62,22 +62,18 @@ export class ScraperService {
     await this.scraperRunRepository.save(run);
 
     try {
-      // Initialize browser and establish session
+      // Initialize browser
       await this.browserService.initialize();
 
-      // Fetch first page to get total count
-      const firstPage = await this.browserService.fetchVehiclePage(1);
-      const totalVehicles = firstPage.TotalVehicleCount || 0;
-      const pageSize = firstPage.PageSize || 50;
-      const vehiclesOnFirstPage = firstPage.VehicleResults?.length || 0;
-      const totalPages = totalVehicles > 0
-        ? Math.ceil(totalVehicles / pageSize)
-        : vehiclesOnFirstPage > 0 ? 1 : 0;
+      // Phase 1: Fetch first search page to discover pagination
+      const firstPage = await this.browserService.fetchSearchPage(1);
+      const totalVehiclesOnPage = firstPage.vehicles.length;
 
       this.logger.log(
-        `BCA response: TotalVehicleCount=${firstPage.TotalVehicleCount}, PageSize=${firstPage.PageSize}, vehiclesOnPage=${vehiclesOnFirstPage}`,
+        `Search page 1: ${totalVehiclesOnPage} vehicles, totalCount=${firstPage.totalCount}, totalPages=${firstPage.totalPages}`,
       );
 
+      const totalPages = firstPage.totalPages || (totalVehiclesOnPage > 0 ? 1 : 0);
       const configMaxPages = parseInt(process.env.SCRAPER_MAX_PAGES || '0', 10);
       const pagesToScrape = maxPages
         ? Math.min(maxPages, totalPages || maxPages)
@@ -86,28 +82,26 @@ export class ScraperService {
           : totalPages;
 
       run.totalPages = pagesToScrape || 1;
-      run.lotsFound = totalVehicles || vehiclesOnFirstPage;
+      run.lotsFound = firstPage.totalCount || totalVehiclesOnPage;
       await this.scraperRunRepository.save(run);
 
       this.logger.log(
-        `Scraping ${pagesToScrape} pages (${totalVehicles} total vehicles)`,
+        `Will scrape ${pagesToScrape} pages (${run.lotsFound} total vehicles)`,
       );
 
-      // Process first page
-      await this.processVehicles(firstPage.VehicleResults, run);
+      // Phase 2: Process vehicles from page 1
+      await this.processVehicleCards(firstPage.vehicles, run);
       run.pagesScraped = 1;
       await this.scraperRunRepository.save(run);
 
-      // Fetch remaining pages with rate limiting
+      // Fetch and process remaining pages
       for (let page = 2; page <= pagesToScrape; page++) {
-        await this.randomDelay(
-          parseInt(process.env.SCRAPER_PAGE_DELAY_MIN || '3000', 10),
-          parseInt(process.env.SCRAPER_PAGE_DELAY_MAX || '8000', 10),
-        );
+        // Crawl delay between pages (robots.txt: 10s)
+        await this.crawlDelay();
 
         try {
-          const pageData = await this.browserService.fetchVehiclePage(page);
-          await this.processVehicles(pageData.VehicleResults, run);
+          const pageData = await this.browserService.fetchSearchPage(page);
+          await this.processVehicleCards(pageData.vehicles, run);
         } catch (error) {
           run.errorsCount++;
           this.logger.warn(`Failed to process page ${page}: ${error.message}`);
@@ -171,27 +165,62 @@ export class ScraperService {
     return this.scraperRunRepository.findOne({ where: { id } });
   }
 
-  private async processVehicles(
-    vehicles: BcaVehicle[],
+  /**
+   * Process vehicle cards from a search results page.
+   * For each card: visit detail page, extract full data, save to DB.
+   */
+  private async processVehicleCards(
+    cards: AutobidVehicleCard[],
     run: ScraperRun,
   ): Promise<void> {
-    for (const vehicle of vehicles) {
+    for (const card of cards) {
       try {
+        const vehicleId = card.vehicleId;
+
+        // Check if lot already exists (dedup by sourceId)
         let lot = await this.lotRepository.findOne({
-          where: { bcaLotId: vehicle.LotId },
+          where: { sourceId: vehicleId },
           relations: ['images'],
         });
 
-        const lotData = this.dataMapper.mapVehicleToLot(vehicle);
+        // Skip recently updated lots (updated within last 12 hours)
+        if (lot && this.isRecentlyUpdated(lot, 12)) {
+          run.lotsUpdated++;
+          this.logger.debug(`Skipping recently updated lot: ${vehicleId}`);
+          continue;
+        }
+
+        // Crawl delay before visiting detail page
+        await this.crawlDelay();
+
+        // Fetch full detail from the vehicle page
+        const detail = await this.browserService.fetchVehicleDetail(
+          card.detailUrl,
+        );
+
+        // Map to lot entity
+        const lotData = this.dataMapper.mapVehicleToLot(
+          detail,
+          vehicleId,
+          card.detailUrl,
+        );
+
+        // Use card price as fallback if detail page price is missing
+        if (!lotData.startingBid && card.price) {
+          lotData.startingBid = this.dataMapper.parseGermanPrice(card.price);
+        }
 
         if (lot) {
           // Update existing lot
           await this.lotRepository.update(lot.id, lotData as any);
           run.lotsUpdated++;
 
-          // Save image refs for lots that have no images yet
-          if ((!lot.images || lot.images.length === 0) && (vehicle.ImageUrl || vehicle.Imagekey)) {
-            await this.saveImageRefsFromApi(lot, vehicle, run);
+          // Add images if lot has none
+          if (
+            (!lot.images || lot.images.length === 0) &&
+            detail.imageUrls.length > 0
+          ) {
+            await this.saveImageRefs(lot, detail.imageUrls, run);
           }
         } else {
           // Create new lot
@@ -199,35 +228,27 @@ export class ScraperService {
           lot = await this.lotRepository.save(lot);
           run.lotsCreated++;
 
-          // Save image refs from API response (fast, no extra navigation)
-          if (vehicle.ImageUrl || vehicle.Imagekey) {
-            await this.saveImageRefsFromApi(lot, vehicle, run);
-          }
-
-          // Optionally download full gallery photos (slow, navigates to each lot page)
-          if (process.env.SCRAPER_DOWNLOAD_PHOTOS === 'true') {
-            await this.downloadPhotosForLot(lot, vehicle, run);
+          // Save image references
+          if (detail.imageUrls.length > 0) {
+            await this.saveImageRefs(lot, detail.imageUrls, run);
           }
         }
       } catch (error) {
         run.errorsCount++;
         this.logger.warn(
-          `Failed to process vehicle ${vehicle.VIN || vehicle.LotId}: ${error.message}`,
+          `Failed to process vehicle ${card.vehicleId}: ${error.message}`,
         );
       }
     }
   }
 
-  private async saveImageRefsFromApi(
+  private async saveImageRefs(
     lot: Lot,
-    vehicle: BcaVehicle,
+    imageUrls: string[],
     run: ScraperRun,
   ): Promise<void> {
     try {
-      const imageRefs = this.photoService.createImageRefsFromApi(
-        vehicle.ImageUrl,
-        vehicle.Imagekey,
-      );
+      const imageRefs = this.photoService.createImageRefsFromUrls(imageUrls);
 
       for (const img of imageRefs) {
         const lotImage = this.lotImageRepository.create({
@@ -245,49 +266,19 @@ export class ScraperService {
     }
   }
 
-  private async downloadPhotosForLot(
-    lot: Lot,
-    vehicle: BcaVehicle,
-    run: ScraperRun,
-  ): Promise<void> {
-    try {
-      // Rate limit before navigating to lot page
-      await this.randomDelay(
-        parseInt(process.env.SCRAPER_PAGE_DELAY_MIN || '3000', 10),
-        parseInt(process.env.SCRAPER_PAGE_DELAY_MAX || '8000', 10),
-      );
-
-      // Extract docIds by navigating to lot page
-      const docIds = await this.browserService.extractPhotoDocIds(
-        vehicle.ViewLotUrl,
-      );
-
-      if (docIds.length > 0 || vehicle.ImageUrl) {
-        const imageData = await this.photoService.downloadLotPhotos(
-          lot.id,
-          vehicle.VIN || lot.id,
-          docIds,
-          vehicle.ImageUrl,
-        );
-
-        for (const img of imageData) {
-          const lotImage = this.lotImageRepository.create({
-            ...img,
-            lotId: lot.id,
-          });
-          await this.lotImageRepository.save(lotImage);
-          run.imagesDownloaded++;
-        }
-      }
-    } catch (error) {
-      this.logger.warn(
-        `Failed to download photos for lot ${lot.id}: ${error.message}`,
-      );
-      run.errorsCount++;
-    }
+  private isRecentlyUpdated(lot: Lot, hours: number): boolean {
+    if (!lot.updatedAt) return false;
+    const threshold = new Date();
+    threshold.setHours(threshold.getHours() - hours);
+    return lot.updatedAt > threshold;
   }
 
-  private randomDelay(min: number, max: number): Promise<void> {
+  /**
+   * Crawl delay respecting robots.txt (10s) + random jitter
+   */
+  private crawlDelay(): Promise<void> {
+    const min = parseInt(process.env.SCRAPER_PAGE_DELAY_MIN || '10000', 10);
+    const max = parseInt(process.env.SCRAPER_PAGE_DELAY_MAX || '15000', 10);
     const ms = Math.floor(Math.random() * (max - min + 1)) + min;
     return new Promise((resolve) => setTimeout(resolve, ms));
   }

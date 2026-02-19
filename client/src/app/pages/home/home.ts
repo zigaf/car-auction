@@ -1,7 +1,10 @@
-import { Component, ChangeDetectorRef, afterNextRender } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
+import { forkJoin } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { LotService } from '../../core/services/lot.service';
+import { ILot, ILotStats, IBrandCount } from '../../models/lot.model';
 
 @Component({
   selector: 'app-home',
@@ -10,12 +13,15 @@ import { environment } from '../../../environments/environment';
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit {
+  private readonly lotService = inject(LotService);
+  private readonly cdr = inject(ChangeDetectorRef);
+
   loading = true;
-  lots: any[] = [];
-  recentLots: any[] = [];
-  brands: { brand: string; count: number }[] = [];
-  stats = { totalLots: 0, totalBrands: 0, countries: 0, withPhotos: 0 };
+  lots: ILot[] = [];
+  recentLots: ILot[] = [];
+  brands: IBrandCount[] = [];
+  stats: ILotStats = { totalLots: 0, totalBrands: 0, countries: 0, withPhotos: 0 };
 
   scraperLoading = false;
   scraperMessage = '';
@@ -33,56 +39,43 @@ export class HomeComponent {
 
   popularTags = ['Porsche 911', 'BMW M3', 'Mercedes W124', 'Land Cruiser', 'Ferrari'];
 
-  constructor(private cdr: ChangeDetectorRef) {
-    afterNextRender(() => {
-      this.loadData();
+  ngOnInit(): void {
+    this.loadData();
+  }
+
+  loadData(): void {
+    this.loading = true;
+
+    forkJoin({
+      lots: this.lotService.getAll({ limit: 6, sort: 'price_desc' }),
+      recentLots: this.lotService.getAll({ limit: 6, sort: 'date_desc' }),
+      brands: this.lotService.getBrands(),
+      stats: this.lotService.getStats(),
+    }).subscribe({
+      next: (result) => {
+        this.lots = result.lots.data || [];
+        this.recentLots = result.recentLots.data || [];
+        this.brands = result.brands || [];
+        this.stats = result.stats;
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+      },
     });
   }
 
-  async loadData(): Promise<void> {
-    this.loading = true;
-    try {
-      const [lotsResp, recentResp, brandsResp, statsResp] = await Promise.all([
-        fetch(`${environment.apiUrl}/lots?limit=6&sort=price_desc`),
-        fetch(`${environment.apiUrl}/lots?limit=6&sort=date_desc`),
-        fetch(`${environment.apiUrl}/lots/brands`),
-        fetch(`${environment.apiUrl}/lots/stats`),
-      ]);
-
-      if (lotsResp.ok) {
-        const data = await lotsResp.json();
-        this.lots = data.data || [];
-      }
-      if (recentResp.ok) {
-        const data = await recentResp.json();
-        this.recentLots = data.data || [];
-      }
-      if (brandsResp.ok) {
-        this.brands = await brandsResp.json();
-      }
-      if (statsResp.ok) {
-        this.stats = await statsResp.json();
-      }
-    } catch {
-      /* keep defaults */
-    } finally {
-      this.loading = false;
-      this.cdr.detectChanges();
-    }
-  }
-
-  getMainImage(lot: any): string | null {
+  getMainImage(lot: ILot): string | null {
     if (lot.images && lot.images.length > 0) {
-      const main = lot.images.find((img: any) => img.category === 'main');
+      const main = lot.images.find((img) => img.category === 'main');
       const img = main || lot.images[0];
       return this.getImageUrl(img.url);
     }
-    // Fallback to BCA CDN image
-    if (lot.bcaImageUrl) {
-      const url = lot.bcaImageUrl.startsWith('//')
-        ? 'https:' + lot.bcaImageUrl
-        : lot.bcaImageUrl;
-      return url;
+    // Fallback to source image URL
+    if (lot.sourceImageUrl) {
+      return lot.sourceImageUrl.startsWith('//')
+        ? 'https:' + lot.sourceImageUrl
+        : lot.sourceImageUrl;
     }
     return null;
   }
@@ -107,8 +100,8 @@ export class HomeComponent {
       const data = await resp.json();
       if (resp.ok) {
         this.scraperStatus = 'success';
-        this.scraperMessage = `Парсер запущен! Найдено: ${data.lotsFound ?? '—'}, создано: ${data.lotsCreated ?? '—'}, обновлено: ${data.lotsUpdated ?? '—'}`;
-        await this.loadData();
+        this.scraperMessage = `Парсер запущен! Найдено: ${data.lotsFound ?? '\u{2014}'}, создано: ${data.lotsCreated ?? '\u{2014}'}, обновлено: ${data.lotsUpdated ?? '\u{2014}'}`;
+        this.loadData();
       } else {
         this.scraperStatus = 'error';
         this.scraperMessage = data.message || 'Ошибка запуска парсера';

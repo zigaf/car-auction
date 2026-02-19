@@ -6,8 +6,8 @@ import { LotImage } from '../../db/entities/lot-image.entity';
 import { ScraperRun } from '../../db/entities/scraper-run.entity';
 import { ScraperService } from './scraper.service';
 import { ScraperController } from './scraper.controller';
-import { BcaBrowserService } from './bca-browser.service';
-import { BcaDataMapperService } from './bca-data-mapper.service';
+import { AutobidBrowserService } from './autobid-browser.service';
+import { AutobidDataMapperService } from './autobid-data-mapper.service';
 import { PhotoDownloadService } from './photo-download.service';
 import { AuthModule } from '../auth/auth.module';
 
@@ -20,8 +20,8 @@ import { AuthModule } from '../auth/auth.module';
   controllers: [ScraperController],
   providers: [
     ScraperService,
-    BcaBrowserService,
-    BcaDataMapperService,
+    AutobidBrowserService,
+    AutobidDataMapperService,
     PhotoDownloadService,
   ],
   exports: [ScraperService],

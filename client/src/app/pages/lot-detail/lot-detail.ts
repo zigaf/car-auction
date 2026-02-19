@@ -1,8 +1,10 @@
-import { Component, ChangeDetectorRef, inject, afterNextRender } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { environment } from '../../../environments/environment';
+import { LotService } from '../../core/services/lot.service';
+import { ILot, ILotImage } from '../../models/lot.model';
 
 @Component({
   selector: 'app-lot-detail',
@@ -11,43 +13,43 @@ import { environment } from '../../../environments/environment';
   templateUrl: './lot-detail.html',
   styleUrl: './lot-detail.scss',
 })
-export class LotDetailComponent {
-  private route = inject(ActivatedRoute);
-  private cdr = inject(ChangeDetectorRef);
+export class LotDetailComponent implements OnInit {
+  private readonly route = inject(ActivatedRoute);
+  private readonly lotService = inject(LotService);
 
   loading = true;
-  lot: any = null;
+  lot: ILot | null = null;
   selectedImageIndex = 0;
 
-  constructor() {
-    afterNextRender(() => {
-      const id = this.route.snapshot.paramMap.get('id');
-      if (id) this.loadLot(id);
-    });
-  }
-
-  async loadLot(id: string): Promise<void> {
-    this.loading = true;
-    try {
-      const resp = await fetch(`${environment.apiUrl}/lots/${id}`);
-      if (!resp.ok) throw new Error('Not found');
-      this.lot = await resp.json();
-    } catch {
-      this.lot = null;
-    } finally {
-      this.loading = false;
-      this.cdr.detectChanges();
+  ngOnInit(): void {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.loadLot(id);
     }
   }
 
-  get images(): any[] {
-    if (this.lot?.images?.length > 0) return this.lot.images;
-    // Fallback: create virtual image from bcaImageUrl
-    if (this.lot?.bcaImageUrl) {
-      const url = this.lot.bcaImageUrl.startsWith('//')
-        ? 'https:' + this.lot.bcaImageUrl
-        : this.lot.bcaImageUrl;
-      return [{ url, category: 'main' }];
+  loadLot(id: string): void {
+    this.loading = true;
+    this.lotService.getById(id).subscribe({
+      next: (lot) => {
+        this.lot = lot;
+        this.loading = false;
+      },
+      error: () => {
+        this.lot = null;
+        this.loading = false;
+      },
+    });
+  }
+
+  get images(): ILotImage[] {
+    if (this.lot?.images?.length) return this.lot.images;
+    // Fallback: create virtual image from source image URL
+    if (this.lot?.sourceImageUrl) {
+      const url = this.lot.sourceImageUrl.startsWith('//')
+        ? 'https:' + this.lot.sourceImageUrl
+        : this.lot.sourceImageUrl;
+      return [{ url, category: 'main' } as unknown as ILotImage];
     }
     return [];
   }

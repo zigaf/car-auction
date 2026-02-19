@@ -18,45 +18,24 @@ export class PhotoDownloadService {
   }
 
   /**
-   * Save image URL references from BCA API response without downloading files.
-   * This is the fast path used during scraping — images are stored as external URLs.
+   * Save image URL references without downloading files.
+   * Stores external URLs directly in the database.
    */
-  createImageRefsFromApi(
-    previewImageUrl: string | null,
-    imageKey: string | null,
-  ): Partial<LotImage>[] {
-    const images: Partial<LotImage>[] = [];
-
-    if (previewImageUrl) {
-      const normalizedUrl = this.normalizeUrl(previewImageUrl);
-      images.push({
-        url: normalizedUrl,
-        originalUrl: normalizedUrl,
-        category: ImageCategory.MAIN,
-        sortOrder: 0,
-      });
-    }
-
-    // Construct higher-resolution image URL from imageKey if available
-    if (imageKey) {
-      const hiResUrl = `https://www1.bcaimage.com/GetDoc.aspx?DocType=VehicleImage&docId=${imageKey}`;
-      images.push({
-        url: hiResUrl,
-        originalUrl: hiResUrl,
-        bcaDocId: imageKey,
-        category: ImageCategory.EXTERIOR,
-        sortOrder: 1,
-      });
-    }
-
-    return images;
+  createImageRefsFromUrls(imageUrls: string[]): Partial<LotImage>[] {
+    return imageUrls
+      .filter((url) => url && url.startsWith('http'))
+      .map((url, index) => ({
+        url,
+        originalUrl: url,
+        category: index === 0 ? ImageCategory.MAIN : ImageCategory.EXTERIOR,
+        sortOrder: index,
+      }));
   }
 
   async downloadLotPhotos(
     lotId: string,
     vin: string,
-    docIds: string[],
-    previewImageUrl: string | null,
+    imageUrls: string[],
   ): Promise<Partial<LotImage>[]> {
     const lotDir = path.join(this.uploadDir, 'lots', lotId);
     await fs.promises.mkdir(lotDir, { recursive: true });
@@ -64,33 +43,18 @@ export class PhotoDownloadService {
     const images: Partial<LotImage>[] = [];
     const safeVin = vin.replace(/[^a-zA-Z0-9_-]/g, '_');
 
-    // Download preview image
-    if (previewImageUrl) {
-      const normalizedUrl = this.normalizeUrl(previewImageUrl);
-      const filename = `${safeVin}_preview.jpg`;
-      const downloaded = await this.downloadFile(normalizedUrl, lotDir, filename);
-      if (downloaded) {
-        images.push({
-          url: `${this.servePath}/lots/${lotId}/${filename}`,
-          originalUrl: normalizedUrl,
-          category: ImageCategory.MAIN,
-          sortOrder: 0,
-        });
-      }
-    }
+    for (let i = 0; i < imageUrls.length; i++) {
+      const url = imageUrls[i];
+      if (!url) continue;
 
-    // Download gallery photos from docIds
-    for (let i = 0; i < docIds.length; i++) {
-      const cdnUrl = `https://www1.bcaimage.com/GetDoc.aspx?DocType=VehicleImage&docId=${docIds[i]}`;
-      const filename = `${safeVin}_gallery_${i + 1}.jpg`;
-      const downloaded = await this.downloadFile(cdnUrl, lotDir, filename);
+      const filename = `${safeVin}_${i + 1}.jpg`;
+      const downloaded = await this.downloadFile(url, lotDir, filename);
       if (downloaded) {
         images.push({
           url: `${this.servePath}/lots/${lotId}/${filename}`,
-          originalUrl: cdnUrl,
-          bcaDocId: docIds[i],
-          category: ImageCategory.EXTERIOR,
-          sortOrder: i + 1,
+          originalUrl: url,
+          category: i === 0 ? ImageCategory.MAIN : ImageCategory.EXTERIOR,
+          sortOrder: i,
         });
       }
 
@@ -118,19 +82,14 @@ export class PhotoDownloadService {
       );
       const filePath = path.join(dir, filename);
       await fs.promises.writeFile(filePath, response.data);
-      this.logger.debug(`Downloaded: ${filename} (${(response.data.length / 1024).toFixed(1)} KB)`);
+      this.logger.debug(
+        `Downloaded: ${filename} (${(response.data.length / 1024).toFixed(1)} KB)`,
+      );
       return true;
     } catch (error) {
       this.logger.warn(`Failed to download ${url}: ${error.message}`);
       return false;
     }
-  }
-
-  private normalizeUrl(url: string): string {
-    if (url.startsWith('//')) {
-      return 'https:' + url;
-    }
-    return url;
   }
 
   private randomDelay(min: number, max: number): Promise<void> {

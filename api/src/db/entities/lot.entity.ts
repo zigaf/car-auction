@@ -6,23 +6,30 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
   Index,
 } from 'typeorm';
 import { LotStatus } from '../../common/enums/lot-status.enum';
 import { FuelType } from '../../common/enums/fuel-type.enum';
+import { AuctionType } from '../../common/enums/auction-type.enum';
 import { LotImage } from './lot-image.entity';
+import { User } from './user.entity';
 
 @Entity('lots')
 export class Lot {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  // BCA deduplication keys
-  @Column({ name: 'bca_lot_id', type: 'varchar', nullable: true, unique: true })
-  bcaLotId: string | null;
+  // Source deduplication keys
+  @Column({ name: 'source_id', type: 'varchar', nullable: true, unique: true })
+  sourceId: string | null;
 
-  @Column({ name: 'bca_vehicle_id', type: 'varchar', nullable: true })
-  bcaVehicleId: string | null;
+  @Column({ name: 'source_vehicle_id', type: 'varchar', nullable: true })
+  sourceVehicleId: string | null;
+
+  @Column({ name: 'source', type: 'varchar', nullable: true, default: "'autobid'" })
+  source: string | null;
 
   // Core vehicle data
   @Column()
@@ -68,7 +75,7 @@ export class Lot {
   @Column({ name: 'vehicle_type', type: 'varchar', nullable: true })
   vehicleType: string | null;
 
-  // Sale/auction data from BCA
+  // Sale/auction data
   @Column({ name: 'sale_location', type: 'varchar', nullable: true })
   saleLocation: string | null;
 
@@ -123,11 +130,11 @@ export class Lot {
   conditionReportUrl: string | null;
 
   // Metadata
-  @Column({ name: 'bca_image_url', type: 'varchar', nullable: true })
-  bcaImageUrl: string | null;
+  @Column({ name: 'source_image_url', type: 'varchar', nullable: true })
+  sourceImageUrl: string | null;
 
-  @Column({ name: 'bca_lot_url', type: 'varchar', nullable: true })
-  bcaLotUrl: string | null;
+  @Column({ name: 'source_url', type: 'varchar', nullable: true })
+  sourceUrl: string | null;
 
   @Column({ type: 'jsonb', nullable: true })
   specs: Record<string, unknown> | null;
@@ -141,9 +148,65 @@ export class Lot {
   @Column({ name: 'lot_number', type: 'varchar', nullable: true })
   lotNumber: string | null;
 
+  // Auction fields
+  @Column({
+    name: 'auction_type',
+    type: 'enum',
+    enum: AuctionType,
+    nullable: true,
+  })
+  auctionType: AuctionType | null;
+
+  @Column({
+    name: 'reserve_price',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    nullable: true,
+  })
+  reservePrice: number | null;
+
+  @Column({
+    name: 'bid_step',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 100,
+  })
+  bidStep: number;
+
+  @Column({ name: 'auction_start_at', type: 'timestamp', nullable: true })
+  auctionStartAt: Date | null;
+
+  @Column({ name: 'auction_end_at', type: 'timestamp', nullable: true })
+  auctionEndAt: Date | null;
+
+  @Column({
+    name: 'current_price',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    nullable: true,
+  })
+  currentPrice: number | null;
+
   // Relations
   @OneToMany(() => LotImage, (image) => image.lot, { cascade: true })
   images: LotImage[];
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'created_by' })
+  createdByUser: User | null;
+
+  @Column({ name: 'created_by', type: 'uuid', nullable: true })
+  createdBy: string | null;
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'winner_id' })
+  winner: User | null;
+
+  @Column({ name: 'winner_id', type: 'uuid', nullable: true })
+  winnerId: string | null;
 
   // Timestamps
   @CreateDateColumn({ name: 'created_at' })

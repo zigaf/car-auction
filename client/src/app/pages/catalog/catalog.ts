@@ -1,8 +1,10 @@
-import { Component, ChangeDetectorRef, afterNextRender } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { environment } from '../../../environments/environment';
+import { LotService } from '../../core/services/lot.service';
+import { ILot, ILotFilter } from '../../models/lot.model';
 
 @Component({
   selector: 'app-catalog',
@@ -11,7 +13,9 @@ import { environment } from '../../../environments/environment';
   templateUrl: './catalog.html',
   styleUrl: './catalog.scss',
 })
-export class CatalogComponent {
+export class CatalogComponent implements OnInit {
+  private readonly lotService = inject(LotService);
+
   showAdvancedFilters = false;
   viewMode: 'grid' | 'list' = 'grid';
   sortBy = 'date_desc';
@@ -46,55 +50,52 @@ export class CatalogComponent {
     electric: 'Электро', lpg: 'Газ', other: 'Другое',
   };
 
-  lots: any[] = [];
+  lots: ILot[] = [];
 
-  constructor(private cdr: ChangeDetectorRef) {
-    afterNextRender(() => {
-      this.loadBrands();
-      this.loadLots();
+  ngOnInit(): void {
+    this.loadBrands();
+    this.loadLots();
+  }
+
+  loadBrands(): void {
+    this.lotService.getBrands().subscribe({
+      next: (data) => {
+        this.brands = data.map((b) => b.brand).filter(Boolean);
+      },
+      error: () => { /* keep empty */ },
     });
   }
 
-  async loadBrands(): Promise<void> {
-    try {
-      const resp = await fetch(`${environment.apiUrl}/lots/brands`);
-      if (resp.ok) {
-        const data = await resp.json();
-        this.brands = data.map((b: any) => b.brand).filter(Boolean);
-        this.cdr.detectChanges();
-      }
-    } catch { /* keep empty */ }
-  }
-
-  async loadLots(): Promise<void> {
+  loadLots(): void {
     this.loading = true;
-    try {
-      const params = new URLSearchParams();
-      params.set('page', String(this.currentPage));
-      params.set('limit', '20');
-      if (this.sortBy) params.set('sort', this.sortBy);
-      if (this.filters.brand) params.set('brand', this.filters.brand);
-      if (this.filters.fuelType) params.set('fuelType', this.filters.fuelType);
-      if (this.filters.yearFrom) params.set('yearFrom', String(this.filters.yearFrom));
-      if (this.filters.yearTo) params.set('yearTo', String(this.filters.yearTo));
-      if (this.filters.priceFrom) params.set('priceFrom', String(this.filters.priceFrom));
-      if (this.filters.priceTo) params.set('priceTo', String(this.filters.priceTo));
-      if (this.filters.mileageFrom) params.set('mileageFrom', String(this.filters.mileageFrom));
-      if (this.filters.mileageTo) params.set('mileageTo', String(this.filters.mileageTo));
-      if (this.filters.search) params.set('search', this.filters.search);
 
-      const resp = await fetch(`${environment.apiUrl}/lots?${params}`);
-      if (!resp.ok) throw new Error('Failed');
-      const result = await resp.json();
-      this.lots = result.data;
-      this.totalLots = result.total;
-    } catch {
-      this.lots = [];
-      this.totalLots = 0;
-    } finally {
-      this.loading = false;
-      this.cdr.detectChanges();
-    }
+    const filter: ILotFilter = {
+      page: this.currentPage,
+      limit: 20,
+      sort: this.sortBy || undefined,
+      brand: this.filters.brand || undefined,
+      fuelType: this.filters.fuelType || undefined,
+      yearFrom: this.filters.yearFrom ?? undefined,
+      yearTo: this.filters.yearTo ?? undefined,
+      priceFrom: this.filters.priceFrom ?? undefined,
+      priceTo: this.filters.priceTo ?? undefined,
+      mileageFrom: this.filters.mileageFrom ?? undefined,
+      mileageTo: this.filters.mileageTo ?? undefined,
+      search: this.filters.search || undefined,
+    };
+
+    this.lotService.getAll(filter).subscribe({
+      next: (result) => {
+        this.lots = result.data;
+        this.totalLots = result.total;
+        this.loading = false;
+      },
+      error: () => {
+        this.lots = [];
+        this.totalLots = 0;
+        this.loading = false;
+      },
+    });
   }
 
   applyFilters(): void {
@@ -102,14 +103,14 @@ export class CatalogComponent {
     this.loadLots();
   }
 
-  getMainImage(lot: any): string | null {
+  getMainImage(lot: ILot): string | null {
     if (lot.images && lot.images.length > 0) {
-      const main = lot.images.find((img: any) => img.category === 'main');
+      const main = lot.images.find((img) => img.category === 'main');
       const img = main || lot.images[0];
       return this.getImageUrl(img.url);
     }
-    if (lot.bcaImageUrl) {
-      return lot.bcaImageUrl.startsWith('//') ? 'https:' + lot.bcaImageUrl : lot.bcaImageUrl;
+    if (lot.sourceImageUrl) {
+      return lot.sourceImageUrl.startsWith('//') ? 'https:' + lot.sourceImageUrl : lot.sourceImageUrl;
     }
     return null;
   }
@@ -120,7 +121,8 @@ export class CatalogComponent {
     return `${environment.apiUrl.replace('/api', '')}${path}`;
   }
 
-  getFuelLabel(fuelType: string): string {
+  getFuelLabel(fuelType: string | null): string {
+    if (!fuelType) return '-';
     return this.fuelTypeLabels[fuelType] || fuelType || '-';
   }
 
