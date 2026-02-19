@@ -425,19 +425,27 @@ export class AutobidBrowserService implements OnModuleDestroy {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const response = await this.page.goto(url, {
-          waitUntil: 'commit',
+          waitUntil: 'domcontentloaded',
           timeout: 60000,
         });
         const status = response?.status();
+        this.logger.log(`Navigation status: ${status}`);
         if (status && status >= 400 && status !== 403) {
           throw new Error(`HTTP ${status}`);
         }
-        // Wait for DOM
+
+        // Wait for network to settle (JS bundles to load)
         await this.page
-          .waitForLoadState('domcontentloaded', { timeout: 30000 })
+          .waitForLoadState('networkidle', { timeout: 30000 })
           .catch(() => {
-            this.logger.warn('domcontentloaded timeout, continuing...');
+            this.logger.warn('networkidle timeout, continuing...');
           });
+
+        // Handle cookie consent (OneTrust)
+        await this.dismissCookieConsent();
+
+        // Extra wait for SPA to render after JS bundles load
+        await this.page.waitForTimeout(5000);
         return;
       } catch (error) {
         this.logger.warn(
@@ -448,6 +456,32 @@ export class AutobidBrowserService implements OnModuleDestroy {
         this.logger.log(`Waiting ${delay}ms before retry...`);
         await this.page.waitForTimeout(delay);
       }
+    }
+  }
+
+  private async dismissCookieConsent(): Promise<void> {
+    try {
+      // OneTrust cookie consent buttons (common patterns)
+      const selectors = [
+        '#onetrust-accept-btn-handler',
+        'button[id*="accept"]',
+        'button[class*="cookie"] button',
+        'button:has-text("Akzeptieren")',
+        'button:has-text("Принять")',
+        'button:has-text("Accept")',
+      ];
+
+      for (const selector of selectors) {
+        const btn = await this.page.$(selector);
+        if (btn) {
+          await btn.click();
+          this.logger.log(`Cookie consent dismissed via: ${selector}`);
+          await this.page.waitForTimeout(2000);
+          return;
+        }
+      }
+    } catch (error) {
+      this.logger.debug(`Cookie consent handling: ${error.message}`);
     }
   }
 
@@ -473,11 +507,11 @@ export class AutobidBrowserService implements OnModuleDestroy {
       }
     }
 
-    // Last resort: just wait
+    // Last resort: wait longer for SPA to render
     this.logger.warn(
-      'No vehicle content selectors matched, waiting 10s...',
+      'No vehicle content selectors matched, waiting 15s for SPA render...',
     );
-    await this.page.waitForTimeout(10000);
+    await this.page.waitForTimeout(15000);
   }
 
   private async logPageDebugInfo(): Promise<void> {
