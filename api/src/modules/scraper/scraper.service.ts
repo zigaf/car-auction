@@ -89,6 +89,12 @@ export class ScraperService {
         `Will scrape ${pagesToScrape} pages (${run.lotsFound} total vehicles)`,
       );
 
+      // Save debug HTML if no vehicles found on first page
+      if (totalVehiclesOnPage === 0 && (firstPage as any)._debugHtml) {
+        run.errorLog = `DEBUG: No vehicles on page 1. HTML: ${(firstPage as any)._debugHtml}`;
+        await this.scraperRunRepository.save(run);
+      }
+
       // Phase 2: Process vehicles from page 1
       await this.processVehicleCards(firstPage.vehicles, run);
       run.pagesScraped = 1;

@@ -200,12 +200,38 @@ export class AutobidBrowserService implements OnModuleDestroy {
       `Page ${pageNumber}: ${result.vehicles.length} vehicles found (total: ${result.totalCount || '?'}, pages: ${result.totalPages || '?'})`,
     );
 
+    // If no vehicles found, dump page content for debugging
+    if (result.vehicles.length === 0) {
+      const html = await this.page.content();
+      this.logger.warn(
+        `No vehicles found on page ${pageNumber}. Page HTML (first 5000 chars): ${html.substring(0, 5000)}`,
+      );
+      // Also dump all links for analysis
+      const links = await this.page.evaluate(() =>
+        Array.from(document.querySelectorAll('a'))
+          .slice(0, 50)
+          .map((a) => ({ href: a.href, text: a.textContent?.trim()?.substring(0, 60) })),
+      );
+      this.logger.warn(`Page links sample: ${JSON.stringify(links.slice(0, 20))}`);
+    }
+
     // Log sample vehicle for debugging
     if (result.vehicles.length > 0) {
       const sample = result.vehicles[0];
       this.logger.log(
         `Sample card: title="${sample.title}", id=${sample.vehicleId}, price=${sample.price}, img=${sample.thumbnailUrl?.substring(0, 80)}`,
       );
+    }
+
+    // Attach debug HTML if no vehicles found (for caller to save to errorLog)
+    if (result.vehicles.length === 0) {
+      try {
+        (result as any)._debugHtml = await this.page
+          .content()
+          .then((h: string) => h.substring(0, 8000));
+      } catch {
+        // ignore
+      }
     }
 
     return result;
