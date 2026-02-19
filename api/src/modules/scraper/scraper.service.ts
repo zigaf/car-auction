@@ -179,6 +179,7 @@ export class ScraperService {
       try {
         let lot = await this.lotRepository.findOne({
           where: { bcaLotId: vehicle.LotId },
+          relations: ['images'],
         });
 
         const lotData = this.dataMapper.mapVehicleToLot(vehicle);
@@ -187,13 +188,23 @@ export class ScraperService {
           // Update existing lot
           await this.lotRepository.update(lot.id, lotData as any);
           run.lotsUpdated++;
+
+          // Save image refs for lots that have no images yet
+          if ((!lot.images || lot.images.length === 0) && (vehicle.ImageUrl || vehicle.Imagekey)) {
+            await this.saveImageRefsFromApi(lot, vehicle, run);
+          }
         } else {
           // Create new lot
           lot = this.lotRepository.create(lotData);
           lot = await this.lotRepository.save(lot);
           run.lotsCreated++;
 
-          // Download photos only for new lots
+          // Save image refs from API response (fast, no extra navigation)
+          if (vehicle.ImageUrl || vehicle.Imagekey) {
+            await this.saveImageRefsFromApi(lot, vehicle, run);
+          }
+
+          // Optionally download full gallery photos (slow, navigates to each lot page)
           if (process.env.SCRAPER_DOWNLOAD_PHOTOS === 'true') {
             await this.downloadPhotosForLot(lot, vehicle, run);
           }
@@ -204,6 +215,33 @@ export class ScraperService {
           `Failed to process vehicle ${vehicle.VIN || vehicle.LotId}: ${error.message}`,
         );
       }
+    }
+  }
+
+  private async saveImageRefsFromApi(
+    lot: Lot,
+    vehicle: BcaVehicle,
+    run: ScraperRun,
+  ): Promise<void> {
+    try {
+      const imageRefs = this.photoService.createImageRefsFromApi(
+        vehicle.ImageUrl,
+        vehicle.Imagekey,
+      );
+
+      for (const img of imageRefs) {
+        const lotImage = this.lotImageRepository.create({
+          ...img,
+          lotId: lot.id,
+        });
+        await this.lotImageRepository.save(lotImage);
+        run.imagesDownloaded++;
+      }
+    } catch (error) {
+      this.logger.warn(
+        `Failed to save image refs for lot ${lot.id}: ${error.message}`,
+      );
+      run.errorsCount++;
     }
   }
 

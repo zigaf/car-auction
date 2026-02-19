@@ -28,7 +28,7 @@ export class BcaDataMapperService {
       model: vehicle.Model || undefined,
       derivative: vehicle.Derivative || undefined,
       year: this.extractYear(vehicle.RegistrationDate),
-      mileage: vehicle.Mileage || null,
+      mileage: vehicle.Mileage ?? null,
       fuelType: this.mapFuelType(vehicle.FuelType),
       enginePowerKw: this.parseIntOrNull(vehicle.PowerKw),
       enginePowerPs: this.parseIntOrNull(vehicle.PowerPs),
@@ -44,14 +44,14 @@ export class BcaDataMapperService {
       saleEndDate: this.parseBcaDate(vehicle.SaleEndDate),
       saleChannel: vehicle.SaleChannel || null,
       saleType: vehicle.SaleType || null,
-      startingBid: vehicle.StartingBid || null,
-      buyNowPrice: vehicle.BuyNowPrice || null,
+      startingBid: this.parsePrice(vehicle.StartingBid, vehicle.BidNow),
+      buyNowPrice: this.parsePrice(vehicle.BuyNowPrice, vehicle.BuyNow),
       originalCurrency: vehicle.OriginalSaleCurrency || null,
       vatTypeCode: vehicle.VatTypeCode || null,
-      originalVatRate: vehicle.OriginalVatRate || null,
+      originalVatRate: vehicle.OriginalVatRate ?? null,
       cosmeticGrade: vehicle.CosmeticGrade || null,
       mechanicalGrade: vehicle.MechanicalGrade || null,
-      damageCost: vehicle.DamageCostCombined || null,
+      damageCost: vehicle.DamageCostCombined ?? null,
       conditionReportUrl: vehicle.ConditionReportUrl || null,
       bcaImageUrl: vehicle.ImageUrl || null,
       bcaLotUrl: vehicle.ViewLotUrl || null,
@@ -88,6 +88,27 @@ export class BcaDataMapperService {
     }
     const date = new Date(dateStr);
     return isNaN(date.getTime()) ? null : date;
+  }
+
+  /**
+   * Parse price from numeric field, falling back to string field.
+   * Handles cases where numeric field is 0 or null but string field has actual value.
+   */
+  private parsePrice(
+    numericValue: number | null | undefined,
+    stringValue: string | null | undefined,
+  ): number | null {
+    // Use numeric value if it's a real number (including 0)
+    if (numericValue !== null && numericValue !== undefined && !isNaN(numericValue)) {
+      return numericValue;
+    }
+    // Fall back to parsing string value (e.g. "€12,500.00" or "12500")
+    if (stringValue) {
+      const cleaned = stringValue.replace(/[^0-9.]/g, '');
+      const parsed = parseFloat(cleaned);
+      return isNaN(parsed) ? null : parsed;
+    }
+    return null;
   }
 
   private parseIntOrNull(value: string | number | null): number | null {

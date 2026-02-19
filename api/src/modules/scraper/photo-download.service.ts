@@ -17,6 +17,41 @@ export class PhotoDownloadService {
     this.servePath = process.env.UPLOAD_SERVE_PATH || '/uploads';
   }
 
+  /**
+   * Save image URL references from BCA API response without downloading files.
+   * This is the fast path used during scraping — images are stored as external URLs.
+   */
+  createImageRefsFromApi(
+    previewImageUrl: string | null,
+    imageKey: string | null,
+  ): Partial<LotImage>[] {
+    const images: Partial<LotImage>[] = [];
+
+    if (previewImageUrl) {
+      const normalizedUrl = this.normalizeUrl(previewImageUrl);
+      images.push({
+        url: normalizedUrl,
+        originalUrl: normalizedUrl,
+        category: ImageCategory.MAIN,
+        sortOrder: 0,
+      });
+    }
+
+    // Construct higher-resolution image URL from imageKey if available
+    if (imageKey) {
+      const hiResUrl = `https://www1.bcaimage.com/GetDoc.aspx?DocType=VehicleImage&docId=${imageKey}`;
+      images.push({
+        url: hiResUrl,
+        originalUrl: hiResUrl,
+        bcaDocId: imageKey,
+        category: ImageCategory.EXTERIOR,
+        sortOrder: 1,
+      });
+    }
+
+    return images;
+  }
+
   async downloadLotPhotos(
     lotId: string,
     vin: string,

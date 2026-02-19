@@ -34,28 +34,58 @@ export class BcaBrowserService implements OnModuleDestroy {
         username: process.env.OXYLABS_PROXY_USERNAME,
         password: process.env.OXYLABS_PROXY_PASSWORD,
       },
-      args: ['--disable-blink-features=AutomationControlled'],
+      args: [
+        '--disable-blink-features=AutomationControlled',
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+      ],
     });
 
     this.context = await this.browser.newContext({
       ignoreHTTPSErrors: true,
       userAgent:
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
       locale: 'en-US',
       viewport: { width: 1920, height: 1080 },
     });
 
     this.page = await this.context.newPage();
 
-    // Establish session by loading the search page
+    // Establish session by loading the search page with retry
     const baseUrl = process.env.BCA_BASE_URL || 'https://be.bca-europe.com';
-    this.logger.log('Establishing session...');
-    await this.page.goto(`${baseUrl}/Search`, {
-      waitUntil: 'domcontentloaded',
-      timeout: 90000,
-    });
-    await this.page.waitForTimeout(8000);
-    this.logger.log('Session established');
+    const maxRetries = 3;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        this.logger.log(`Establishing session (attempt ${attempt}/${maxRetries})...`);
+        const response = await this.page.goto(`${baseUrl}/Search`, {
+          waitUntil: 'commit',
+          timeout: 60000,
+        });
+        const status = response?.status();
+        this.logger.log(`Page response status: ${status}`);
+
+        // Wait for DOM to be ready
+        await this.page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => {
+          this.logger.warn('domcontentloaded timeout, continuing anyway...');
+        });
+
+        await this.page.waitForTimeout(5000);
+        this.logger.log('Session established');
+        return;
+      } catch (error) {
+        this.logger.warn(`Session attempt ${attempt} failed: ${error.message}`);
+        if (attempt === maxRetries) {
+          throw new Error(
+            `Failed to establish BCA session after ${maxRetries} attempts: ${error.message}`,
+          );
+        }
+        // Exponential backoff between retries
+        const delay = attempt * 5000;
+        this.logger.log(`Waiting ${delay}ms before retry...`);
+        await this.page.waitForTimeout(delay);
+      }
+    }
   }
 
   async fetchVehiclePage(pageNumber: number): Promise<BcaSearchResponse> {
@@ -90,7 +120,14 @@ export class BcaBrowserService implements OnModuleDestroy {
 
     this.logger.log(`API top-level keys: ${JSON.stringify((result as any)._topLevelKeys)}`);
     if ((result as any)._sampleVehicle) {
-      this.logger.log(`Sample vehicle: ${(result as any)._sampleVehicle}`);
+      this.logger.log(`Sample vehicle (first 2000 chars): ${(result as any)._sampleVehicle}`);
+    }
+    // Log price-related fields from first vehicle for debugging
+    const firstV = result.VehicleResults?.[0];
+    if (firstV) {
+      this.logger.log(
+        `Price sample: StartingBid=${firstV.StartingBid}, BuyNowPrice=${firstV.BuyNowPrice}, BidNow=${firstV.BidNow}, BuyNow=${firstV.BuyNow}, ImageUrl=${firstV.ImageUrl}, Imagekey=${firstV.Imagekey}`,
+      );
     }
     this.logger.log(
       `Page ${pageNumber}: ${result.VehicleResults?.length || 0} vehicles (total: ${result.TotalVehicleCount})`,
