@@ -72,92 +72,99 @@
           <!-- Specs -->
           <div class="specs-section">
             <h2 class="section-title">Характеристики</h2>
-            <div class="specs-grid">
-              @if (lot.enginePowerPs || lot.enginePowerKw) {
-                <div class="spec-item">
-                  <span class="material-symbols-rounded spec-item__icon">speed</span>
-                  <div class="spec-item__content">
-                    <span class="spec-item__label">Мощность</span>
-                    <span class="spec-item__value">
-                      @if (lot.enginePowerPs) { {{ lot.enginePowerPs }} л.с. }
-                      @if (lot.enginePowerKw) { ({{ lot.enginePowerKw }} кВт) }
-                    </span>
+            @if (hasSpecs) {
+              <div class="specs-grid">
+                @if (lot.enginePowerPs || lot.enginePowerKw) {
+                  <div class="spec-item">
+                    <span class="material-symbols-rounded spec-item__icon">speed</span>
+                    <div class="spec-item__content">
+                      <span class="spec-item__label">Мощность</span>
+                      <span class="spec-item__value">
+                        @if (lot.enginePowerPs) { {{ lot.enginePowerPs }} л.с. }
+                        @if (lot.enginePowerKw) { ({{ lot.enginePowerKw }} кВт) }
+                      </span>
+                    </div>
                   </div>
-                </div>
-              }
-              @if (lot.fuelType) {
-                <div class="spec-item">
-                  <span class="material-symbols-rounded spec-item__icon">local_gas_station</span>
-                  <div class="spec-item__content">
-                    <span class="spec-item__label">Топливо</span>
-                    <span class="spec-item__value">{{ getFuelLabel(lot.fuelType) }}</span>
+                }
+                @if (lot.fuelType) {
+                  <div class="spec-item">
+                    <span class="material-symbols-rounded spec-item__icon">local_gas_station</span>
+                    <div class="spec-item__content">
+                      <span class="spec-item__label">Топливо</span>
+                      <span class="spec-item__value">{{ getFuelLabel(lot.fuelType) }}</span>
+                    </div>
                   </div>
-                </div>
-              }
-              @if (lot.mileage) {
-                <div class="spec-item">
-                  <span class="material-symbols-rounded spec-item__icon">speed</span>
-                  <div class="spec-item__content">
-                    <span class="spec-item__label">Пробег</span>
-                    <span class="spec-item__value">{{ lot.mileage | number }} км</span>
+                }
+                @if (lot.mileage) {
+                  <div class="spec-item">
+                    <span class="material-symbols-rounded spec-item__icon">speed</span>
+                    <div class="spec-item__content">
+                      <span class="spec-item__label">Пробег</span>
+                      <span class="spec-item__value">{{ lot.mileage | number }} км</span>
+                    </div>
                   </div>
-                </div>
-              }
-              @if (lot.year) {
-                <div class="spec-item">
-                  <span class="material-symbols-rounded spec-item__icon">calendar_month</span>
-                  <div class="spec-item__content">
-                    <span class="spec-item__label">Год</span>
-                    <span class="spec-item__value">{{ lot.year }}</span>
+                }
+                @if (lot.year) {
+                  <div class="spec-item">
+                    <span class="material-symbols-rounded spec-item__icon">calendar_month</span>
+                    <div class="spec-item__content">
+                      <span class="spec-item__label">Год</span>
+                      <span class="spec-item__value">{{ lot.year }}</span>
+                    </div>
                   </div>
-                </div>
-              }
-              @if (lot.transmission) {
-                <div class="spec-item">
-                  <span class="material-symbols-rounded spec-item__icon">settings</span>
-                  <div class="spec-item__content">
-                    <span class="spec-item__label">КПП</span>
-                    <span class="spec-item__value">{{ lot.transmission }}</span>
+                }
+                @if (lot.transmission) {
+                  <div class="spec-item">
+                    <span class="material-symbols-rounded spec-item__icon">settings</span>
+                    <div class="spec-item__content">
+                      <span class="spec-item__label">КПП</span>
+                      <span class="spec-item__value">{{ lot.transmission }}</span>
+                    </div>
                   </div>
-                </div>
-              }
-              @if (lot.exteriorColor) {
-                <div class="spec-item">
-                  <span class="material-symbols-rounded spec-item__icon">palette</span>
-                  <div class="spec-item__content">
-                    <span class="spec-item__label">Цвет</span>
-                    <span class="spec-item__value">{{ lot.exteriorColor }}</span>
+                }
+                @if (lot.exteriorColor) {
+                  <div class="spec-item">
+                    <span class="material-symbols-rounded spec-item__icon">palette</span>
+                    <div class="spec-item__content">
+                      <span class="spec-item__label">Цвет</span>
+                      <span class="spec-item__value">{{ lot.exteriorColor }}</span>
+                    </div>
                   </div>
-                </div>
-              }
-              @if (lot.vehicleType) {
-                <div class="spec-item">
-                  <span class="material-symbols-rounded spec-item__icon">directions_car</span>
-                  <div class="spec-item__content">
-                    <span class="spec-item__label">Тип</span>
-                    <span class="spec-item__value">{{ lot.vehicleType }}</span>
+                }
+                @if (lot.vehicleType) {
+                  <div class="spec-item">
+                    <span class="material-symbols-rounded spec-item__icon">directions_car</span>
+                    <div class="spec-item__content">
+                      <span class="spec-item__label">Тип</span>
+                      <span class="spec-item__value">{{ lot.vehicleType }}</span>
+                    </div>
                   </div>
-                </div>
-              }
-              @if (lot.numberOfOwners) {
-                <div class="spec-item">
-                  <span class="material-symbols-rounded spec-item__icon">person</span>
-                  <div class="spec-item__content">
-                    <span class="spec-item__label">Владельцев</span>
-                    <span class="spec-item__value">{{ lot.numberOfOwners }}</span>
+                }
+                @if (lot.numberOfOwners) {
+                  <div class="spec-item">
+                    <span class="material-symbols-rounded spec-item__icon">person</span>
+                    <div class="spec-item__content">
+                      <span class="spec-item__label">Владельцев</span>
+                      <span class="spec-item__value">{{ lot.numberOfOwners }}</span>
+                    </div>
                   </div>
-                </div>
-              }
-              @if (lot.numberOfKeys) {
-                <div class="spec-item">
-                  <span class="material-symbols-rounded spec-item__icon">key</span>
-                  <div class="spec-item__content">
-                    <span class="spec-item__label">Ключей</span>
-                    <span class="spec-item__value">{{ lot.numberOfKeys }}</span>
+                }
+                @if (lot.numberOfKeys) {
+                  <div class="spec-item">
+                    <span class="material-symbols-rounded spec-item__icon">key</span>
+                    <div class="spec-item__content">
+                      <span class="spec-item__label">Ключей</span>
+                      <span class="spec-item__value">{{ lot.numberOfKeys }}</span>
+                    </div>
                   </div>
-                </div>
-              }
-            </div>
+                }
+              </div>
+            } @else {
+              <div class="placeholder-stub">
+                <span class="material-symbols-rounded">hourglass_top</span>
+                <span>Лот осматривается экспертами, информация появится позже</span>
+              </div>
+            }
 
             @if (lot.vin) {
               <div class="vin-block">
@@ -188,6 +195,17 @@
                   <span class="material-symbols-rounded">{{ equipmentExpanded ? 'expand_less' : 'expand_more' }}</span>
                 </button>
               }
+            </div>
+          } @else {
+            <div class="info-section">
+              <h2 class="section-title">
+                <span class="material-symbols-rounded section-title__icon">checklist</span>
+                Комплектация
+              </h2>
+              <div class="placeholder-stub">
+                <span class="material-symbols-rounded">hourglass_top</span>
+                <span>Лот осматривается экспертами, информация появится позже</span>
+              </div>
             </div>
           }
 
@@ -371,6 +389,20 @@
             </div>
           }
 
+          <!-- Condition stub when no body/interior/accident data -->
+          @if (bodyCondition.length === 0 && interiorCondition.length === 0 && !accidentInfo) {
+            <div class="info-section">
+              <h2 class="section-title">
+                <span class="material-symbols-rounded section-title__icon">fact_check</span>
+                Состояние
+              </h2>
+              <div class="placeholder-stub">
+                <span class="material-symbols-rounded">hourglass_top</span>
+                <span>Лот осматривается экспертами, информация появится позже</span>
+              </div>
+            </div>
+          }
+
           <!-- Status badges -->
           <div class="status-section">
             <div class="status-badges">
@@ -399,34 +431,68 @@
         <!-- Right Column: Info Panel -->
         <div class="lot-detail__right">
           <div class="auction-panel">
-            <div class="auction-panel__header">
-              <h1 class="auction-panel__title">{{ lot.title }}</h1>
-              @if (lot.derivative) {
-                <span class="auction-panel__trim">{{ lot.derivative }}</span>
-              }
+            <!-- Title + Favorite -->
+            <div class="auction-panel__top">
+              <div class="auction-panel__header">
+                <h1 class="auction-panel__title">{{ lot.title }}</h1>
+                @if (lot.derivative) {
+                  <span class="auction-panel__trim">{{ lot.derivative }}</span>
+                }
+              </div>
+              <button class="auction-panel__fav" [class.auction-panel__fav--active]="isFavorite" (click)="toggleFavorite()">
+                <span class="material-symbols-rounded">{{ isFavorite ? 'favorite' : 'favorite_border' }}</span>
+                <span class="auction-panel__fav-count">{{ favoritesCount }}</span>
+              </button>
             </div>
 
-            <!-- Sale info -->
+            <!-- Starting price -->
             <div class="auction-panel__price-row">
               <div class="auction-panel__price">
                 @if (lot.startingBid) {
                   <span class="auction-panel__price-label">Стартовая цена</span>
                   <span class="auction-panel__price-value mono">{{ lot.startingBid | number }} {{ lot.originalCurrency || 'EUR' }}</span>
                 } @else {
-                  <span class="auction-panel__price-label">{{ lot.saleChannel || 'Аукцион' }}</span>
-                  <span class="auction-panel__price-value mono">{{ lot.saleName }}</span>
+                  <span class="auction-panel__price-label">Стартовая цена</span>
+                  <span class="auction-panel__price-value auction-panel__price-value--pending">Ожидается</span>
                 }
               </div>
             </div>
 
-            @if (lot.buyNowPrice) {
-              <div class="auction-panel__buynow">
-                <span class="auction-panel__price-label">Buy Now</span>
+            <!-- Buy Now -->
+            <div class="auction-panel__buynow">
+              @if (lot.buyNowPrice) {
+                <span class="auction-panel__price-label">Цена выкупа</span>
                 <span class="auction-panel__price-value mono">{{ lot.buyNowPrice | number }} {{ lot.originalCurrency || 'EUR' }}</span>
+              } @else {
+                <span class="auction-panel__price-label">Цена выкупа</span>
+                <span class="auction-panel__buynow-na">Не запрошена продавцом</span>
+              }
+            </div>
+
+            <!-- Min payment -->
+            @if (minPayment) {
+              <div class="auction-panel__min-payment">
+                <span class="material-symbols-rounded">payments</span>
+                <div>
+                  <span class="auction-panel__min-label">Минимальный платёж</span>
+                  <span class="auction-panel__min-value mono">{{ minPayment | number }} {{ lot.originalCurrency || 'EUR' }}</span>
+                </div>
               </div>
             }
 
-            <!-- Location -->
+            <!-- Reserve bids from partners -->
+            @if (reserveBid) {
+              <div class="auction-panel__reserve">
+                <span class="material-symbols-rounded">groups</span>
+                <div>
+                  <span class="auction-panel__reserve-label">Резервная ставка партнёров</span>
+                  <span class="auction-panel__reserve-value mono">{{ reserveBid | number }} {{ lot.originalCurrency || 'EUR' }}</span>
+                </div>
+                <p class="auction-panel__reserve-hint">Если ставки не превысят эту сумму, автомобиль уйдёт партнёрам</p>
+              </div>
+            }
+
+            <!-- Info rows -->
             <div class="auction-panel__info-rows">
               @if (lot.vehicleLocation) {
                 <div class="auction-panel__info-row">

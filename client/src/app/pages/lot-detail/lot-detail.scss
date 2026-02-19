@@ -750,8 +750,17 @@
   margin-bottom: $space-lg;
 }
 
-.auction-panel__header {
+// Title row with favorite button
+.auction-panel__top {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-md;
   margin-bottom: $space-base;
+}
+
+.auction-panel__header {
+  flex: 1;
+  min-width: 0;
 }
 
 .auction-panel__title {
@@ -806,6 +815,113 @@
     font-size: $fs-lg;
     color: $status-yellow;
   }
+}
+
+// Favorite button
+.auction-panel__fav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: 1px solid $border-color;
+  border-radius: $radius-base;
+  padding: $space-xs $space-sm;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+
+  .material-symbols-rounded { font-size: 22px; color: $text-tertiary; transition: color 0.15s; }
+
+  &:hover {
+    border-color: $status-red;
+    .material-symbols-rounded { color: $status-red; }
+  }
+
+  &--active {
+    border-color: $status-red;
+    background: rgba($status-red, 0.06);
+    .material-symbols-rounded { color: $status-red; }
+  }
+}
+
+.auction-panel__fav-count {
+  font-size: $fs-xs;
+  color: $text-tertiary;
+  font-family: $font-mono;
+}
+
+.auction-panel__price-value--pending {
+  font-size: $fs-lg;
+  color: $text-tertiary;
+  font-weight: $fw-medium;
+}
+
+.auction-panel__buynow-na {
+  font-size: $fs-sm;
+  color: $text-tertiary;
+  font-style: italic;
+}
+
+// Min payment block
+.auction-panel__min-payment {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-sm $space-base;
+  margin-bottom: $space-md;
+  background: rgba($status-green, 0.06);
+  border: 1px solid rgba($status-green, 0.15);
+  border-radius: $radius-base;
+
+  > .material-symbols-rounded { font-size: 20px; color: $status-green; flex-shrink: 0; }
+}
+
+.auction-panel__min-label {
+  display: block;
+  font-size: $fs-xs;
+  color: $text-tertiary;
+}
+
+.auction-panel__min-value {
+  font-size: $fs-sm;
+  font-weight: $fw-semibold;
+  color: $status-green;
+}
+
+// Reserve bids from partners
+.auction-panel__reserve {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-sm $space-base;
+  margin-bottom: $space-md;
+  background: rgba($accent, 0.05);
+  border: 1px solid rgba($accent, 0.15);
+  border-radius: $radius-base;
+
+  > .material-symbols-rounded { font-size: 20px; color: $accent; flex-shrink: 0; }
+}
+
+.auction-panel__reserve-label {
+  display: block;
+  font-size: $fs-xs;
+  color: $text-tertiary;
+}
+
+.auction-panel__reserve-value {
+  font-size: $fs-sm;
+  font-weight: $fw-semibold;
+  color: $accent;
+}
+
+.auction-panel__reserve-hint {
+  width: 100%;
+  margin: $space-xs 0 0;
+  font-size: $fs-xs;
+  color: $text-tertiary;
+  line-height: 1.4;
 }
 
 .auction-panel__info-rows {
@@ -1071,6 +1187,25 @@
     .mono {
       color: $accent;
     }
+  }
+}
+
+// ─── Placeholder stub ──────────────────────────────
+.placeholder-stub {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-base;
+  background: $bg-elevated;
+  border-radius: $radius-base;
+  color: $text-tertiary;
+  font-size: $fs-sm;
+  line-height: 1.4;
+
+  .material-symbols-rounded {
+    font-size: 20px;
+    color: $text-tertiary;
+    flex-shrink: 0;
   }
 }
 

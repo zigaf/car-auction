@@ -37,6 +37,13 @@ export class LotDetailComponent implements OnInit, OnDestroy {
   activeGalleryTab: GalleryTab = 'all';
   fullscreenOpen = false;
 
+  // Favorites (fake — random 1-30, +1 on click)
+  isFavorite = false;
+  favoritesCount = Math.floor(Math.random() * 30) + 1;
+
+  // Reserve bid from "other platforms" (fake — 70-90% of starting bid)
+  reserveMultiplier = 0.7 + Math.random() * 0.2;
+
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
@@ -212,5 +219,27 @@ export class LotDetailComponent implements OnInit, OnDestroy {
 
   toggleEquipment(): void {
     this.equipmentExpanded = !this.equipmentExpanded;
+  }
+
+  toggleFavorite(): void {
+    this.isFavorite = !this.isFavorite;
+    this.favoritesCount += this.isFavorite ? 1 : -1;
+  }
+
+  get minPayment(): number | null {
+    if (!this.lot) return null;
+    return this.lot.startingBid || this.lot.reservePrice || null;
+  }
+
+  get reserveBid(): number | null {
+    if (!this.lot?.startingBid) return null;
+    return Math.round(this.lot.startingBid * this.reserveMultiplier);
+  }
+
+  /** True if lot has at least some real specs data beyond title */
+  get hasSpecs(): boolean {
+    if (!this.lot) return false;
+    return !!(this.lot.enginePowerPs || this.lot.enginePowerKw || this.lot.fuelType ||
+      this.lot.mileage || this.lot.year || this.lot.transmission || this.lot.exteriorColor);
   }
 }
