@@ -190,10 +190,15 @@ export class ScraperService {
         });
 
         // Skip recently updated lots (updated within last 12 hours)
-        if (lot && this.isRecentlyUpdated(lot, 12)) {
+        // BUT always re-scrape if data looks incomplete (no specs or no images)
+        const hasGoodData = lot && lot.images?.length > 2 && lot.mileage;
+        if (lot && hasGoodData && this.isRecentlyUpdated(lot, 12)) {
           run.lotsUpdated++;
           this.logger.debug(`Skipping recently updated lot: ${vehicleId}`);
           continue;
+        }
+        if (lot && !hasGoodData) {
+          this.logger.log(`Re-scraping lot ${vehicleId} (incomplete data: images=${lot.images?.length || 0}, mileage=${lot.mileage})`);
         }
 
         // Crawl delay before visiting detail page

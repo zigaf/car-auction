@@ -865,49 +865,42 @@ export class AutobidBrowserService implements OnModuleDestroy {
   }
 
   private async dismissCookieConsent(): Promise<void> {
-    try {
-      // OneTrust cookie consent buttons (common patterns)
-      const selectors = [
-        '#onetrust-accept-btn-handler',
-        'button[id*="accept"]',
-        'button[class*="cookie"] button',
-        'button:has-text("Akzeptieren")',
-        'button:has-text("Принять")',
-        'button:has-text("Accept")',
-      ];
-
-      for (const selector of selectors) {
+    // Helper: try to click a button with short timeout (skip if not visible)
+    const tryClick = async (selector: string): Promise<boolean> => {
+      try {
         const btn = await this.page.$(selector);
-        if (btn) {
-          await btn.click();
-          this.logger.log(`Cookie consent dismissed via: ${selector}`);
-          await this.page.waitForTimeout(2000);
-          break;
-        }
+        if (!btn) return false;
+        const visible = await btn.isVisible().catch(() => false);
+        if (!visible) return false;
+        await btn.click({ timeout: 3000 });
+        this.logger.log(`Dismissed overlay via: ${selector}`);
+        await this.page.waitForTimeout(1000);
+        return true;
+      } catch {
+        return false;
       }
-    } catch (error) {
-      this.logger.debug(`Cookie consent handling: ${error.message}`);
+    };
+
+    // OneTrust cookie consent buttons
+    const cookieSelectors = [
+      '#onetrust-accept-btn-handler',
+      'button[id*="accept"]',
+      'button:has-text("Akzeptieren")',
+      'button:has-text("Принять")',
+      'button:has-text("Accept")',
+    ];
+    for (const sel of cookieSelectors) {
+      if (await tryClick(sel)) break;
     }
 
-    // autobid.de shows a "browser not supported" overlay in headless mode
-    // Click "Continue anyway" / "Продолжить в любом случае"
-    try {
-      const continueSelectors = [
-        'text=Продолжить в любом случае',
-        'text=Continue anyway',
-        'text=Trotzdem fortfahren',
-      ];
-      for (const selector of continueSelectors) {
-        const btn = await this.page.$(selector);
-        if (btn) {
-          await btn.click();
-          this.logger.log(`Browser warning dismissed via: ${selector}`);
-          await this.page.waitForTimeout(2000);
-          break;
-        }
-      }
-    } catch (error) {
-      this.logger.debug(`Browser warning handling: ${error.message}`);
+    // "Browser not supported" overlay — click "Continue anyway"
+    const continueSelectors = [
+      'text=Продолжить в любом случае',
+      'text=Continue anyway',
+      'text=Trotzdem fortfahren',
+    ];
+    for (const sel of continueSelectors) {
+      if (await tryClick(sel)) break;
     }
   }
 
