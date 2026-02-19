@@ -37,19 +37,26 @@ export class AutobidDataMapperService {
     const brand = this.findSpec(specs, ['Марка', 'Marke']) || this.extractBrandFromTitle(detail.title);
     const model = this.findSpec(specs, ['Модель', 'Modell']) || this.extractModelFromTitle(detail.title, brand);
     const derivative = this.findSpec(specs, ['Вариант', 'Variante', 'Версия', 'Ausstattung']);
-    const mileageStr = this.findSpec(specs, ['Пробег', 'Kilometerstand', 'km-Stand', 'Laufleistung']);
-    const fuelStr = this.findSpec(specs, ['Топливо', 'Kraftstoff', 'Kraftstoffart', 'Вид топлива']);
+    const mileageStr = this.findSpec(specs, ['Показания счетчика', 'Пробег', 'Kilometerstand', 'km-Stand', 'Laufleistung']);
+    const fuelStr = this.findSpec(specs, ['Вид топлива', 'Топливо', 'Kraftstoff', 'Kraftstoffart']);
     const powerStr = this.findSpec(specs, ['Мощность', 'Leistung']);
-    const regStr = this.findSpec(specs, ['Первая регистрация', 'Erstzulassung', 'Дата регистрации', 'Дата первой регистрации']);
-    const vinStr = this.findSpec(specs, ['VIN', 'FIN', 'Fahrgestellnummer', 'Идентификационный номер']);
-    const locationStr = this.findSpec(specs, ['Местоположение', 'Standort', 'Расположение']);
-    const colorStr = this.findSpec(specs, ['Цвет', 'Farbe', 'Außenfarbe']);
-    const vehicleTypeStr = this.findSpec(specs, ['Тип', 'Fahrzeugart', 'Тип кузова', 'Karosserie']);
-    const transmissionStr = this.findSpec(specs, ['Коробка передач', 'Getriebe', 'Трансмиссия']);
+    const regStr = this.findSpec(specs, ['Первичная регистрация', 'Первая регистрация', 'Erstzulassung', 'Дата регистрации']);
+    const vinStr = this.findSpec(specs, ['Идентификационный номер', 'VIN', 'FIN', 'Fahrgestellnummer']);
+    const locationStr = this.findSpec(specs, ['местоположение', 'Местоположение', 'Standort', 'Расположение']);
+    const colorStr = this.findSpec(specs, ['Цвет', 'Farbe', 'Außenfarbe', 'Обозначение цвета']);
+    const vehicleTypeStr = this.findSpec(specs, ['Категория', 'Тип', 'Fahrzeugart', 'Тип кузова', 'Karosserie']);
+    const transmissionStr = this.findSpec(specs, ['Вид коробки передач', 'Коробка передач', 'Getriebe', 'Трансмиссия']);
 
     const power = this.parsePower(powerStr);
     const year = this.extractYear(regStr);
     const regDate = this.parseRegistrationDate(regStr);
+
+    // Extract owners count from specs
+    const ownersStr = this.findSpec(specs, ['Общее известное число предыдущих владельцев', 'Vorbesitzer', 'Anzahl der Vorbesitzer']);
+    const keysStr = this.findSpec(specs, ['Количество ключей', 'Anzahl Schlüssel']);
+
+    // Build description from sections
+    const description = this.buildDescription(detail);
 
     return {
       sourceId: vehicleId,
@@ -74,14 +81,85 @@ export class AutobidDataMapperService {
       originalCurrency: 'EUR',
       sourceImageUrl: detail.imageUrls?.[0] || null,
       sourceUrl: detailUrl,
+      transmission: transmissionStr || undefined,
+      numberOfOwners: this.parseLeadingInt(ownersStr),
+      numberOfKeys: this.parseLeadingInt(keysStr),
+      equipment: detail.equipment?.length > 0 ? detail.equipment : null,
       specs: {
         ...specs,
-        ...(transmissionStr ? { transmission: transmissionStr } : {}),
+        ...(detail.sections ? { _sections: detail.sections } : {}),
       },
-      description: detail.description,
+      description,
       saleDate: this.parseGermanDate(detail.auctionEndDate),
       status: LotStatus.IMPORTED,
     };
+  }
+
+  private parseLeadingInt(str: string | null): number | null {
+    if (!str) return null;
+    const match = str.match(/(\d+)/);
+    return match ? parseInt(match[1], 10) : null;
+  }
+
+  private buildDescription(detail: AutobidVehicleDetail): string | null {
+    const parts: string[] = [];
+
+    if (detail.description) {
+      parts.push(detail.description);
+    }
+
+    const sections = detail.sections;
+    if (!sections) return parts.length > 0 ? parts.join('\n\n') : null;
+
+    if (sections.accidentInfo) {
+      parts.push(`Авария / Повреждения: ${sections.accidentInfo}`);
+    }
+
+    if (sections.bodyCondition?.length > 0) {
+      const lines = sections.bodyCondition.map((item) => {
+        const issues = item.issues.length > 0 ? ` — ${item.issues.join(', ')}` : '';
+        return `  ${item.part}${issues}`;
+      });
+      parts.push(`Кузов:\n${lines.join('\n')}`);
+    }
+
+    if (sections.interiorCondition?.length > 0) {
+      const lines = sections.interiorCondition.map((item) => {
+        const issues = item.issues.length > 0 ? ` — ${item.issues.join(', ')}` : '';
+        return `  ${item.part}${issues}`;
+      });
+      parts.push(`Салон:\n${lines.join('\n')}`);
+    }
+
+    if (sections.tires?.length > 0) {
+      const lines = sections.tires.map((t) => {
+        const info = [t.treadDepth, t.size].filter(Boolean).join(', ');
+        return `  ${t.position}: ${info}`;
+      });
+      parts.push(`Шины:\n${lines.join('\n')}`);
+    }
+
+    if (sections.stoneChips?.length > 0) {
+      const lines = sections.stoneChips.map((item) => {
+        const issues = item.issues.length > 0 ? ` — ${item.issues.join(', ')}` : '';
+        return `  ${item.part}${issues}`;
+      });
+      parts.push(`Вмятина от камней:\n${lines.join('\n')}`);
+    }
+
+    if (sections.seats) {
+      parts.push(`Сиденья: ${sections.seats}`);
+    }
+
+    if (sections.generalInfo) {
+      parts.push(`Общая информация: ${sections.generalInfo}`);
+    }
+
+    if (sections.parkingFee) {
+      parts.push(`Стоянка: ${sections.parkingFee}`);
+    }
+
+    return parts.length > 0 ? parts.join('\n\n') : null;
   }
 
   private findSpec(specs: Record<string, string>, keys: string[]): string | null {
@@ -157,8 +235,9 @@ export class AutobidDataMapperService {
    */
   private parsePower(str: string | null): { kw: number | null; ps: number | null } {
     if (!str) return { kw: null, ps: null };
-    const kwMatch = str.match(/(\d+)\s*kW/i);
-    const psMatch = str.match(/(\d+)\s*PS/i);
+    // German: "110 kW (150 PS)" or Russian: "84 кВт / 114 л.с."
+    const kwMatch = str.match(/(\d+)\s*(?:kW|кВт)/i);
+    const psMatch = str.match(/(\d+)\s*(?:PS|л\.?\s*с\.?)/i);
     return {
       kw: kwMatch ? parseInt(kwMatch[1], 10) : null,
       ps: psMatch ? parseInt(psMatch[1], 10) : null,

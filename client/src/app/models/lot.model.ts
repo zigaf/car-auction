@@ -76,6 +76,10 @@ export interface ILot {
   specs: Record<string, unknown> | null;
   status: LotStatus;
   description: string | null;
+  equipment: string[] | null;
+  transmission: string | null;
+  numberOfOwners: number | null;
+  numberOfKeys: number | null;
   lotNumber: string | null;
   auctionType: string | null;
   reservePrice: number | null;

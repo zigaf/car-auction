@@ -145,6 +145,18 @@ export class Lot {
   @Column({ type: 'text', nullable: true })
   description: string | null;
 
+  @Column({ type: 'jsonb', nullable: true })
+  equipment: string[] | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  transmission: string | null;
+
+  @Column({ name: 'number_of_owners', type: 'int', nullable: true })
+  numberOfOwners: number | null;
+
+  @Column({ name: 'number_of_keys', type: 'int', nullable: true })
+  numberOfKeys: number | null;
+
   @Column({ name: 'lot_number', type: 'varchar', nullable: true })
   lotNumber: string | null;
 

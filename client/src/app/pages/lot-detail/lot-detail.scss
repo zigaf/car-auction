@@ -173,10 +173,6 @@
 }
 
 // ─── Specs ──────────────────────────────────────────
-.section-title {
-  @include heading($fs-lg);
-  margin: 0 0 $space-base;
-}
 
 .specs-section {
   @include panel;
@@ -262,6 +258,184 @@
   transition: color $transition-fast;
 
   &:hover { color: $accent-hover; }
+}
+
+// ─── Info Sections (Equipment, Condition, Tires, etc.) ──
+.info-section {
+  @include panel;
+  padding: $space-lg;
+  margin-bottom: $space-lg;
+
+  &--warning {
+    border-left: 3px solid $status-yellow;
+  }
+}
+
+.section-title {
+  @include heading($fs-lg);
+  margin: 0 0 $space-base;
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+
+  &__icon {
+    font-size: 20px;
+    color: $accent;
+
+    &--warning {
+      color: $status-yellow;
+    }
+  }
+}
+
+.info-text {
+  font-size: $fs-sm;
+  color: $text-secondary;
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-line;
+}
+
+// Equipment list
+.equipment-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $space-xs $space-lg;
+
+  @include mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+.equipment-list__item {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  font-size: $fs-sm;
+  color: $text-secondary;
+  padding: $space-xs 0;
+}
+
+.equipment-list__check {
+  font-size: 16px;
+  color: $status-green;
+  flex-shrink: 0;
+}
+
+.show-more-btn {
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+  margin-top: $space-md;
+  background: none;
+  border: none;
+  color: $accent;
+  font-size: $fs-sm;
+  font-family: $font-ui;
+  cursor: pointer;
+  padding: $space-xs 0;
+  transition: color $transition-fast;
+
+  .material-symbols-rounded { font-size: 18px; }
+  &:hover { color: $accent-hover; }
+}
+
+// Condition tables (body, interior, stone chips)
+.condition-table {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: $divider;
+  border-radius: $radius-base;
+  overflow: hidden;
+}
+
+.condition-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-md;
+  padding: $space-sm $space-md;
+  background: $bg-panel;
+
+  @include mobile {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $space-xs;
+  }
+}
+
+.condition-row__part {
+  font-size: $fs-sm;
+  color: $text-primary;
+  font-weight: $fw-medium;
+  min-width: 140px;
+}
+
+.condition-row__issues {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-xs;
+}
+
+.condition-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px $space-sm;
+  border-radius: $radius-chip;
+  font-size: $fs-xs;
+  font-weight: $fw-medium;
+
+  &--damage {
+    background: rgba($status-red, 0.1);
+    color: $status-red;
+  }
+
+  &--ok {
+    background: rgba($status-green, 0.1);
+    color: $status-green;
+  }
+}
+
+// Tires table
+.tires-table {
+  border-radius: $radius-base;
+  overflow: hidden;
+  border: 1px solid $divider;
+}
+
+.tires-table__header {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: $space-md;
+  padding: $space-sm $space-md;
+  background: $bg-elevated;
+  font-size: $fs-xs;
+  color: $text-tertiary;
+  font-weight: $fw-semibold;
+  text-transform: uppercase;
+}
+
+.tires-table__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: $space-md;
+  padding: $space-sm $space-md;
+  font-size: $fs-sm;
+  border-top: 1px solid $divider;
+}
+
+.tires-table__position {
+  color: $text-primary;
+  font-weight: $fw-medium;
+}
+
+.tires-table__depth,
+.tires-table__size {
+  color: $text-secondary;
 }
 
 // ─── Status Badges ──────────────────────────────────

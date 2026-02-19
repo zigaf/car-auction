@@ -94,6 +94,15 @@
                   </div>
                 </div>
               }
+              @if (lot.transmission) {
+                <div class="spec-item">
+                  <span class="material-symbols-rounded spec-item__icon">settings</span>
+                  <div class="spec-item__content">
+                    <span class="spec-item__label">КПП</span>
+                    <span class="spec-item__value">{{ lot.transmission }}</span>
+                  </div>
+                </div>
+              }
               @if (lot.exteriorColor) {
                 <div class="spec-item">
                   <span class="material-symbols-rounded spec-item__icon">palette</span>
@@ -112,6 +121,24 @@
                   </div>
                 </div>
               }
+              @if (lot.numberOfOwners) {
+                <div class="spec-item">
+                  <span class="material-symbols-rounded spec-item__icon">person</span>
+                  <div class="spec-item__content">
+                    <span class="spec-item__label">Владельцев</span>
+                    <span class="spec-item__value">{{ lot.numberOfOwners }}</span>
+                  </div>
+                </div>
+              }
+              @if (lot.numberOfKeys) {
+                <div class="spec-item">
+                  <span class="material-symbols-rounded spec-item__icon">key</span>
+                  <div class="spec-item__content">
+                    <span class="spec-item__label">Ключей</span>
+                    <span class="spec-item__value">{{ lot.numberOfKeys }}</span>
+                  </div>
+                </div>
+              }
             </div>
 
             @if (lot.vin) {
@@ -121,6 +148,176 @@
               </div>
             }
           </div>
+
+          <!-- Equipment -->
+          @if (lot.equipment && lot.equipment.length > 0) {
+            <div class="info-section">
+              <h2 class="section-title">
+                <span class="material-symbols-rounded section-title__icon">checklist</span>
+                Комплектация
+              </h2>
+              <ul class="equipment-list">
+                @for (item of visibleEquipment; track item) {
+                  <li class="equipment-list__item">
+                    <span class="material-symbols-rounded equipment-list__check">check_circle</span>
+                    {{ item }}
+                  </li>
+                }
+              </ul>
+              @if (lot.equipment.length > 10) {
+                <button class="show-more-btn" (click)="toggleEquipment()">
+                  {{ equipmentExpanded ? 'Скрыть' : 'Показать все (' + lot.equipment.length + ')' }}
+                  <span class="material-symbols-rounded">{{ equipmentExpanded ? 'expand_less' : 'expand_more' }}</span>
+                </button>
+              }
+            </div>
+          }
+
+          <!-- Accident Info -->
+          @if (accidentInfo) {
+            <div class="info-section info-section--warning">
+              <h2 class="section-title">
+                <span class="material-symbols-rounded section-title__icon section-title__icon--warning">warning</span>
+                Авария / Повреждения
+              </h2>
+              <p class="info-text">{{ accidentInfo }}</p>
+            </div>
+          }
+
+          <!-- Body Condition -->
+          @if (bodyCondition.length > 0) {
+            <div class="info-section">
+              <h2 class="section-title">
+                <span class="material-symbols-rounded section-title__icon">directions_car</span>
+                Кузов
+              </h2>
+              <div class="condition-table">
+                @for (item of bodyCondition; track item.part) {
+                  <div class="condition-row">
+                    <span class="condition-row__part">{{ item.part }}</span>
+                    @if (item.issues.length > 0) {
+                      <div class="condition-row__issues">
+                        @for (issue of item.issues; track issue) {
+                          <span class="condition-tag condition-tag--damage">{{ issue }}</span>
+                        }
+                      </div>
+                    } @else {
+                      <span class="condition-tag condition-tag--ok">OK</span>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Interior Condition -->
+          @if (interiorCondition.length > 0) {
+            <div class="info-section">
+              <h2 class="section-title">
+                <span class="material-symbols-rounded section-title__icon">airline_seat_recline_normal</span>
+                Салон
+              </h2>
+              <div class="condition-table">
+                @for (item of interiorCondition; track item.part) {
+                  <div class="condition-row">
+                    <span class="condition-row__part">{{ item.part }}</span>
+                    @if (item.issues.length > 0) {
+                      <div class="condition-row__issues">
+                        @for (issue of item.issues; track issue) {
+                          <span class="condition-tag condition-tag--damage">{{ issue }}</span>
+                        }
+                      </div>
+                    } @else {
+                      <span class="condition-tag condition-tag--ok">OK</span>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Tires -->
+          @if (tires.length > 0) {
+            <div class="info-section">
+              <h2 class="section-title">
+                <span class="material-symbols-rounded section-title__icon">tire_repair</span>
+                Шины / Колесные диски
+              </h2>
+              <div class="tires-table">
+                <div class="tires-table__header">
+                  <span>Позиция</span>
+                  <span>Глубина протектора</span>
+                  <span>Размер</span>
+                </div>
+                @for (tire of tires; track tire.position) {
+                  <div class="tires-table__row">
+                    <span class="tires-table__position">{{ tire.position }}</span>
+                    <span class="tires-table__depth">{{ tire.treadDepth || '-' }}</span>
+                    <span class="tires-table__size">{{ tire.size || '-' }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Stone Chips -->
+          @if (stoneChips.length > 0) {
+            <div class="info-section">
+              <h2 class="section-title">
+                <span class="material-symbols-rounded section-title__icon">grain</span>
+                Сколы / Ветровое стекло
+              </h2>
+              <div class="condition-table">
+                @for (item of stoneChips; track item.part) {
+                  <div class="condition-row">
+                    <span class="condition-row__part">{{ item.part }}</span>
+                    @if (item.issues.length > 0) {
+                      <div class="condition-row__issues">
+                        @for (issue of item.issues; track issue) {
+                          <span class="condition-tag condition-tag--damage">{{ issue }}</span>
+                        }
+                      </div>
+                    } @else {
+                      <span class="condition-tag condition-tag--ok">OK</span>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Seats -->
+          @if (seatsInfo) {
+            <div class="info-section">
+              <h2 class="section-title">
+                <span class="material-symbols-rounded section-title__icon">event_seat</span>
+                Сиденья
+              </h2>
+              <p class="info-text">{{ seatsInfo }}</p>
+            </div>
+          }
+
+          <!-- General Info -->
+          @if (generalInfo) {
+            <div class="info-section">
+              <h2 class="section-title">
+                <span class="material-symbols-rounded section-title__icon">info</span>
+                Общая информация
+              </h2>
+              <p class="info-text">{{ generalInfo }}</p>
+            </div>
+          }
+
+          <!-- Parking Fee -->
+          @if (parkingFee) {
+            <div class="info-section">
+              <h2 class="section-title">
+                <span class="material-symbols-rounded section-title__icon">local_parking</span>
+                Стоянка
+              </h2>
+              <p class="info-text">{{ parkingFee }}</p>
+            </div>
+          }
 
           <!-- Status badges -->
           <div class="status-section">

@@ -6,6 +6,17 @@ import { environment } from '../../../environments/environment';
 import { LotService } from '../../core/services/lot.service';
 import { ILot, ILotImage } from '../../models/lot.model';
 
+interface ConditionItem {
+  part: string;
+  issues: string[];
+}
+
+interface TireInfo {
+  position: string;
+  treadDepth: string | null;
+  size: string | null;
+}
+
 @Component({
   selector: 'app-lot-detail',
   standalone: true,
@@ -20,6 +31,7 @@ export class LotDetailComponent implements OnInit {
   loading = true;
   lot: ILot | null = null;
   selectedImageIndex = 0;
+  equipmentExpanded = false;
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -44,7 +56,6 @@ export class LotDetailComponent implements OnInit {
 
   get images(): ILotImage[] {
     if (this.lot?.images?.length) return this.lot.images;
-    // Fallback: create virtual image from source image URL
     if (this.lot?.sourceImageUrl) {
       const url = this.lot.sourceImageUrl.startsWith('//')
         ? 'https:' + this.lot.sourceImageUrl
@@ -75,5 +86,52 @@ export class LotDetailComponent implements OnInit {
       electric: 'Электро', lpg: 'Газ', other: 'Другое',
     };
     return map[fuelType] || fuelType || '-';
+  }
+
+  // ── Sections data from specs._sections ──
+
+  private get sections(): any {
+    return (this.lot?.specs as any)?._sections || null;
+  }
+
+  get bodyCondition(): ConditionItem[] {
+    return this.sections?.bodyCondition || [];
+  }
+
+  get interiorCondition(): ConditionItem[] {
+    return this.sections?.interiorCondition || [];
+  }
+
+  get tires(): TireInfo[] {
+    return this.sections?.tires || [];
+  }
+
+  get stoneChips(): ConditionItem[] {
+    return this.sections?.stoneChips || [];
+  }
+
+  get accidentInfo(): string | null {
+    return this.sections?.accidentInfo || null;
+  }
+
+  get seatsInfo(): string | null {
+    return this.sections?.seats || null;
+  }
+
+  get parkingFee(): string | null {
+    return this.sections?.parkingFee || null;
+  }
+
+  get generalInfo(): string | null {
+    return this.sections?.generalInfo || null;
+  }
+
+  get visibleEquipment(): string[] {
+    const eq = this.lot?.equipment || [];
+    return this.equipmentExpanded ? eq : eq.slice(0, 10);
+  }
+
+  toggleEquipment(): void {
+    this.equipmentExpanded = !this.equipmentExpanded;
   }
 }
