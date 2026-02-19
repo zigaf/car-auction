@@ -162,6 +162,18 @@
             </div>
           </a>
         }
+        <!-- Infinite scroll anchor -->
+        <div #scrollAnchor class="catalog__scroll-anchor">
+          @if (loadingMore) {
+            <div class="catalog__loading-more">
+              <span class="material-symbols-rounded spinning">progress_activity</span>
+              Загрузка...
+            </div>
+          }
+          @if (!loading && !loadingMore && lots.length > 0 && !hasMore) {
+            <div class="catalog__end">Все лоты загружены</div>
+          }
+        </div>
       </div>
     </div>
   </div>

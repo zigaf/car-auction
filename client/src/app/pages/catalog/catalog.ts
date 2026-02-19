@@ -1,4 +1,5 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, AfterViewInit, ElementRef, ViewChild, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
@@ -13,13 +14,18 @@ import { ILot, ILotFilter } from '../../models/lot.model';
   templateUrl: './catalog.html',
   styleUrl: './catalog.scss',
 })
-export class CatalogComponent implements OnInit {
+export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly lotService = inject(LotService);
+  private readonly platformId = inject(PLATFORM_ID);
+  private observer: IntersectionObserver | null = null;
+
+  @ViewChild('scrollAnchor') scrollAnchor!: ElementRef<HTMLDivElement>;
 
   showAdvancedFilters = false;
   viewMode: 'grid' | 'list' = 'grid';
   sortBy = 'date_desc';
   loading = false;
+  loadingMore = false;
   totalLots = 0;
   currentPage = 1;
 
@@ -52,9 +58,38 @@ export class CatalogComponent implements OnInit {
 
   lots: ILot[] = [];
 
+  get hasMore(): boolean {
+    return this.lots.length < this.totalLots;
+  }
+
   ngOnInit(): void {
     this.loadBrands();
     this.loadLots();
+  }
+
+  ngAfterViewInit(): void {
+    this.setupIntersectionObserver();
+  }
+
+  ngOnDestroy(): void {
+    this.observer?.disconnect();
+  }
+
+  private setupIntersectionObserver(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    this.observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && this.hasMore && !this.loading && !this.loadingMore) {
+          this.loadMore();
+        }
+      },
+      { rootMargin: '200px' },
+    );
+
+    if (this.scrollAnchor?.nativeElement) {
+      this.observer.observe(this.scrollAnchor.nativeElement);
+    }
   }
 
   loadBrands(): void {
@@ -94,6 +129,38 @@ export class CatalogComponent implements OnInit {
         this.lots = [];
         this.totalLots = 0;
         this.loading = false;
+      },
+    });
+  }
+
+  loadMore(): void {
+    if (!this.hasMore || this.loadingMore) return;
+    this.loadingMore = true;
+    this.currentPage++;
+
+    const filter: ILotFilter = {
+      page: this.currentPage,
+      limit: 20,
+      sort: this.sortBy || undefined,
+      brand: this.filters.brand || undefined,
+      fuelType: this.filters.fuelType || undefined,
+      yearFrom: this.filters.yearFrom ?? undefined,
+      yearTo: this.filters.yearTo ?? undefined,
+      priceFrom: this.filters.priceFrom ?? undefined,
+      priceTo: this.filters.priceTo ?? undefined,
+      mileageFrom: this.filters.mileageFrom ?? undefined,
+      mileageTo: this.filters.mileageTo ?? undefined,
+      search: this.filters.search || undefined,
+    };
+
+    this.lotService.getAll(filter).subscribe({
+      next: (result) => {
+        this.lots = [...this.lots, ...result.data];
+        this.totalLots = result.total;
+        this.loadingMore = false;
+      },
+      error: () => {
+        this.loadingMore = false;
       },
     });
   }
