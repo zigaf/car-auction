@@ -57,12 +57,16 @@
 
 .gallery__main {
   position: relative;
-  aspect-ratio: 4 / 3;
+  height: 400px;
   background: $bg-elevated;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+
+  @include mobile {
+    height: 260px;
+  }
 }
 
 // Main gallery image
