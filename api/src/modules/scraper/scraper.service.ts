@@ -202,6 +202,7 @@ export class ScraperService {
         // Fetch full detail from the vehicle page
         const detail = await this.browserService.fetchVehicleDetail(
           card.detailUrl,
+          vehicleId,
         );
 
         // Map to lot entity

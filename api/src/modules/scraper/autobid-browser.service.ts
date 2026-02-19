@@ -23,35 +23,47 @@ export class AutobidBrowserService implements OnModuleDestroy {
   }
 
   async initialize(): Promise<void> {
-    const proxyServer = (
-      process.env.OXYLABS_PROXY_SERVER || 'http://unblock.oxylabs.io:60000'
-    ).replace('https://', 'http://');
-
-    this.logger.log(`Launching browser with proxy: ${proxyServer}`);
-    this.logger.log(
-      `Proxy user: ${process.env.OXYLABS_PROXY_USERNAME || '(not set)'}`,
-    );
-
+    const useProxy = process.env.SCRAPER_USE_PROXY !== 'false';
     const { chromium } = await this.getPlaywright();
 
-    this.browser = await chromium.launch({
-      headless: true,
-      proxy: {
-        server: proxyServer,
-        username: process.env.OXYLABS_PROXY_USERNAME,
-        password: process.env.OXYLABS_PROXY_PASSWORD,
-      },
-      args: [
-        '--disable-blink-features=AutomationControlled',
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--disable-extensions',
-        '--single-process',
-        '--no-zygote',
-      ],
-    });
+    const launchArgs = [
+      '--disable-blink-features=AutomationControlled',
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--disable-extensions',
+      '--single-process',
+      '--no-zygote',
+    ];
+
+    if (useProxy) {
+      const proxyServer = (
+        process.env.OXYLABS_PROXY_SERVER || 'http://unblock.oxylabs.io:60000'
+      ).replace('https://', 'http://');
+
+      this.logger.log(`Launching browser WITH proxy: ${proxyServer}`);
+      this.logger.log(
+        `Proxy user: ${process.env.OXYLABS_PROXY_USERNAME || '(not set)'}`,
+      );
+
+      this.browser = await chromium.launch({
+        headless: true,
+        proxy: {
+          server: proxyServer,
+          username: process.env.OXYLABS_PROXY_USERNAME,
+          password: process.env.OXYLABS_PROXY_PASSWORD,
+        },
+        args: launchArgs,
+      });
+    } else {
+      this.logger.log('Launching browser WITHOUT proxy (SCRAPER_USE_PROXY=false)');
+
+      this.browser = await chromium.launch({
+        headless: true,
+        args: launchArgs,
+      });
+    }
 
     this.context = await this.browser.newContext({
       ignoreHTTPSErrors: true,
@@ -300,6 +312,7 @@ export class AutobidBrowserService implements OnModuleDestroy {
 
   async fetchVehicleDetail(
     detailUrl: string,
+    vehicleId?: string,
   ): Promise<AutobidVehicleDetail> {
     if (!this.page) {
       throw new Error('Browser not initialized. Call initialize() first.');
@@ -324,7 +337,7 @@ export class AutobidBrowserService implements OnModuleDestroy {
     // Scroll page to trigger lazy-loaded sections (body, interior, tires, etc.)
     await this.scrollPageForLazyContent();
 
-    const result: AutobidVehicleDetail = await this.page.evaluate(() => {
+    const result: AutobidVehicleDetail = await this.page.evaluate((vId: string | undefined) => {
       const getAll = (sel: string) =>
         Array.from(document.querySelectorAll(sel));
 
@@ -433,6 +446,8 @@ export class AutobidBrowserService implements OnModuleDestroy {
       const addCdnImage = (src: string) => {
         if (!src.includes('cdn.autobid.de')) return;
         if (src.includes('logo') || src.includes('icon')) return;
+        // Filter: if we know the vehicleId, only accept images from that vehicle's folder
+        if (vId && !src.includes(`/${vId}/`)) return;
         const baseUrl = src.replace(
           /_(?:xs|s|m|l)\.(jpg|jpeg|png|webp)/i,
           '_l.$1',
@@ -451,15 +466,14 @@ export class AutobidBrowserService implements OnModuleDestroy {
         addCdnImage(src);
       });
 
-      if (imageUrls.length === 0) {
-        getAll('picture source').forEach((source) => {
-          const srcset = source.getAttribute('srcset') || '';
-          srcset
-            .split(',')
-            .map((s) => s.trim().split(' ')[0])
-            .forEach(addCdnImage);
-        });
-      }
+      // Also check <picture> <source> for additional images
+      getAll('picture source').forEach((source) => {
+        const srcset = source.getAttribute('srcset') || '';
+        srcset
+          .split(',')
+          .map((s) => s.trim().split(' ')[0])
+          .forEach(addCdnImage);
+      });
 
       // ===================== PRICE =====================
       let price: string | null = null;
@@ -501,28 +515,7 @@ export class AutobidBrowserService implements OnModuleDestroy {
           }
         });
       }
-      // Fallback: find largest cluster of <li> items
-      if (equipment.length === 0) {
-        const allLi = getAll('li');
-        const clusters: Element[][] = [];
-        let currentCluster: Element[] = [];
-        allLi.forEach((li) => {
-          const text = li.textContent?.trim() || '';
-          if (text.length > 2 && text.length < 200) {
-            currentCluster.push(li);
-          } else if (currentCluster.length > 0) {
-            clusters.push(currentCluster);
-            currentCluster = [];
-          }
-        });
-        if (currentCluster.length > 0) clusters.push(currentCluster);
-        const biggest = clusters.sort((a, b) => b.length - a.length)[0];
-        if (biggest && biggest.length >= 5) {
-          biggest.forEach((li) => {
-            equipment.push(li.textContent?.trim() || '');
-          });
-        }
-      }
+      // No fallback — avoid picking up navigation menu items
 
       // Helper: extract condition table rows from a container
       const extractConditionTable = (
@@ -792,10 +785,13 @@ export class AutobidBrowserService implements OnModuleDestroy {
           generalInfo,
         },
       };
-    });
+    }, vehicleId);
 
     this.logger.log(
       `Detail extracted: title="${result.title?.substring(0, 60)}", specs=${Object.keys(result.specs).length}, images=${result.imageUrls.length}, price=${result.price}`,
+    );
+    this.logger.log(
+      `Detail sections: equipment=${result.equipment?.length || 0}, body=${result.sections?.bodyCondition?.length || 0}, interior=${result.sections?.interiorCondition?.length || 0}, tires=${result.sections?.tires?.length || 0}`,
     );
 
     // Log all spec keys for debugging
@@ -803,6 +799,25 @@ export class AutobidBrowserService implements OnModuleDestroy {
       this.logger.debug(
         `Spec keys: ${Object.keys(result.specs).join(', ')}`,
       );
+    }
+
+    // If extraction looks empty, log page content for debugging
+    if (Object.keys(result.specs).length === 0 && result.imageUrls.length <= 2) {
+      const debugInfo = await this.page.evaluate(() => {
+        return {
+          bodyTextLength: document.body?.innerText?.length || 0,
+          bodySnippet: (document.body?.innerText || '').substring(0, 1500),
+          title: document.title,
+          imgCount: document.querySelectorAll('img').length,
+          headerCount: document.querySelectorAll('header').length,
+          tableCount: document.querySelectorAll('table').length,
+        };
+      });
+      this.logger.warn(
+        `Detail page looks empty! bodyTextLen=${debugInfo.bodyTextLength}, imgs=${debugInfo.imgCount}, headers=${debugInfo.headerCount}, tables=${debugInfo.tableCount}`,
+      );
+      this.logger.warn(`Page title: ${debugInfo.title}`);
+      this.logger.warn(`Body snippet: ${debugInfo.bodySnippet.substring(0, 500)}`);
     }
 
     return result;
