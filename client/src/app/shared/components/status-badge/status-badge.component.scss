@@ -1,5 +1,6 @@
 @use '../../../../styles/variables' as *;
 @use '../../../../styles/mixins' as *;
+@use 'sass:color';
 
 .app-badge {
     display: inline-flex;
@@ -18,12 +19,12 @@
     // Variants mapped to design tokens
     &--success {
         background: rgba($status-green, 0.1);
-        color: darken($status-green, 10%);
+        color: color.scale($status-green, $lightness: -10%);
     }
 
     &--warning {
         background: rgba($status-yellow, 0.15);
-        color: darken($status-yellow, 20%);
+        color: color.scale($status-yellow, $lightness: -20%);
     }
 
     &--error {
@@ -33,7 +34,7 @@
 
     &--info {
         background: rgba($status-blue, 0.1);
-        color: darken($status-blue, 10%);
+        color: color.scale($status-blue, $lightness: -10%);
     }
 
     &--neutral {
