@@ -19,14 +19,18 @@ export class BcaBrowserService implements OnModuleDestroy {
   }
 
   async initialize(): Promise<void> {
-    this.logger.log('Launching browser with Oxylabs proxy...');
+    const proxyServer = (process.env.OXYLABS_PROXY_SERVER || 'http://unblock.oxylabs.io:60000')
+      .replace('https://', 'http://');
+
+    this.logger.log(`Launching browser with proxy: ${proxyServer}`);
+    this.logger.log(`Proxy user: ${process.env.OXYLABS_PROXY_USERNAME || '(not set)'}`);
 
     const { chromium } = await this.getPlaywright();
 
     this.browser = await chromium.launch({
       headless: true,
       proxy: {
-        server: process.env.OXYLABS_PROXY_SERVER || 'https://unblock.oxylabs.io:60000',
+        server: proxyServer,
         username: process.env.OXYLABS_PROXY_USERNAME,
         password: process.env.OXYLABS_PROXY_PASSWORD,
       },
