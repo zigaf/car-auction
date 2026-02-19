@@ -1,36 +1,142 @@
 <div class="orders">
   <h1 class="page-title">Мои заказы</h1>
 
-  @for (order of orders; track order.id) {
-    <div class="order-card">
-      <div class="order-card__header">
-        <div class="order-card__info">
-          <span class="order-card__id mono">{{ order.id }}</span>
-          <h3>{{ order.brand }} {{ order.model }} {{ order.year }}</h3>
-        </div>
-        <span class="order-card__total mono">{{ order.total | number }} EUR</span>
-      </div>
-
-      <!-- Progress -->
-      <div class="order-progress">
-        @for (status of order.statuses; track status.label; let i = $index) {
-          <div class="progress-step" [class.progress-step--done]="status.done" [class.progress-step--active]="i === order.currentStatus">
-            <div class="progress-step__dot">
-              @if (status.done) {
-                <span class="material-symbols-rounded">check</span>
-              }
-            </div>
-            <span class="progress-step__label">{{ status.label }}</span>
-          </div>
-        }
-      </div>
+  @if (error) {
+    <div class="error-state">
+      <span class="material-symbols-rounded">error</span>
+      <p>{{ error }}</p>
     </div>
   }
 
-  @if (orders.length === 0) {
+  @if (loading) {
+    <div class="loading-state">
+      <p>Загрузка...</p>
+    </div>
+  }
+
+  @if (!loading && !error && orders.length === 0) {
     <div class="empty-state">
       <span class="material-symbols-rounded">local_shipping</span>
       <p>У вас пока нет заказов</p>
     </div>
+  }
+
+  @if (!loading && !error && orders.length > 0) {
+    @for (order of orders; track order.id) {
+      <div class="order-card" [class.order-card--expanded]="expandedOrderId === order.id">
+        <div class="order-card__header" (click)="toggleOrder(order.id)">
+          <div class="order-card__info">
+            <span class="order-card__id mono">#{{ getShortId(order.id) }}</span>
+            <h3>{{ getLotTitle(order) }}</h3>
+          </div>
+          <div class="order-card__meta">
+            <span class="order-badge" [class]="getStatusBadgeClass(order.status)">
+              {{ getStatusLabel(order.status) }}
+            </span>
+            <span class="order-card__total mono">{{ order.total | number }} EUR</span>
+          </div>
+          <div class="order-card__toggle">
+            <span class="material-symbols-rounded">
+              {{ expandedOrderId === order.id ? 'expand_less' : 'expand_more' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="order-card__date">
+          <span class="material-symbols-rounded">calendar_today</span>
+          {{ order.createdAt | date:'dd.MM.yyyy' }}
+        </div>
+
+        <!-- Progress bar -->
+        <div class="order-progress">
+          @for (step of steps; track step.status) {
+            <div class="progress-step" [class]="getStepState(order.status, step.status)">
+              <div class="progress-step__dot">
+                @if (getStepState(order.status, step.status) === 'progress-step--done') {
+                  <span class="material-symbols-rounded">check</span>
+                }
+              </div>
+              <span class="progress-step__label">{{ step.label }}</span>
+            </div>
+          }
+        </div>
+
+        <!-- Expanded details -->
+        @if (expandedOrderId === order.id) {
+          <div class="order-detail">
+            <div class="order-detail__costs">
+              <h4 class="order-detail__title">Стоимость</h4>
+              <div class="cost-row">
+                <span>Цена авто</span>
+                <span class="mono">{{ order.carPrice | number }} EUR</span>
+              </div>
+              <div class="cost-row">
+                <span>Комиссия</span>
+                <span class="mono">{{ order.commission | number }} EUR</span>
+              </div>
+              <div class="cost-row">
+                <span>Доставка</span>
+                <span class="mono">{{ order.deliveryCost | number }} EUR</span>
+              </div>
+              <div class="cost-row">
+                <span>Растаможка</span>
+                <span class="mono">{{ order.customsCost | number }} EUR</span>
+              </div>
+              <div class="cost-row cost-row--total">
+                <span>Итого</span>
+                <span class="mono">{{ order.total | number }} EUR</span>
+              </div>
+            </div>
+
+            @if (order.managerComment) {
+              <div class="order-detail__comment">
+                <h4 class="order-detail__title">Комментарий менеджера</h4>
+                <p>{{ order.managerComment }}</p>
+              </div>
+            }
+
+            <!-- Status history timeline -->
+            <div class="order-detail__timeline">
+              <h4 class="order-detail__title">История статусов</h4>
+
+              @if (trackingLoading[order.id]) {
+                <p class="timeline-loading">Загрузка...</p>
+              }
+
+              @if (!trackingLoading[order.id] && trackingMap[order.id]) {
+                @if (trackingMap[order.id].length === 0) {
+                  <p class="timeline-empty">Нет записей</p>
+                }
+
+                @if (trackingMap[order.id].length > 0) {
+                  <div class="timeline">
+                    @for (entry of trackingMap[order.id]; track entry.id) {
+                      <div class="timeline__item">
+                        <div class="timeline__dot"></div>
+                        <div class="timeline__content">
+                          <div class="timeline__header">
+                            <span class="timeline__status">{{ getStatusLabel(entry.status) }}</span>
+                            <span class="timeline__date mono">{{ entry.createdAt | date:'dd.MM.yyyy HH:mm' }}</span>
+                          </div>
+                          @if (entry.comment) {
+                            <p class="timeline__comment">{{ entry.comment }}</p>
+                          }
+                          @if (entry.estimatedDate) {
+                            <span class="timeline__estimate">
+                              <span class="material-symbols-rounded">schedule</span>
+                              Ожидаемая дата: {{ entry.estimatedDate | date:'dd.MM.yyyy' }}
+                            </span>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
   }
 </div>

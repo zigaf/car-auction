@@ -7,40 +7,50 @@
     </button>
   </div>
 
-  <div class="documents__table-wrapper">
-    <div class="documents__table">
-      <div class="doc-table-header">
-        <span>Файл</span>
-        <span>Тип</span>
-        <span>Статус</span>
-        <span>Дата</span>
-        <span>Загрузил</span>
-        <span></span>
-      </div>
-      @for (doc of documents; track doc.id) {
-        <div class="doc-row">
-          <div class="doc-row__file">
-            <span class="material-symbols-rounded doc-row__icon">{{ getTypeIcon(doc.type) }}</span>
-            <span class="doc-row__name">{{ doc.name }}</span>
-          </div>
-          <span class="doc-row__type">{{ doc.typeLabel }}</span>
-          <span class="doc-status" [class]="getStatusClass(doc.status)">{{ doc.statusLabel }}</span>
-          <span class="doc-row__date mono">{{ doc.date }}</span>
-          <span class="doc-row__uploader">{{ doc.uploadedBy }}</span>
-          <div class="doc-row__actions">
-            <button class="icon-btn" title="Скачать">
-              <span class="material-symbols-rounded">download</span>
-            </button>
-            <button class="icon-btn" title="Удалить">
-              <span class="material-symbols-rounded">delete</span>
-            </button>
-          </div>
-        </div>
-      }
+  @if (error) {
+    <div class="error-state">
+      <span class="material-symbols-rounded">error</span>
+      <p>{{ error }}</p>
     </div>
-  </div>
+  }
 
-  @if (documents.length === 0) {
+  @if (loading) {
+    <div class="loading-state">
+      <p>Загрузка...</p>
+    </div>
+  }
+
+  @if (!loading && !error && documents.length > 0) {
+    <div class="documents__table-wrapper">
+      <div class="documents__table">
+        <div class="doc-table-header">
+          <span>Файл</span>
+          <span>Тип</span>
+          <span>Статус</span>
+          <span>Дата</span>
+          <span></span>
+        </div>
+        @for (doc of documents; track doc.id) {
+          <div class="doc-row">
+            <div class="doc-row__file">
+              <span class="material-symbols-rounded doc-row__icon">{{ getTypeIcon(doc.type) }}</span>
+              <span class="doc-row__name">{{ doc.fileName }}</span>
+            </div>
+            <span class="doc-row__type">{{ getTypeLabel(doc.type) }}</span>
+            <span class="doc-status" [class]="getStatusClass(doc.status)">{{ getStatusLabel(doc.status) }}</span>
+            <span class="doc-row__date mono">{{ doc.createdAt | date:'yyyy-MM-dd' }}</span>
+            <div class="doc-row__actions">
+              <button class="icon-btn" title="Скачать">
+                <span class="material-symbols-rounded">download</span>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  @if (!loading && !error && documents.length === 0) {
     <div class="empty-state">
       <span class="material-symbols-rounded">description</span>
       <p>У вас пока нет документов</p>

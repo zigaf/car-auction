@@ -1,67 +1,132 @@
 <div class="watchlist">
   <h1 class="page-title">Отслеживаемые</h1>
 
-  <div class="watchlist__brands">
-    <h2 class="section-title">Отслеживаемые бренды</h2>
-    <div class="brand-chips">
-      @for (brand of trackedBrands; track brand.id) {
-        <span class="brand-chip">
-          {{ brand.name }}
-          <button class="brand-chip__remove" (click)="removeBrand(brand.id)">
-            <span class="material-symbols-rounded">close</span>
-          </button>
-        </span>
-      }
-      <button class="brand-chip brand-chip--add">
-        <span class="material-symbols-rounded">add</span>
-        Добавить
-      </button>
+  @if (error) {
+    <div class="error-state">
+      <span class="material-symbols-rounded">error</span>
+      <p>{{ error }}</p>
     </div>
-  </div>
+  }
 
-  <div class="watchlist__lots">
-    <h2 class="section-title">Совпадения ({{ watchedLots.length }})</h2>
-    <div class="lot-grid">
-      @for (lot of watchedLots; track lot.id) {
-        <div class="lot-card">
-          <button class="lot-card__remove" (click)="removeLot(lot.id)" title="Убрать из отслеживаемых">
-            <span class="material-symbols-rounded">favorite</span>
-          </button>
-          <div class="lot-card__image">
-            <span class="material-symbols-rounded">directions_car</span>
-          </div>
-          <div class="lot-card__body">
-            <a [routerLink]="['/catalog', lot.id]" class="lot-card__title">{{ lot.brand }} {{ lot.model }} {{ lot.year }}</a>
-            <div class="lot-card__specs">
-              <span class="lot-card__spec">
-                <span class="material-symbols-rounded">speed</span>
-                {{ lot.mileage | number }} км
-              </span>
-              <span class="lot-card__spec">
-                <span class="material-symbols-rounded">local_gas_station</span>
-                {{ lot.fuel }}
-              </span>
-            </div>
-            <div class="lot-card__footer">
-              <div class="lot-card__bid">
-                <span class="lot-card__bid-label">Текущая ставка</span>
-                <span class="lot-card__bid-value mono">{{ lot.currentBid | number }} EUR</span>
+  @if (loading) {
+    <div class="loading-state">
+      <p>Загрузка...</p>
+    </div>
+  }
+
+  @if (!loading && !error) {
+    <!-- Watched brands -->
+    <div class="watchlist__brands">
+      <h2 class="section-title">Отслеживаемые бренды</h2>
+      <div class="brand-chips">
+        @for (item of brandWatchlist; track item.id) {
+          <span class="brand-chip">
+            {{ item.brand }}
+            <button class="brand-chip__remove" (click)="removeBrand(item.id)">
+              <span class="material-symbols-rounded">close</span>
+            </button>
+          </span>
+        }
+        <button class="brand-chip brand-chip--add">
+          <span class="material-symbols-rounded">add</span>
+          Добавить
+        </button>
+      </div>
+    </div>
+
+    <!-- Favorite lots -->
+    @if (favorites.length > 0) {
+      <div class="watchlist__lots">
+        <h2 class="section-title">Избранные лоты ({{ favorites.length }})</h2>
+        <div class="lot-grid">
+          @for (fav of favorites; track fav.lotId) {
+            <div class="lot-card">
+              <button class="lot-card__remove" (click)="removeFavorite(fav.lotId)" title="Убрать из избранного">
+                <span class="material-symbols-rounded">favorite</span>
+              </button>
+              <div class="lot-card__image">
+                @if (fav.lot.images && fav.lot.images.length > 0) {
+                  <img [src]="fav.lot.images[0].url" [alt]="fav.lot.title" />
+                } @else {
+                  <span class="material-symbols-rounded">directions_car</span>
+                }
               </div>
-              <div class="lot-card__meta">
-                <span class="lot-card__timer mono">{{ lot.endTime }}</span>
-                <span class="lot-card__bids">{{ lot.bids }} ставок</span>
+              <div class="lot-card__body">
+                <a [routerLink]="['/catalog', fav.lot.id]" class="lot-card__title">{{ fav.lot.brand }} {{ fav.lot.model }} {{ fav.lot.year }}</a>
+                <div class="lot-card__specs">
+                  @if (fav.lot.mileage) {
+                    <span class="lot-card__spec">
+                      <span class="material-symbols-rounded">speed</span>
+                      {{ fav.lot.mileage | number }} км
+                    </span>
+                  }
+                  @if (fav.lot.fuelType) {
+                    <span class="lot-card__spec">
+                      <span class="material-symbols-rounded">local_gas_station</span>
+                      {{ fav.lot.fuelType }}
+                    </span>
+                  }
+                </div>
+                <div class="lot-card__footer">
+                  @if (fav.lot.startingBid) {
+                    <div class="lot-card__bid">
+                      <span class="lot-card__bid-label">Стартовая цена</span>
+                      <span class="lot-card__bid-value mono">{{ fav.lot.startingBid | number }} EUR</span>
+                    </div>
+                  }
+                </div>
               </div>
             </div>
-          </div>
+          }
         </div>
-      }
-    </div>
-  </div>
+      </div>
+    }
 
-  @if (watchedLots.length === 0) {
-    <div class="empty-state">
-      <span class="material-symbols-rounded">favorite_border</span>
-      <p>Вы ещё не добавили лоты в отслеживаемые</p>
-    </div>
+    <!-- Watched lots from watchlist -->
+    @if (lotWatchlist.length > 0) {
+      <div class="watchlist__lots">
+        <h2 class="section-title">Отслеживаемые лоты ({{ lotWatchlist.length }})</h2>
+        <div class="lot-grid">
+          @for (item of lotWatchlist; track item.id) {
+            <div class="lot-card">
+              <button class="lot-card__remove" (click)="removeWatchlistItem(item.id)" title="Убрать из отслеживаемых">
+                <span class="material-symbols-rounded">visibility_off</span>
+              </button>
+              <div class="lot-card__image">
+                @if (item.lot && item.lot.images && item.lot.images.length > 0) {
+                  <img [src]="item.lot!.images[0].url" [alt]="item.lot!.title" />
+                } @else {
+                  <span class="material-symbols-rounded">directions_car</span>
+                }
+              </div>
+              <div class="lot-card__body">
+                <a [routerLink]="['/catalog', item.lot!.id]" class="lot-card__title">{{ item.lot!.brand }} {{ item.lot!.model }} {{ item.lot!.year }}</a>
+                <div class="lot-card__specs">
+                  @if (item.lot!.mileage) {
+                    <span class="lot-card__spec">
+                      <span class="material-symbols-rounded">speed</span>
+                      {{ item.lot!.mileage | number }} км
+                    </span>
+                  }
+                  @if (item.lot!.fuelType) {
+                    <span class="lot-card__spec">
+                      <span class="material-symbols-rounded">local_gas_station</span>
+                      {{ item.lot!.fuelType }}
+                    </span>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    @if (favorites.length === 0 && lotWatchlist.length === 0 && brandWatchlist.length === 0) {
+      <div class="empty-state">
+        <span class="material-symbols-rounded">favorite_border</span>
+        <p>Вы ещё не добавили лоты в отслеживаемые</p>
+      </div>
+    }
   }
 </div>

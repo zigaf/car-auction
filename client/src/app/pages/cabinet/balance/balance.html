@@ -1,49 +1,74 @@
 <div class="balance">
   <h1 class="page-title">Баланс</h1>
 
-  <div class="balance__header">
-    <div class="balance__current">
-      <span class="balance__label">Текущий баланс</span>
-      <span class="balance__amount mono">{{ balance | number }} EUR</span>
+  @if (error) {
+    <div class="error-state">
+      <span class="material-symbols-rounded">error</span>
+      <p>{{ error }}</p>
     </div>
-    <div class="balance__actions">
-      <button class="balance__btn balance__btn--deposit">
-        <span class="material-symbols-rounded">add</span>
-        Пополнить
-      </button>
-      <button class="balance__btn balance__btn--withdraw">
-        <span class="material-symbols-rounded">arrow_upward</span>
-        Вывести
-      </button>
-    </div>
-  </div>
+  }
 
-  <div class="balance__table-wrapper">
-    <h2 class="section-title">История операций</h2>
-    <div class="balance__table">
-      <div class="table-header">
-        <span>Дата</span>
-        <span>Тип</span>
-        <span>Описание</span>
-        <span class="text-right">Сумма</span>
-        <span class="text-right">Остаток</span>
+  @if (loading) {
+    <div class="loading-state">
+      <p>Загрузка...</p>
+    </div>
+  }
+
+  @if (!loading && !error) {
+    <div class="balance__header">
+      <div class="balance__current">
+        <span class="balance__label">Текущий баланс</span>
+        <span class="balance__amount mono">{{ balance | number }} EUR</span>
       </div>
-      @for (tx of transactions; track tx.id) {
-        <div class="table-row">
-          <span class="table-row__date mono">{{ tx.date }}</span>
-          <span class="table-row__type">
-            <span class="type-icon" [class]="'type-icon--' + tx.type">
-              <span class="material-symbols-rounded">{{ getTypeIcon(tx.type) }}</span>
-            </span>
-            {{ tx.label }}
-          </span>
-          <span class="table-row__desc">{{ tx.description }}</span>
-          <span class="table-row__amount mono text-right" [class.positive]="tx.amount > 0" [class.negative]="tx.amount < 0">
-            {{ tx.amount > 0 ? '+' : '' }}{{ tx.amount | number }} EUR
-          </span>
-          <span class="table-row__balance mono text-right">{{ tx.balanceAfter | number }} EUR</span>
+      <div class="balance__actions">
+        <button class="balance__btn balance__btn--deposit">
+          <span class="material-symbols-rounded">add</span>
+          Пополнить
+        </button>
+        <button class="balance__btn balance__btn--withdraw">
+          <span class="material-symbols-rounded">arrow_upward</span>
+          Вывести
+        </button>
+      </div>
+    </div>
+
+    <div class="balance__table-wrapper">
+      <h2 class="section-title">История операций</h2>
+
+      @if (transactions.length === 0) {
+        <div class="empty-state">
+          <span class="material-symbols-rounded">receipt_long</span>
+          <p>Операций пока нет</p>
+        </div>
+      }
+
+      @if (transactions.length > 0) {
+        <div class="balance__table">
+          <div class="table-header">
+            <span>Дата</span>
+            <span>Тип</span>
+            <span>Описание</span>
+            <span class="text-right">Сумма</span>
+            <span class="text-right">Остаток</span>
+          </div>
+          @for (tx of transactions; track tx.id) {
+            <div class="table-row">
+              <span class="table-row__date mono">{{ tx.createdAt | date:'yyyy-MM-dd' }}</span>
+              <span class="table-row__type">
+                <span class="type-icon" [class]="'type-icon--' + tx.type">
+                  <span class="material-symbols-rounded">{{ getTypeIcon(tx.type) }}</span>
+                </span>
+                {{ getTypeLabel(tx.type) }}
+              </span>
+              <span class="table-row__desc">{{ tx.description }}</span>
+              <span class="table-row__amount mono text-right" [class.positive]="tx.amount > 0" [class.negative]="tx.amount < 0">
+                {{ tx.amount > 0 ? '+' : '' }}{{ tx.amount | number }} EUR
+              </span>
+              <span class="table-row__balance mono text-right">{{ tx.balanceAfter | number }} EUR</span>
+            </div>
+          }
         </div>
       }
     </div>
-  </div>
+  }
 </div>

@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
+import { StateService } from '../../../core/services/state.service';
 
 @Component({
   selector: 'app-login',
@@ -14,8 +15,55 @@ export class LoginComponent {
   email = '';
   password = '';
   showPassword = false;
+  errorMessage = '';
+  isLoading = false;
 
   private router = inject(Router);
+  private stateService = inject(StateService);
+
+  async onLogin() {
+    this.errorMessage = '';
+
+    if (!this.email || !this.password) {
+      this.errorMessage = 'Введите email и пароль';
+      return;
+    }
+
+    this.isLoading = true;
+
+    try {
+      const response = await fetch(`${environment.apiUrl}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: this.email, password: this.password }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        throw new Error(error?.message || 'Неверный email или пароль');
+      }
+
+      const data = await response.json();
+      localStorage.setItem('accessToken', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
+
+      // Load user profile
+      const profileResponse = await fetch(`${environment.apiUrl}/users/me`, {
+        headers: { Authorization: `Bearer ${data.accessToken}` },
+      });
+
+      if (profileResponse.ok) {
+        const user = await profileResponse.json();
+        this.stateService.setUser(user);
+      }
+
+      this.router.navigate(['/cabinet']);
+    } catch (err: any) {
+      this.errorMessage = err.message || 'Ошибка при входе. Попробуйте позже.';
+    } finally {
+      this.isLoading = false;
+    }
+  }
 
   telegramLogin() {
     const botName = environment.telegramBotName;

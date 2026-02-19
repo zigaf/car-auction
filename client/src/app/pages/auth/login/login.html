@@ -6,7 +6,7 @@
       <p>Войдите, чтобы участвовать в торгах</p>
     </div>
 
-    <form class="auth-form" (ngSubmit)="$event.preventDefault()">
+    <form class="auth-form" (ngSubmit)="onLogin()">
       <div class="form-group">
         <label>Email</label>
         <div class="input-wrap">
@@ -30,7 +30,13 @@
         <a routerLink="/forgot-password" class="auth-form__forgot">Забыли пароль?</a>
       </div>
 
-      <button type="submit" class="auth-form__submit">Войти</button>
+      @if (errorMessage) {
+        <div class="auth-form__error">{{ errorMessage }}</div>
+      }
+
+      <button type="submit" class="auth-form__submit" [disabled]="isLoading">
+        {{ isLoading ? 'Вход...' : 'Войти' }}
+      </button>
     </form>
 
     <div class="social-divider">

@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { StateService, UserState } from '../../core/services/state.service';
 
 @Component({
   selector: 'app-cabinet',
@@ -9,6 +10,24 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
   styleUrl: './cabinet.scss',
 })
 export class CabinetComponent {
+  private stateService = inject(StateService);
+
+  get currentUser(): UserState | null {
+    return this.stateService.snapshot.user;
+  }
+
+  get userName(): string {
+    const user = this.currentUser;
+    if (!user) return '';
+    return `${user.firstName} ${user.lastName}`.trim();
+  }
+
+  get userStatus(): string {
+    const user = this.currentUser;
+    if (!user) return '';
+    return user.isVerified ? 'Верифицирован' : 'Не верифицирован';
+  }
+
   navItems = [
     { path: '/cabinet', label: 'Обзор', icon: 'dashboard', exact: true },
     { path: '/cabinet/bids', label: 'Мои ставки', icon: 'gavel', exact: false },

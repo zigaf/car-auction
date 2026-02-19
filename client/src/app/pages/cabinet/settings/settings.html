@@ -5,24 +5,38 @@
   <section class="settings__section">
     <h2 class="section-title">Профиль</h2>
     <div class="settings__panel">
-      <div class="form-grid">
-        <div class="form-group">
-          <label class="form-label">Имя</label>
-          <div class="form-input form-input--readonly">{{ profile.firstName }}</div>
+      @if (profileLoading) {
+        <div class="settings__loading">Загрузка профиля...</div>
+      } @else {
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Имя</label>
+            <input type="text" class="form-input" [(ngModel)]="profile.firstName" placeholder="Имя">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Фамилия</label>
+            <input type="text" class="form-input" [(ngModel)]="profile.lastName" placeholder="Фамилия">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <div class="form-input form-input--readonly">{{ profile.email }}</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Телефон</label>
+            <input type="text" class="form-input" [(ngModel)]="profile.phone" placeholder="+380 XX XXX XXXX">
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Фамилия</label>
-          <div class="form-input form-input--readonly">{{ profile.lastName }}</div>
+        <div class="settings__save-row">
+          <button class="settings__save-btn" (click)="saveProfile()" [disabled]="profileSaving">
+            {{ profileSaving ? 'Сохранение...' : 'Сохранить профиль' }}
+          </button>
+          @if (profileSaveMessage) {
+            <span class="settings__save-msg" [class.settings__save-msg--success]="profileSaveStatus === 'success'" [class.settings__save-msg--error]="profileSaveStatus === 'error'">
+              {{ profileSaveMessage }}
+            </span>
+          }
         </div>
-        <div class="form-group">
-          <label class="form-label">Email</label>
-          <div class="form-input form-input--readonly">{{ profile.email }}</div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Телефон</label>
-          <div class="form-input form-input--readonly">{{ profile.phone }}</div>
-        </div>
-      </div>
+      }
     </div>
   </section>
 

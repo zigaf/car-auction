@@ -1,78 +1,99 @@
 <div class="my-bids">
-  <h1 class="page-title">Мои ставки</h1>
+  <h1 class="page-title">My Bids</h1>
 
+  <!-- Tabs -->
   <div class="tabs">
-    <button [class.active]="activeTab === 'active'" (click)="activeTab = 'active'">
-      Активные <span class="tabs__count">{{ activeBids.length }}</span>
+    <button [class.active]="activeTab === 'all'" (click)="setTab('all')">
+      All
+      <span class="tabs__count">{{ counts.all }}</span>
     </button>
-    <button [class.active]="activeTab === 'won'" (click)="activeTab = 'won'">
-      Выигранные <span class="tabs__count">{{ wonBids.length }}</span>
+    <button [class.active]="activeTab === 'active'" (click)="setTab('active')">
+      Active
+      <span class="tabs__count">{{ counts.active }}</span>
     </button>
-    <button [class.active]="activeTab === 'lost'" (click)="activeTab = 'lost'">
-      Проигранные <span class="tabs__count">{{ lostBids.length }}</span>
+    <button [class.active]="activeTab === 'won'" (click)="setTab('won')">
+      Won
+      <span class="tabs__count">{{ counts.won }}</span>
+    </button>
+    <button [class.active]="activeTab === 'lost'" (click)="setTab('lost')">
+      Lost
+      <span class="tabs__count">{{ counts.lost }}</span>
     </button>
   </div>
 
-  @if (activeTab === 'active') {
+  <!-- Loading -->
+  @if (loading) {
+    <div class="loading-state">
+      <span class="material-symbols-rounded spin">progress_activity</span>
+      <p>Loading your bids...</p>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (error) {
+    <div class="error-state">
+      <span class="material-symbols-rounded">error</span>
+      <p>{{ error }}</p>
+      <button class="retry-btn" (click)="loadBids()">Retry</button>
+    </div>
+  }
+
+  <!-- Empty state -->
+  @if (!loading && !error && filteredBids.length === 0) {
+    <div class="empty-state">
+      <span class="material-symbols-rounded">gavel</span>
+      @if (activeTab === 'all') {
+        <p>You have not placed any bids yet.</p>
+      } @else if (activeTab === 'active') {
+        <p>No active bids.</p>
+      } @else if (activeTab === 'won') {
+        <p>No won auctions yet.</p>
+      } @else {
+        <p>No lost auctions.</p>
+      }
+    </div>
+  }
+
+  <!-- Bids list -->
+  @if (!loading && !error && filteredBids.length > 0) {
     <div class="bids-list">
-      @for (bid of activeBids; track bid.id) {
-        <a [routerLink]="['/catalog', bid.id]" class="bid-row">
+      @for (bid of filteredBids; track bid.id) {
+        <a class="bid-row" [routerLink]="['/catalog', bid.lotId]">
           <div class="bid-row__thumb">
-            <span class="material-symbols-rounded">directions_car</span>
+            @if (getLotImage(bid)) {
+              <img [src]="getLotImage(bid)" [alt]="bid.lot?.title || 'Lot'" class="bid-row__thumb-img">
+            } @else {
+              <span class="material-symbols-rounded">directions_car</span>
+            }
           </div>
           <div class="bid-row__info">
-            <span class="bid-row__name">{{ bid.brand }} {{ bid.model }} {{ bid.year }}</span>
-            <span class="bid-row__timer mono">{{ bid.endTime }}</span>
+            <span class="bid-row__name">{{ bid.lot?.title || 'Lot' }}</span>
+            <span class="bid-row__date">{{ bid.createdAt | date:'dd MMM yyyy, HH:mm' }}</span>
           </div>
           <div class="bid-row__amounts">
-            <span class="bid-row__my-bid">Моя: <strong class="mono">{{ bid.myBid | number }} EUR</strong></span>
-            <span class="bid-row__current">Текущая: <strong class="mono">{{ bid.currentBid | number }} EUR</strong></span>
+            <span class="bid-row__my-bid">My bid: <strong>{{ bid.amount | number }} EUR</strong></span>
+            @if (bid.lot?.currentPrice) {
+              <span class="bid-row__current">Current: <strong>{{ bid.lot?.currentPrice | number }} EUR</strong></span>
+            }
           </div>
-          <span class="bid-status" [class.bid-status--leading]="bid.status === 'leading'" [class.bid-status--outbid]="bid.status === 'outbid'">
-            {{ bid.status === 'leading' ? 'Лидирую' : 'Перебит' }}
-          </span>
+          <div class="bid-status {{ getBidStatus(bid).cssClass }}">
+            {{ getBidStatus(bid).label }}
+          </div>
         </a>
       }
     </div>
-  }
 
-  @if (activeTab === 'won') {
-    <div class="bids-list">
-      @for (bid of wonBids; track bid.id) {
-        <div class="bid-row">
-          <div class="bid-row__thumb">
-            <span class="material-symbols-rounded">directions_car</span>
-          </div>
-          <div class="bid-row__info">
-            <span class="bid-row__name">{{ bid.brand }} {{ bid.model }} {{ bid.year }}</span>
-            <span class="bid-row__payment">{{ bid.paymentStatus }}</span>
-          </div>
-          <div class="bid-row__amounts">
-            <span class="bid-row__current">Итого: <strong class="mono">{{ bid.finalPrice | number }} EUR</strong></span>
-          </div>
-          <span class="bid-status bid-status--won">Выигран</span>
-        </div>
-      }
-    </div>
-  }
-
-  @if (activeTab === 'lost') {
-    <div class="bids-list">
-      @for (bid of lostBids; track bid.id) {
-        <div class="bid-row">
-          <div class="bid-row__thumb">
-            <span class="material-symbols-rounded">directions_car</span>
-          </div>
-          <div class="bid-row__info">
-            <span class="bid-row__name">{{ bid.brand }} {{ bid.model }} {{ bid.year }}</span>
-          </div>
-          <div class="bid-row__amounts">
-            <span class="bid-row__my-bid">Моя: <strong class="mono">{{ bid.myBid | number }} EUR</strong></span>
-            <span class="bid-row__current">Итого: <strong class="mono">{{ bid.finalPrice | number }} EUR</strong></span>
-          </div>
-          <span class="bid-status bid-status--lost">Проигран</span>
-        </div>
-      }
-    </div>
+    <!-- Pagination -->
+    @if (totalPages > 1) {
+      <div class="pagination">
+        <button class="pagination__btn" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">
+          <span class="material-symbols-rounded">chevron_left</span>
+        </button>
+        <span class="pagination__info">Page {{ currentPage }} of {{ totalPages }}</span>
+        <button class="pagination__btn" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">
+          <span class="material-symbols-rounded">chevron_right</span>
+        </button>
+      </div>
+    }
   }
 </div>

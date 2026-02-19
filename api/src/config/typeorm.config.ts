@@ -4,10 +4,6 @@ export const typeOrmConfig = (): TypeOrmModuleOptions => {
   // Support Railway DATABASE_URL or individual PG* / DATABASE_* vars
   const url = process.env.DATABASE_URL || process.env.DATABASE_PUBLIC_URL;
 
-  console.log('[TypeORM Config] DATABASE_URL set:', !!process.env.DATABASE_URL);
-  console.log('[TypeORM Config] PGHOST:', process.env.PGHOST || '(not set)');
-  console.log('[TypeORM Config] Using URL mode:', !!url);
-
   if (url) {
     return {
       type: 'postgres',
@@ -15,7 +11,7 @@ export const typeOrmConfig = (): TypeOrmModuleOptions => {
       ssl: url.includes('railway') ? { rejectUnauthorized: false } : false,
       entities: [__dirname + '/../db/entities/*.entity{.ts,.js}'],
       migrations: [__dirname + '/../db/migrations/*{.ts,.js}'],
-      synchronize: true,
+      synchronize: process.env.NODE_ENV !== 'production',
       logging: process.env.NODE_ENV === 'development',
     };
   }
@@ -29,7 +25,7 @@ export const typeOrmConfig = (): TypeOrmModuleOptions => {
     database: process.env.PGDATABASE || process.env.DATABASE_NAME || 'car_auction',
     entities: [__dirname + '/../db/entities/*.entity{.ts,.js}'],
     migrations: [__dirname + '/../db/migrations/*{.ts,.js}'],
-    synchronize: true,
+    synchronize: process.env.NODE_ENV !== 'production',
     logging: process.env.NODE_ENV === 'development',
   };
 };

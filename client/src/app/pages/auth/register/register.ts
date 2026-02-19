@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
+import { StateService } from '../../../core/services/state.service';
 
 @Component({
   selector: 'app-register',
@@ -18,8 +19,71 @@ export class RegisterComponent {
   password = '';
   confirmPassword = '';
   showPassword = false;
+  errorMessage = '';
+  isLoading = false;
 
   private router = inject(Router);
+  private stateService = inject(StateService);
+
+  async onRegister() {
+    this.errorMessage = '';
+
+    if (!this.firstName || !this.lastName || !this.email || !this.password) {
+      this.errorMessage = 'Заполните все обязательные поля';
+      return;
+    }
+
+    if (this.password !== this.confirmPassword) {
+      this.errorMessage = 'Пароли не совпадают';
+      return;
+    }
+
+    if (this.password.length < 8) {
+      this.errorMessage = 'Пароль должен содержать минимум 8 символов';
+      return;
+    }
+
+    this.isLoading = true;
+
+    try {
+      const response = await fetch(`${environment.apiUrl}/auth/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: this.firstName,
+          lastName: this.lastName,
+          email: this.email,
+          phone: this.phone || undefined,
+          password: this.password,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        throw new Error(error?.message || 'Ошибка регистрации');
+      }
+
+      const data = await response.json();
+      localStorage.setItem('accessToken', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
+
+      // Load user profile
+      const profileResponse = await fetch(`${environment.apiUrl}/users/me`, {
+        headers: { Authorization: `Bearer ${data.accessToken}` },
+      });
+
+      if (profileResponse.ok) {
+        const user = await profileResponse.json();
+        this.stateService.setUser(user);
+      }
+
+      this.router.navigate(['/cabinet']);
+    } catch (err: any) {
+      this.errorMessage = err.message || 'Ошибка при регистрации. Попробуйте позже.';
+    } finally {
+      this.isLoading = false;
+    }
+  }
 
   telegramLogin() {
     const botName = environment.telegramBotName;

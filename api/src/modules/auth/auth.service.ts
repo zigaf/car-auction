@@ -79,10 +79,13 @@ export class AuthService {
   }
 
   async refresh(refreshToken: string) {
+    const refreshSecret = process.env.JWT_REFRESH_SECRET || (process.env.NODE_ENV === 'production' ? undefined : 'dev-refresh-secret');
+    if (!refreshSecret) throw new Error('JWT_REFRESH_SECRET must be set in production');
+
     let payload: JwtPayload;
     try {
       payload = this.jwtService.verify<JwtPayload>(refreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret',
+        secret: refreshSecret,
       });
     } catch {
       throw new UnauthorizedException('Invalid refresh token');
@@ -189,13 +192,19 @@ export class AuthService {
       role: user.role,
     };
 
+    const accessSecret = process.env.JWT_ACCESS_SECRET || (process.env.NODE_ENV === 'production' ? undefined : 'dev-access-secret');
+    if (!accessSecret) throw new Error('JWT_ACCESS_SECRET must be set in production');
+
+    const refreshSecret = process.env.JWT_REFRESH_SECRET || (process.env.NODE_ENV === 'production' ? undefined : 'dev-refresh-secret');
+    if (!refreshSecret) throw new Error('JWT_REFRESH_SECRET must be set in production');
+
     const accessToken = this.jwtService.sign(payload as Record<string, unknown>, {
-      secret: process.env.JWT_ACCESS_SECRET || 'dev-access-secret',
+      secret: accessSecret,
       expiresIn: (process.env.JWT_ACCESS_EXPIRATION || '15m') as any,
     });
 
     const refreshToken = this.jwtService.sign(payload as Record<string, unknown>, {
-      secret: process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret',
+      secret: refreshSecret,
       expiresIn: (process.env.JWT_REFRESH_EXPIRATION || '7d') as any,
     });
 

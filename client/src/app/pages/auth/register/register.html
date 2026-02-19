@@ -6,7 +6,7 @@
       <p>Создайте аккаунт для участия в аукционах</p>
     </div>
 
-    <form class="auth-form" (ngSubmit)="$event.preventDefault()">
+    <form class="auth-form" (ngSubmit)="onRegister()">
       <div class="form-row">
         <div class="form-group">
           <label>Имя</label>
@@ -59,7 +59,13 @@
         </div>
       </div>
 
-      <button type="submit" class="auth-form__submit">Зарегистрироваться</button>
+      @if (errorMessage) {
+        <div class="auth-form__error">{{ errorMessage }}</div>
+      }
+
+      <button type="submit" class="auth-form__submit" [disabled]="isLoading">
+        {{ isLoading ? 'Регистрация...' : 'Зарегистрироваться' }}
+      </button>
     </form>
 
     <div class="social-divider">

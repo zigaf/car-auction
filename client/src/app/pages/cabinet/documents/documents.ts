@@ -1,35 +1,97 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { DocumentsService } from '../../../core/services/documents.service';
+import { IDocument, DocumentType, DocumentStatus } from '../../../models/document.model';
 
 @Component({
   selector: 'app-documents',
   standalone: true,
-  imports: [],
+  imports: [DatePipe],
   templateUrl: './documents.html',
   styleUrl: './documents.scss',
 })
-export class DocumentsComponent {
-  documents = [
-    { id: 1, name: 'passport_nalyvaiko.pdf', type: 'passport', typeLabel: 'Паспорт', status: 'approved', statusLabel: 'Подтверждён', date: '2025-05-10', uploadedBy: 'Максим Н.' },
-    { id: 2, name: 'invoice_porsche_cayenne.pdf', type: 'invoice', typeLabel: 'Инвойс', status: 'pending', statusLabel: 'На проверке', date: '2025-05-16', uploadedBy: 'Менеджер' },
-    { id: 3, name: 'customs_declaration_112.pdf', type: 'customs', typeLabel: 'Таможня', status: 'pending', statusLabel: 'На проверке', date: '2025-05-17', uploadedBy: 'Менеджер' },
-    { id: 4, name: 'driver_license_expired.jpg', type: 'passport', typeLabel: 'Вод. удост.', status: 'rejected', statusLabel: 'Отклонён', date: '2025-05-08', uploadedBy: 'Максим Н.' },
-  ];
+export class DocumentsComponent implements OnInit {
+  private readonly documentsService = inject(DocumentsService);
+
+  documents: IDocument[] = [];
+  loading = true;
+  error = '';
+
+  ngOnInit(): void {
+    this.loadDocuments();
+  }
+
+  private loadDocuments(): void {
+    this.loading = true;
+    this.error = '';
+
+    this.documentsService.getDocuments(1, 50).subscribe({
+      next: (res) => {
+        this.documents = res.data;
+        this.loading = false;
+      },
+      error: () => {
+        this.error = 'Не удалось загрузить документы';
+        this.loading = false;
+      },
+    });
+  }
 
   getStatusClass(status: string): string {
     switch (status) {
-      case 'approved': return 'doc-status--approved';
-      case 'pending': return 'doc-status--pending';
-      case 'rejected': return 'doc-status--rejected';
-      default: return '';
+      case DocumentStatus.APPROVED:
+        return 'doc-status--approved';
+      case DocumentStatus.PENDING:
+        return 'doc-status--pending';
+      case DocumentStatus.REJECTED:
+        return 'doc-status--rejected';
+      default:
+        return '';
+    }
+  }
+
+  getStatusLabel(status: string): string {
+    switch (status) {
+      case DocumentStatus.APPROVED:
+        return 'Подтверждён';
+      case DocumentStatus.PENDING:
+        return 'На проверке';
+      case DocumentStatus.REJECTED:
+        return 'Отклонён';
+      default:
+        return status;
     }
   }
 
   getTypeIcon(type: string): string {
     switch (type) {
-      case 'passport': return 'badge';
-      case 'invoice': return 'receipt';
-      case 'customs': return 'assured_workload';
-      default: return 'description';
+      case DocumentType.PASSPORT:
+        return 'badge';
+      case DocumentType.INVOICE:
+        return 'receipt';
+      case DocumentType.CUSTOMS_DOC:
+        return 'assured_workload';
+      case DocumentType.POWER_OF_ATTORNEY:
+        return 'gavel';
+      default:
+        return 'description';
+    }
+  }
+
+  getTypeLabel(type: string): string {
+    switch (type) {
+      case DocumentType.PASSPORT:
+        return 'Паспорт';
+      case DocumentType.INVOICE:
+        return 'Инвойс';
+      case DocumentType.CUSTOMS_DOC:
+        return 'Таможня';
+      case DocumentType.POWER_OF_ATTORNEY:
+        return 'Доверенность';
+      case DocumentType.OTHER:
+        return 'Другое';
+      default:
+        return type;
     }
   }
 }

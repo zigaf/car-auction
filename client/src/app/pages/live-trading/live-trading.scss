@@ -8,6 +8,42 @@
   overflow: hidden;
 }
 
+// --- Loading & Empty States ---
+.live__loading,
+.live__empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $space-md;
+  color: $text-tertiary;
+
+  .material-symbols-rounded {
+    font-size: 48px;
+  }
+
+  h3 {
+    margin: 0;
+    color: $text-primary;
+    font-size: $fs-lg;
+  }
+
+  p {
+    margin: 0;
+    font-size: $fs-sm;
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
 // --- Stats ---
 .live__stats {
   display: flex;
@@ -119,6 +155,12 @@
   }
 }
 
+.lot__image-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .lot__image-placeholder {
   width: 100%;
   height: 100%;
@@ -189,6 +231,61 @@
   font-size: $fs-2xl;
   font-weight: $fw-bold;
   color: $accent;
+}
+
+// --- Lot title ---
+.lot__title {
+  margin: 0 0 $space-base;
+  font-size: $fs-lg;
+  font-weight: $fw-bold;
+  color: $text-primary;
+}
+
+// --- Ended banner ---
+.lot__ended-banner {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-md;
+  background: rgba($status-red, 0.1);
+  border: 1px solid rgba($status-red, 0.3);
+  border-radius: $radius-base;
+  color: $status-red;
+  font-weight: $fw-semibold;
+  margin-bottom: $space-base;
+
+  .material-symbols-rounded { font-size: 20px; }
+}
+
+.lot__ended-won {
+  margin-left: auto;
+  color: $status-green;
+  font-weight: $fw-bold;
+}
+
+// --- Messages ---
+.lot__message {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-sm $space-md;
+  border-radius: $radius-base;
+  font-size: $fs-sm;
+  margin-bottom: $space-base;
+
+  .material-symbols-rounded { font-size: 18px; }
+
+  &--error {
+    background: rgba($status-red, 0.1);
+    border: 1px solid rgba($status-red, 0.3);
+    color: $status-red;
+  }
+
+  &--success {
+    background: rgba($status-green, 0.1);
+    border: 1px solid rgba($status-green, 0.3);
+    color: $status-green;
+  }
 }
 
 // --- Specs ---
@@ -362,10 +459,23 @@
   & + & { border-top: 1px solid $divider; }
 }
 
+.lot__history-empty {
+  text-align: center;
+  padding: $space-md;
+  font-size: $fs-sm;
+  color: $text-tertiary;
+}
+
 .lot__history-flag { font-size: 14px; }
 .lot__history-bidder { color: $text-secondary; }
 .lot__history-amount { color: $text-primary; font-weight: $fw-medium; }
 .lot__history-time { color: $text-tertiary; font-size: $fs-xs; }
+
+.lot__history-item--mine {
+  background: $accent-subtle;
+  border-radius: $radius-sm;
+  padding: $space-xs $space-sm;
+}
 
 // --- Middle: Auction List ---
 .live__list {
@@ -432,11 +542,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 
   .material-symbols-rounded {
     font-size: 24px;
     color: $text-tertiary;
   }
+}
+
+.auction-row__thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .auction-row__info {
@@ -552,6 +669,19 @@
   &:first-child {
     background: $accent-subtle;
   }
+}
+
+.live__feed-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $space-sm;
+  padding: $space-xl;
+  color: $text-tertiary;
+
+  .material-symbols-rounded { font-size: 32px; }
+  p { margin: 0; font-size: $fs-sm; }
 }
 
 .feed-item__flag { font-size: 14px; }

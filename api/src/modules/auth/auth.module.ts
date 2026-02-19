@@ -21,6 +21,6 @@ import { RefreshToken } from '../../db/entities/refresh-token.entity';
   ],
   controllers: [AuthController, OAuthController],
   providers: [AuthService, JwtStrategy, OAuthService, TelegramAuthService],
-  exports: [AuthService, JwtStrategy, PassportModule],
+  exports: [AuthService, JwtStrategy, PassportModule, JwtModule],
 })
 export class AuthModule {}

@@ -1,6 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
+import { WatchlistService } from '../../../core/services/watchlist.service';
+import { FavoritesService } from '../../../core/services/favorites.service';
+import { IWatchlistItem } from '../../../models/watchlist.model';
+import { IFavorite } from '../../../models/favorite.model';
 
 @Component({
   selector: 'app-watchlist',
@@ -9,24 +13,73 @@ import { DecimalPipe } from '@angular/common';
   templateUrl: './watchlist.html',
   styleUrl: './watchlist.scss',
 })
-export class WatchlistComponent {
-  trackedBrands = [
-    { id: 1, name: 'BMW' },
-    { id: 2, name: 'Porsche' },
-    { id: 3, name: 'Audi' },
-  ];
+export class WatchlistComponent implements OnInit {
+  private readonly watchlistService = inject(WatchlistService);
+  private readonly favoritesService = inject(FavoritesService);
 
-  watchedLots = [
-    { id: 1, brand: 'BMW', model: '5 Series', year: 2021, mileage: 42000, fuel: 'Дизель', currentBid: 18500, endTime: '1:45:22', bids: 12, image: null },
-    { id: 4, brand: 'Porsche', model: 'Macan', year: 2022, mileage: 28000, fuel: 'Бензин', currentBid: 38200, endTime: '3:12:05', bids: 8, image: null },
-    { id: 6, brand: 'Audi', model: 'Q5', year: 2021, mileage: 51000, fuel: 'Дизель', currentBid: 22800, endTime: '0:55:40', bids: 15, image: null },
-  ];
+  watchlistItems: IWatchlistItem[] = [];
+  favorites: IFavorite[] = [];
+  loading = true;
+  error = '';
 
-  removeBrand(id: number): void {
-    this.trackedBrands = this.trackedBrands.filter(b => b.id !== id);
+  ngOnInit(): void {
+    this.loadData();
   }
 
-  removeLot(id: number): void {
-    this.watchedLots = this.watchedLots.filter(l => l.id !== id);
+  private loadData(): void {
+    this.loading = true;
+    this.error = '';
+
+    this.watchlistService.getWatchlist().subscribe({
+      next: (items) => {
+        this.watchlistItems = items;
+        this.loading = false;
+      },
+      error: () => {
+        this.error = 'Не удалось загрузить отслеживаемые';
+        this.loading = false;
+      },
+    });
+
+    this.favoritesService.getFavorites(1, 50).subscribe({
+      next: (res) => {
+        this.favorites = res.data;
+      },
+      error: () => {
+        // silently fail favorites load
+      },
+    });
+  }
+
+  get brandWatchlist(): IWatchlistItem[] {
+    return this.watchlistItems.filter(item => item.brand && !item.lotId);
+  }
+
+  get lotWatchlist(): IWatchlistItem[] {
+    return this.watchlistItems.filter(item => item.lotId && item.lot);
+  }
+
+  removeBrand(id: string): void {
+    this.watchlistService.removeFromWatchlist(id).subscribe({
+      next: () => {
+        this.watchlistItems = this.watchlistItems.filter(item => item.id !== id);
+      },
+    });
+  }
+
+  removeFavorite(lotId: string): void {
+    this.favoritesService.removeFavorite(lotId).subscribe({
+      next: () => {
+        this.favorites = this.favorites.filter(f => f.lotId !== lotId);
+      },
+    });
+  }
+
+  removeWatchlistItem(id: string): void {
+    this.watchlistService.removeFromWatchlist(id).subscribe({
+      next: () => {
+        this.watchlistItems = this.watchlistItems.filter(item => item.id !== id);
+      },
+    });
   }
 }

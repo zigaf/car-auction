@@ -212,6 +212,60 @@
   }
 }
 
+// Loading / save states
+.settings__loading {
+  font-size: $fs-sm;
+  color: $text-tertiary;
+  padding: $space-lg 0;
+}
+
+.settings__save-row {
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+  margin-top: $space-lg;
+  padding-top: $space-lg;
+  border-top: 1px solid $divider;
+}
+
+.settings__save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-xs;
+  padding: $space-md $space-xl;
+  background: $accent;
+  border: 1px solid $accent;
+  border-radius: $radius-base;
+  font-family: $font-ui;
+  font-size: $fs-sm;
+  font-weight: $fw-semibold;
+  color: #fff;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.settings__save-msg {
+  font-size: $fs-sm;
+  font-weight: $fw-medium;
+
+  &--success {
+    color: #4caf50;
+  }
+
+  &--error {
+    color: #f44336;
+  }
+}
+
 // Scraper section
 .scraper__desc {
   font-size: $fs-sm;
