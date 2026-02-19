@@ -57,7 +57,7 @@
 
 .gallery__main {
   position: relative;
-  height: 400px;
+  height: 320px;
   background: $bg-elevated;
   display: flex;
   align-items: center;
@@ -65,7 +65,7 @@
   overflow: hidden;
 
   @include mobile {
-    height: 260px;
+    height: 220px;
   }
 }
 
