@@ -57,12 +57,25 @@
 
 .gallery__main {
   position: relative;
-  height: 400px;
+  height: 480px;
   background: linear-gradient(135deg, $bg-panel, $bg-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 
   @include mobile {
-    height: 260px;
+    height: 280px;
   }
+}
+
+// Main gallery image — fills the entire gallery area
+.gallery__main-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: opacity $transition-base;
+  user-select: none;
 }
 
 .gallery__placeholder {
@@ -77,6 +90,98 @@
 
   .material-symbols-rounded {
     font-size: 64px;
+  }
+}
+
+// Prev / Next navigation arrows
+.gallery__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: $radius-round;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity $transition-fast, background $transition-fast;
+
+  .material-symbols-rounded {
+    font-size: 24px;
+    color: #fff;
+  }
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  &--prev {
+    left: $space-md;
+  }
+
+  &--next {
+    right: $space-md;
+  }
+
+  .gallery__main:hover & {
+    opacity: 1;
+  }
+}
+
+// Image counter overlay
+.gallery__counter {
+  position: absolute;
+  bottom: $space-md;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: $fs-xs;
+  font-weight: $fw-semibold;
+  padding: 4px $space-sm;
+  border-radius: $radius-chip;
+  pointer-events: none;
+  letter-spacing: 0.5px;
+  font-family: $font-mono;
+}
+
+// Fullscreen / zoom button
+.gallery__fullscreen-btn {
+  position: absolute;
+  bottom: $space-md;
+  right: $space-md;
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: $radius-base;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity $transition-fast, background $transition-fast;
+
+  .material-symbols-rounded {
+    font-size: 20px;
+    color: #fff;
+  }
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  .gallery__main:hover & {
+    opacity: 1;
   }
 }
 
@@ -107,6 +212,7 @@
   }
 }
 
+// Gallery category tabs
 .gallery__tabs {
   display: flex;
   border-top: 1px solid $border-color;
@@ -143,33 +249,260 @@
   }
 }
 
+// Thumbnails wrapper with scroll indicators
+.gallery__thumbs-wrapper {
+  position: relative;
+  border-top: 1px solid $border-color;
+
+  // Fade-out scroll hints on left/right edges
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 24px;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  &::before {
+    left: 0;
+    background: linear-gradient(to right, $bg-panel, transparent);
+  }
+
+  &::after {
+    right: 0;
+    background: linear-gradient(to left, $bg-panel, transparent);
+  }
+}
+
 .gallery__thumbs {
   display: flex;
-  gap: $space-xs;
-  padding: $space-sm;
+  gap: $space-sm;
+  padding: $space-sm $space-base;
   overflow-x: auto;
+  scroll-behavior: smooth;
   @include custom-scrollbar;
+
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
 }
 
 .gallery__thumb {
-  width: 72px;
-  height: 54px;
+  width: 84px;
+  height: 64px;
   flex-shrink: 0;
   background: $bg-elevated;
-  border: 1px solid $border-color;
+  border: 2px solid $border-color;
   border-radius: $radius-base;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  overflow: hidden;
   cursor: pointer;
-  transition: border-color $transition-fast;
+  transition: border-color $transition-fast, box-shadow $transition-fast;
 
   .material-symbols-rounded {
     font-size: 20px;
     color: $text-tertiary;
   }
 
-  &:hover { border-color: $accent; }
+  &:hover {
+    border-color: $accent;
+  }
+
+  // Thumbnail image inside
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+    display: block;
+  }
+}
+
+// Active thumbnail — highlighted border
+.gallery__thumb--active {
+  border-color: $accent;
+  border-width: 2px;
+  box-shadow: 0 0 0 2px rgba($accent, 0.2);
+}
+
+// ─── Damage Photos Grid ─────────────────────────────
+.damage-photos {
+  margin-top: $space-lg;
+  padding-top: $space-base;
+  border-top: 1px solid $divider;
+}
+
+.damage-photos__title {
+  font-size: $fs-sm;
+  font-weight: $fw-semibold;
+  color: $text-secondary;
+  margin: 0 0 $space-md;
+}
+
+.damage-photos__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $space-sm;
+
+  @include tablet {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @include mobile {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.damage-photos__item {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: $radius-base;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1px solid $border-color;
+  transition: border-color $transition-fast;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform $transition-base;
+  }
+
+  &:hover {
+    border-color: $accent;
+
+    img {
+      transform: scale(1.05);
+    }
+
+    .damage-photos__overlay {
+      opacity: 1;
+    }
+  }
+}
+
+.damage-photos__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity $transition-fast;
+
+  .material-symbols-rounded {
+    font-size: 28px;
+    color: #fff;
+  }
+}
+
+// ─── Fullscreen Overlay ──────────────────────────────
+.fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: $z-modal;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn $transition-fast;
+}
+
+.fullscreen-overlay__content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fullscreen-overlay__img {
+  max-width: 92vw;
+  max-height: 92vh;
+  object-fit: contain;
+  user-select: none;
+}
+
+.fullscreen-overlay__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: $radius-round;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background $transition-fast;
+
+  .material-symbols-rounded {
+    font-size: 28px;
+    color: #fff;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.24);
+  }
+
+  &--prev {
+    left: $space-lg;
+  }
+
+  &--next {
+    right: $space-lg;
+  }
+}
+
+.fullscreen-overlay__counter {
+  position: absolute;
+  bottom: $space-xl;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.7);
+  font-family: $font-mono;
+  font-size: $fs-sm;
+  letter-spacing: 1px;
+}
+
+.fullscreen-overlay__close {
+  position: absolute;
+  top: $space-lg;
+  right: $space-lg;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: $radius-round;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background $transition-fast;
+
+  .material-symbols-rounded {
+    font-size: 24px;
+    color: #fff;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.24);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 // ─── Specs ──────────────────────────────────────────

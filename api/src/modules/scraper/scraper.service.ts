@@ -228,11 +228,12 @@ export class ScraperService {
           run.lotsUpdated++;
 
           // Add images if lot has none
+          const damageUrls = detail.sections?.damageImageUrls || [];
           if (
             (!lot.images || lot.images.length === 0) &&
-            detail.imageUrls.length > 0
+            (detail.imageUrls.length > 0 || damageUrls.length > 0)
           ) {
-            await this.saveImageRefs(lot, detail.imageUrls, run);
+            await this.saveImageRefs(lot, detail.imageUrls, run, damageUrls);
           }
         } else {
           // Create new lot
@@ -241,8 +242,9 @@ export class ScraperService {
           run.lotsCreated++;
 
           // Save image references
-          if (detail.imageUrls.length > 0) {
-            await this.saveImageRefs(lot, detail.imageUrls, run);
+          const damageUrls = detail.sections?.damageImageUrls || [];
+          if (detail.imageUrls.length > 0 || damageUrls.length > 0) {
+            await this.saveImageRefs(lot, detail.imageUrls, run, damageUrls);
           }
         }
       } catch (error) {
@@ -258,9 +260,10 @@ export class ScraperService {
     lot: Lot,
     imageUrls: string[],
     run: ScraperRun,
+    damageImageUrls: string[] = [],
   ): Promise<void> {
     try {
-      const imageRefs = this.photoService.createImageRefsFromUrls(imageUrls);
+      const imageRefs = this.photoService.createImageRefsFromUrls(imageUrls, damageImageUrls);
 
       for (const img of imageRefs) {
         const lotImage = this.lotImageRepository.create({

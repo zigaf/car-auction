@@ -1,10 +1,10 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { environment } from '../../../environments/environment';
 import { LotService } from '../../core/services/lot.service';
-import { ILot, ILotImage } from '../../models/lot.model';
+import { ILot, ILotImage, ImageCategory } from '../../models/lot.model';
 
 interface ConditionItem {
   part: string;
@@ -17,6 +17,8 @@ interface TireInfo {
   size: string | null;
 }
 
+export type GalleryTab = 'all' | 'exterior' | 'interior' | 'damage';
+
 @Component({
   selector: 'app-lot-detail',
   standalone: true,
@@ -24,7 +26,7 @@ interface TireInfo {
   templateUrl: './lot-detail.html',
   styleUrl: './lot-detail.scss',
 })
-export class LotDetailComponent implements OnInit {
+export class LotDetailComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly lotService = inject(LotService);
 
@@ -32,11 +34,19 @@ export class LotDetailComponent implements OnInit {
   lot: ILot | null = null;
   selectedImageIndex = 0;
   equipmentExpanded = false;
+  activeGalleryTab: GalleryTab = 'all';
+  fullscreenOpen = false;
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.loadLot(id);
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.fullscreenOpen) {
+      document.body.style.overflow = '';
     }
   }
 
@@ -65,13 +75,82 @@ export class LotDetailComponent implements OnInit {
     return [];
   }
 
+  /** Images filtered by the active gallery tab */
+  get filteredImages(): ILotImage[] {
+    if (this.activeGalleryTab === 'all') return this.images;
+    const categoryMap: Record<string, ImageCategory> = {
+      exterior: ImageCategory.EXTERIOR,
+      interior: ImageCategory.INTERIOR,
+      damage: ImageCategory.DAMAGE,
+    };
+    const cat = categoryMap[this.activeGalleryTab];
+    return this.images.filter((img) => img.category === cat);
+  }
+
+  get damageImages(): ILotImage[] {
+    return this.images.filter((img) => img.category === ImageCategory.DAMAGE);
+  }
+
   get currentImage(): string | null {
-    if (this.images.length === 0) return null;
-    return this.getImageUrl(this.images[this.selectedImageIndex]?.url);
+    const imgs = this.filteredImages;
+    if (imgs.length === 0) return null;
+    const idx = Math.min(this.selectedImageIndex, imgs.length - 1);
+    return this.getImageUrl(imgs[idx]?.url);
+  }
+
+  get imageCounter(): string {
+    const imgs = this.filteredImages;
+    if (imgs.length === 0) return '';
+    const idx = Math.min(this.selectedImageIndex, imgs.length - 1);
+    return `${idx + 1} / ${imgs.length}`;
   }
 
   selectImage(index: number): void {
     this.selectedImageIndex = index;
+  }
+
+  /** Navigate to a specific image in the full (unfiltered) image list */
+  goToImageInAllPhotos(image: ILotImage): void {
+    this.activeGalleryTab = 'all';
+    const idx = this.images.findIndex((img) => img.url === image.url);
+    if (idx !== -1) {
+      this.selectedImageIndex = idx;
+    }
+  }
+
+  prevImage(): void {
+    const imgs = this.filteredImages;
+    if (imgs.length === 0) return;
+    this.selectedImageIndex =
+      this.selectedImageIndex <= 0 ? imgs.length - 1 : this.selectedImageIndex - 1;
+  }
+
+  nextImage(): void {
+    const imgs = this.filteredImages;
+    if (imgs.length === 0) return;
+    this.selectedImageIndex =
+      this.selectedImageIndex >= imgs.length - 1 ? 0 : this.selectedImageIndex + 1;
+  }
+
+  setGalleryTab(tab: GalleryTab): void {
+    this.activeGalleryTab = tab;
+    this.selectedImageIndex = 0;
+  }
+
+  toggleFullscreen(): void {
+    this.fullscreenOpen = !this.fullscreenOpen;
+    document.body.style.overflow = this.fullscreenOpen ? 'hidden' : '';
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  handleKeyboard(event: KeyboardEvent): void {
+    if (event.key === 'ArrowLeft') {
+      this.prevImage();
+    } else if (event.key === 'ArrowRight') {
+      this.nextImage();
+    } else if (event.key === 'Escape' && this.fullscreenOpen) {
+      this.toggleFullscreen();
+    }
   }
 
   getImageUrl(path: string): string {

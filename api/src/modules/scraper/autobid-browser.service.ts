@@ -725,6 +725,45 @@ export class AutobidBrowserService implements OnModuleDestroy {
         if (texts.length > 0) generalInfo = texts.join('. ');
       }
 
+      // ===================== DAMAGE/CONDITION IMAGES =====================
+      const damageImageUrls: string[] = [];
+      const seenDamageUrls = new Set<string>();
+
+      const collectDamageImages = (container: Element | null) => {
+        if (!container) return;
+        container.querySelectorAll('img').forEach((img) => {
+          const rawSrc = img.getAttribute('src') || (img as HTMLImageElement).src || '';
+          if (!rawSrc || rawSrc.startsWith('data:')) return;
+          // Resolve relative URLs to absolute
+          let absoluteUrl: string;
+          try {
+            absoluteUrl = new URL(rawSrc, window.location.href).href;
+          } catch {
+            return;
+          }
+          // Skip logos, icons, and tiny UI elements
+          if (absoluteUrl.includes('logo') || absoluteUrl.includes('icon')) return;
+          // Normalize to large variant if it's a cdn.autobid.de image
+          if (absoluteUrl.includes('cdn.autobid.de')) {
+            absoluteUrl = absoluteUrl.replace(
+              /_(?:xs|s|m|l)\.(jpg|jpeg|png|webp)/i,
+              '_l.$1',
+            );
+          }
+          // Skip images already captured in the main gallery
+          if (seenBaseUrls.has(absoluteUrl)) return;
+          if (!seenDamageUrls.has(absoluteUrl)) {
+            seenDamageUrls.add(absoluteUrl);
+            damageImageUrls.push(absoluteUrl);
+          }
+        });
+      };
+
+      collectDamageImages(bodyContainer);
+      collectDamageImages(interiorContainer);
+      collectDamageImages(chipsContainer);
+      collectDamageImages(accidentContainer);
+
       // ===================== DESCRIPTION (German text below equipment) =====================
       let description: string | null = null;
       if (equipContainer) {
@@ -783,6 +822,7 @@ export class AutobidBrowserService implements OnModuleDestroy {
           stoneChips,
           parkingFee,
           generalInfo,
+          damageImageUrls,
         },
       };
     }, vehicleId);

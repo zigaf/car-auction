@@ -36,17 +36,64 @@
                   <span>Фото автомобиля</span>
                 </div>
               }
+
+              <!-- Prev / Next arrows -->
+              @if (filteredImages.length > 1) {
+                <button class="gallery__arrow gallery__arrow--prev" (click)="prevImage()" aria-label="Предыдущее фото">
+                  <span class="material-symbols-rounded">chevron_left</span>
+                </button>
+                <button class="gallery__arrow gallery__arrow--next" (click)="nextImage()" aria-label="Следующее фото">
+                  <span class="material-symbols-rounded">chevron_right</span>
+                </button>
+              }
+
+              <!-- Image counter -->
+              @if (filteredImages.length > 1) {
+                <span class="gallery__counter">{{ imageCounter }}</span>
+              }
+
+              <!-- Fullscreen button -->
+              @if (currentImage) {
+                <button class="gallery__fullscreen-btn" (click)="toggleFullscreen()" aria-label="Полный экран">
+                  <span class="material-symbols-rounded">fullscreen</span>
+                </button>
+              }
+
               <button class="gallery__like">
                 <span class="material-symbols-rounded">favorite</span>
               </button>
             </div>
-            @if (images.length > 1) {
-              <div class="gallery__thumbs">
-                @for (img of images; track img.id; let i = $index) {
-                  <div class="gallery__thumb" [class.gallery__thumb--active]="selectedImageIndex === i" (click)="selectImage(i)">
-                    <img [src]="getImageUrl(img.url)" [alt]="'Фото ' + (i + 1)">
-                  </div>
-                }
+
+            <!-- Gallery tabs -->
+            <div class="gallery__tabs">
+              <button [class.active]="activeGalleryTab === 'all'" (click)="setGalleryTab('all')">
+                <span class="material-symbols-rounded">photo_library</span>
+                Все фото
+              </button>
+              <button [class.active]="activeGalleryTab === 'exterior'" (click)="setGalleryTab('exterior')">
+                <span class="material-symbols-rounded">directions_car</span>
+                Экстерьер
+              </button>
+              <button [class.active]="activeGalleryTab === 'interior'" (click)="setGalleryTab('interior')">
+                <span class="material-symbols-rounded">airline_seat_recline_normal</span>
+                Интерьер
+              </button>
+              <button [class.active]="activeGalleryTab === 'damage'" (click)="setGalleryTab('damage')">
+                <span class="material-symbols-rounded">warning</span>
+                Повреждения
+              </button>
+            </div>
+
+            <!-- Thumbnails -->
+            @if (filteredImages.length > 1) {
+              <div class="gallery__thumbs-wrapper">
+                <div class="gallery__thumbs">
+                  @for (img of filteredImages; track img.url; let i = $index) {
+                    <div class="gallery__thumb" [class.gallery__thumb--active]="selectedImageIndex === i" (click)="selectImage(i)">
+                      <img [src]="getImageUrl(img.url)" [alt]="'Фото ' + (i + 1)">
+                    </div>
+                  }
+                </div>
               </div>
             }
           </div>
@@ -181,6 +228,23 @@
                 Авария / Повреждения
               </h2>
               <p class="info-text">{{ accidentInfo }}</p>
+
+              <!-- Damage photos in accident section -->
+              @if (damageImages.length > 0) {
+                <div class="damage-photos">
+                  <h3 class="damage-photos__title">Фото повреждений</h3>
+                  <div class="damage-photos__grid">
+                    @for (img of damageImages; track img.url) {
+                      <div class="damage-photos__item" (click)="goToImageInAllPhotos(img)">
+                        <img [src]="getImageUrl(img.url)" [alt]="'Повреждение'">
+                        <div class="damage-photos__overlay">
+                          <span class="material-symbols-rounded">zoom_in</span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
             </div>
           }
 
@@ -207,6 +271,23 @@
                   </div>
                 }
               </div>
+
+              <!-- Damage photos in body section (if no accident section is shown) -->
+              @if (!accidentInfo && damageImages.length > 0) {
+                <div class="damage-photos">
+                  <h3 class="damage-photos__title">Фото повреждений</h3>
+                  <div class="damage-photos__grid">
+                    @for (img of damageImages; track img.url) {
+                      <div class="damage-photos__item" (click)="goToImageInAllPhotos(img)">
+                        <img [src]="getImageUrl(img.url)" [alt]="'Повреждение'">
+                        <div class="damage-photos__overlay">
+                          <span class="material-symbols-rounded">zoom_in</span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
             </div>
           }
 
@@ -413,3 +494,26 @@
     }
   </div>
 </div>
+
+<!-- Fullscreen overlay -->
+@if (fullscreenOpen && currentImage) {
+  <div class="fullscreen-overlay" (click)="toggleFullscreen()">
+    <div class="fullscreen-overlay__content" (click)="$event.stopPropagation()">
+      <img [src]="currentImage" [alt]="lot?.title || ''" class="fullscreen-overlay__img">
+
+      @if (filteredImages.length > 1) {
+        <button class="fullscreen-overlay__arrow fullscreen-overlay__arrow--prev" (click)="prevImage()">
+          <span class="material-symbols-rounded">chevron_left</span>
+        </button>
+        <button class="fullscreen-overlay__arrow fullscreen-overlay__arrow--next" (click)="nextImage()">
+          <span class="material-symbols-rounded">chevron_right</span>
+        </button>
+        <span class="fullscreen-overlay__counter">{{ imageCounter }}</span>
+      }
+
+      <button class="fullscreen-overlay__close" (click)="toggleFullscreen()">
+        <span class="material-symbols-rounded">close</span>
+      </button>
+    </div>
+  </div>
+}

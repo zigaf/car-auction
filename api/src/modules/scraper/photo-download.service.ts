@@ -21,8 +21,11 @@ export class PhotoDownloadService {
    * Save image URL references without downloading files.
    * Stores external URLs directly in the database.
    */
-  createImageRefsFromUrls(imageUrls: string[]): Partial<LotImage>[] {
-    return imageUrls
+  createImageRefsFromUrls(
+    imageUrls: string[],
+    damageImageUrls: string[] = [],
+  ): Partial<LotImage>[] {
+    const galleryRefs = imageUrls
       .filter((url) => url && url.startsWith('http'))
       .map((url, index) => ({
         url,
@@ -30,6 +33,18 @@ export class PhotoDownloadService {
         category: index === 0 ? ImageCategory.MAIN : ImageCategory.EXTERIOR,
         sortOrder: index,
       }));
+
+    const damageStartIndex = galleryRefs.length;
+    const damageRefs = damageImageUrls
+      .filter((url) => url && url.startsWith('http'))
+      .map((url, index) => ({
+        url,
+        originalUrl: url,
+        category: ImageCategory.DAMAGE,
+        sortOrder: damageStartIndex + index,
+      }));
+
+    return [...galleryRefs, ...damageRefs];
   }
 
   async downloadLotPhotos(

@@ -45,6 +45,8 @@ export interface AutobidDetailSections {
   parkingFee: string | null;
   /** Общая информация */
   generalInfo: string | null;
+  /** Image URLs extracted from damage/condition sections (body, interior, stone chips, accident) */
+  damageImageUrls: string[];
 }
 
 export interface AutobidConditionItem {
