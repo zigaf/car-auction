@@ -67,19 +67,26 @@ export class ScraperService {
 
       // Fetch first page to get total count
       const firstPage = await this.browserService.fetchVehiclePage(1);
-      const totalVehicles = firstPage.TotalVehicleCount;
+      const totalVehicles = firstPage.TotalVehicleCount || 0;
       const pageSize = firstPage.PageSize || 50;
-      const totalPages = Math.ceil(totalVehicles / pageSize);
+      const vehiclesOnFirstPage = firstPage.VehicleResults?.length || 0;
+      const totalPages = totalVehicles > 0
+        ? Math.ceil(totalVehicles / pageSize)
+        : vehiclesOnFirstPage > 0 ? 1 : 0;
+
+      this.logger.log(
+        `BCA response: TotalVehicleCount=${firstPage.TotalVehicleCount}, PageSize=${firstPage.PageSize}, vehiclesOnPage=${vehiclesOnFirstPage}`,
+      );
 
       const configMaxPages = parseInt(process.env.SCRAPER_MAX_PAGES || '0', 10);
       const pagesToScrape = maxPages
-        ? Math.min(maxPages, totalPages)
+        ? Math.min(maxPages, totalPages || maxPages)
         : configMaxPages > 0
-          ? Math.min(configMaxPages, totalPages)
+          ? Math.min(configMaxPages, totalPages || configMaxPages)
           : totalPages;
 
-      run.totalPages = pagesToScrape;
-      run.lotsFound = totalVehicles;
+      run.totalPages = pagesToScrape || 1;
+      run.lotsFound = totalVehicles || vehiclesOnFirstPage;
       await this.scraperRunRepository.save(run);
 
       this.logger.log(
