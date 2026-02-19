@@ -26,15 +26,26 @@
         <span class="material-symbols-rounded">favorite</span>
       </button>
 
+      @if (appState$ | async; as state) {
+      @if (state.isAuthenticated && state.user) {
+      <div class="header__user-menu">
+        <a routerLink="/cabinet" class="header__user-btn">
+          <img *ngIf="state.user.countryFlag" [src]="state.user.countryFlag" alt="Flag" class="header__user-flag">
+          <span class="header__user-name">{{ state.user.firstName || 'Профиль' }}</span>
+        </a>
+        <app-button variant="ghost" size="sm" icon="logout" (click)="logout()" aria-label="Выйти"
+          class="header__logout-btn"></app-button>
+      </div>
+      } @else {
       <a routerLink="/login" class="header__login-btn">
         <span class="material-symbols-rounded">person</span>
         <span>Войти</span>
       </a>
+      }
+      }
 
+      <button class="header__burger" (click)="toggleMenu()">
+        <span class="material-symbols-rounded">menu</span>
+      </button>
     </div>
-
-    <button class="header__burger" (click)="toggleMenu()">
-      <span class="material-symbols-rounded">menu</span>
-    </button>
-  </div>
 </header>

@@ -11,6 +11,7 @@ import { catchError, filter, take, switchMap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { StateService } from '../services/state.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
@@ -20,7 +21,8 @@ export class AuthInterceptor implements HttpInterceptor {
   constructor(
     private readonly router: Router,
     private readonly http: HttpClient,
-  ) {}
+    private readonly stateService: StateService,
+  ) { }
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     const accessToken = this.getAccessToken();
@@ -118,6 +120,7 @@ export class AuthInterceptor implements HttpInterceptor {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
     }
+    this.stateService.clearUser();
     this.router.navigate(['/login']);
   }
 }

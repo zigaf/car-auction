@@ -140,7 +140,9 @@
     cursor: not-allowed;
   }
 
-  .material-symbols-rounded { font-size: 20px; }
+  .material-symbols-rounded {
+    font-size: 20px;
+  }
 
   &--primary {
     background: $accent;
@@ -358,7 +360,7 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .auctions__brand {
@@ -367,18 +369,34 @@
   justify-content: space-between;
   padding: $space-sm $space-md;
   border-radius: $radius-base;
-  cursor: pointer;
-  transition: background $transition-fast;
+  text-decoration: none;
+  transition: all $transition-fast;
 
   &:hover {
     background: $bg-secondary;
   }
+
+  &--active {
+    background: $bg-elevated;
+
+    .auctions__brand-name {
+      font-weight: $fw-semibold;
+      color: $text-primary;
+    }
+  }
+}
+
+.auctions__brand-info {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
 }
 
 .auctions__brand-name {
   font-size: $fs-sm;
   color: $text-primary;
   font-weight: $fw-medium;
+  transition: color $transition-fast, font-weight $transition-fast;
 }
 
 .auctions__brand-count {
@@ -461,6 +479,7 @@
 
   &:hover {
     background: #FFFFFF;
+
     .material-symbols-rounded {
       color: $status-red;
     }
@@ -557,9 +576,17 @@
     font-size: 13px;
   }
 
-  &.timer--green { color: $status-green; }
-  &.timer--yellow { color: $status-yellow; }
-  &.timer--red { color: $status-red; }
+  &.timer--green {
+    color: $status-green;
+  }
+
+  &.timer--yellow {
+    color: $status-yellow;
+  }
+
+  &.timer--red {
+    color: $status-red;
+  }
 }
 
 .auctions__more {
@@ -629,9 +656,13 @@
   text-decoration: none;
   white-space: nowrap;
 
-  .material-symbols-rounded { font-size: 18px; }
+  .material-symbols-rounded {
+    font-size: 18px;
+  }
 
-  &:hover { opacity: 0.8; }
+  &:hover {
+    opacity: 0.8;
+  }
 }
 
 .ending-soon__track {
@@ -643,7 +674,9 @@
   padding-bottom: $space-md;
   @include custom-scrollbar;
 
-  &::-webkit-scrollbar { height: 4px; }
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
 }
 
 .ending-soon__card {
@@ -693,7 +726,9 @@
   font-weight: $fw-semibold;
   backdrop-filter: blur(8px);
 
-  .material-symbols-rounded { font-size: 14px; }
+  .material-symbols-rounded {
+    font-size: 14px;
+  }
 
   &.timer--green {
     background: rgba(34, 197, 94, 0.85);
@@ -713,8 +748,15 @@
 }
 
 @keyframes timer-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
 }
 
 .ending-soon__info {

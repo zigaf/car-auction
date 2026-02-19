@@ -11,7 +11,7 @@
           <span class="material-symbols-rounded">sort</span>
           <select [(ngModel)]="sortBy" (ngModelChange)="applyFilters()">
             @for (opt of sortOptions; track opt.value) {
-              <option [value]="opt.value">{{ opt.label }}</option>
+            <option [value]="opt.value">{{ opt.label }}</option>
             }
           </select>
         </div>
@@ -41,12 +41,22 @@
 
         <div class="filter-group">
           <label class="filter-label">Марка</label>
-          <select [(ngModel)]="filters.brand" class="filter-select">
-            <option value="">Все марки</option>
+          <div class="filter-brands">
+            <label class="filter-brands__item" [class.filter-brands__item--active]="filters.brand === ''">
+              <input type="radio" name="brandFilter" [(ngModel)]="filters.brand" value="" class="filter-brands__radio">
+              <span class="filter-brands__name">Все марки</span>
+            </label>
             @for (b of brands; track b) {
-              <option [value]="b">{{ b }}</option>
+            <label class="filter-brands__item" [class.filter-brands__item--active]="filters.brand === b">
+              <input type="radio" name="brandFilter" [(ngModel)]="filters.brand" [value]="b"
+                class="filter-brands__radio">
+              <div class="filter-brands__icon">
+                <app-brand-icon [brand]="b" [size]="16"></app-brand-icon>
+              </div>
+              <span class="filter-brands__name">{{ b }}</span>
+            </label>
             }
-          </select>
+          </div>
         </div>
 
         <div class="filter-group">
@@ -72,7 +82,7 @@
           <select [(ngModel)]="filters.fuelType" class="filter-select">
             <option value="">Все</option>
             @for (f of fuelTypes; track f) {
-              <option [value]="f">{{ fuelTypeLabels[f] }}</option>
+            <option [value]="f">{{ fuelTypeLabels[f] }}</option>
             }
           </select>
         </div>
@@ -95,83 +105,83 @@
       <!-- Lot cards grid -->
       <div class="catalog__grid" [class.catalog__grid--list]="viewMode === 'list'">
         @if (loading) {
-          <div class="catalog__loading">Загрузка...</div>
+        <div class="catalog__loading">Загрузка...</div>
         }
 
         @if (!loading && lots.length === 0) {
-          <div class="catalog__empty">
-            <span class="material-symbols-rounded">search_off</span>
-            <p>Лоты не найдены. Попробуйте изменить фильтры или запустить парсинг в настройках.</p>
-          </div>
+        <div class="catalog__empty">
+          <span class="material-symbols-rounded">search_off</span>
+          <p>Лоты не найдены. Попробуйте изменить фильтры или запустить парсинг в настройках.</p>
+        </div>
         }
 
         @for (lot of lots; track lot.id) {
-          <a [routerLink]="['/catalog', lot.id]" class="lot-card">
-            <div class="lot-card__image">
-              @if (getMainImage(lot)) {
-                <img [src]="getMainImage(lot)" [alt]="lot.title" class="lot-card__img">
-              } @else {
-                <div class="lot-card__placeholder">
-                  <span class="material-symbols-rounded">directions_car</span>
-                </div>
+        <a [routerLink]="['/catalog', lot.id]" class="lot-card">
+          <div class="lot-card__image">
+            @if (getMainImage(lot)) {
+            <img [src]="getMainImage(lot)" [alt]="lot.title" class="lot-card__img">
+            } @else {
+            <div class="lot-card__placeholder">
+              <span class="material-symbols-rounded">directions_car</span>
+            </div>
+            }
+            <div class="lot-card__badges">
+              @if (lot.saleCountry) {
+              <span class="lot-badge lot-badge--docs">{{ lot.saleCountry }}</span>
               }
-              <div class="lot-card__badges">
-                @if (lot.saleCountry) {
-                  <span class="lot-badge lot-badge--docs">{{ lot.saleCountry }}</span>
-                }
-                @if (lot.cosmeticGrade && lot.cosmeticGrade !== '-') {
-                  <span class="lot-badge lot-badge--damage">{{ lot.cosmeticGrade }}</span>
-                }
-              </div>
-              @if (lot.buyNowPrice) {
-                <span class="lot-card__buynow-tag">Buy Now</span>
+              @if (lot.cosmeticGrade && lot.cosmeticGrade !== '-') {
+              <span class="lot-badge lot-badge--damage">{{ lot.cosmeticGrade }}</span>
               }
-              <button class="lot-card__like" (click)="$event.preventDefault(); $event.stopPropagation()">
-                <span class="material-symbols-rounded">favorite</span>
-              </button>
+            </div>
+            @if (lot.buyNowPrice) {
+            <span class="lot-card__buynow-tag">Buy Now</span>
+            }
+            <button class="lot-card__like" (click)="$event.preventDefault(); $event.stopPropagation()">
+              <span class="material-symbols-rounded">favorite</span>
+            </button>
+          </div>
+
+          <div class="lot-card__body">
+            <h3 class="lot-card__title">{{ lot.title }}</h3>
+            <div class="lot-card__specs">
+              @if (lot.year) { <span>{{ lot.year }}</span><span class="dot"></span> }
+              @if (lot.mileage) { <span>{{ lot.mileage | number }} км</span><span class="dot"></span> }
+              <span>{{ getFuelLabel(lot.fuelType) }}</span>
+              @if (lot.enginePowerPs) { <span class="dot"></span><span>{{ lot.enginePowerPs }} л.с.</span> }
             </div>
 
-            <div class="lot-card__body">
-              <h3 class="lot-card__title">{{ lot.title }}</h3>
-              <div class="lot-card__specs">
-                @if (lot.year) { <span>{{ lot.year }}</span><span class="dot"></span> }
-                @if (lot.mileage) { <span>{{ lot.mileage | number }} км</span><span class="dot"></span> }
-                <span>{{ getFuelLabel(lot.fuelType) }}</span>
-                @if (lot.enginePowerPs) { <span class="dot"></span><span>{{ lot.enginePowerPs }} л.с.</span> }
+            <div class="lot-card__auction">
+              <div class="lot-card__price">
+                @if (lot.startingBid) {
+                <span class="lot-card__price-label">Стартовая цена</span>
+                <span class="lot-card__price-value mono">{{ lot.startingBid | number }} EUR</span>
+                } @else {
+                <span class="lot-card__price-label">{{ lot.saleChannel || 'Аукцион' }}</span>
+                <span class="lot-card__price-value mono">{{ lot.saleName }}</span>
+                }
               </div>
-
-              <div class="lot-card__auction">
-                <div class="lot-card__price">
-                  @if (lot.startingBid) {
-                    <span class="lot-card__price-label">Стартовая цена</span>
-                    <span class="lot-card__price-value mono">{{ lot.startingBid | number }} EUR</span>
-                  } @else {
-                    <span class="lot-card__price-label">{{ lot.saleChannel || 'Аукцион' }}</span>
-                    <span class="lot-card__price-value mono">{{ lot.saleName }}</span>
-                  }
-                </div>
-                <div class="lot-card__meta">
-                  @if (lot.vehicleLocation) {
-                    <span class="lot-card__location">
-                      <span class="material-symbols-rounded">location_on</span>
-                      {{ lot.vehicleLocation }}
-                    </span>
-                  }
-                </div>
+              <div class="lot-card__meta">
+                @if (lot.vehicleLocation) {
+                <span class="lot-card__location">
+                  <span class="material-symbols-rounded">location_on</span>
+                  {{ lot.vehicleLocation }}
+                </span>
+                }
               </div>
             </div>
-          </a>
+          </div>
+        </a>
         }
         <!-- Infinite scroll anchor -->
         <div #scrollAnchor class="catalog__scroll-anchor">
           @if (loadingMore) {
-            <div class="catalog__loading-more">
-              <span class="material-symbols-rounded spinning">progress_activity</span>
-              Загрузка...
-            </div>
+          <div class="catalog__loading-more">
+            <span class="material-symbols-rounded spinning">progress_activity</span>
+            Загрузка...
+          </div>
           }
           @if (!loading && !loadingMore && lots.length > 0 && !hasMore) {
-            <div class="catalog__end">Все лоты загружены</div>
+          <div class="catalog__end">Все лоты загружены</div>
           }
         </div>
       </div>

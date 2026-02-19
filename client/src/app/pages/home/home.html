@@ -5,9 +5,9 @@
       <h1 class="hero__title">Найдите автомобиль мечты</h1>
       <p class="hero__subtitle">
         @if (stats.totalLots > 0) {
-          Более {{ stats.totalLots | number }} автомобилей с европейских аукционов
+        Более {{ stats.totalLots | number }} автомобилей с европейских аукционов
         } @else {
-          Автомобили с европейских аукционов BCA Europe
+        Автомобили с европейских аукционов BCA Europe
         }
       </p>
 
@@ -17,25 +17,23 @@
             <span class="material-symbols-rounded">search</span>
             Смотреть каталог
           </a>
-          <button
-            class="hero__btn hero__btn--secondary"
-            (click)="startScraper()"
-            [disabled]="scraperLoading">
+          <button class="hero__btn hero__btn--secondary" (click)="startScraper()" [disabled]="scraperLoading">
             <span class="material-symbols-rounded">sync</span>
             @if (scraperLoading) { Парсинг... } @else { Запустить парсер }
           </button>
         </div>
         @if (scraperMessage) {
-          <div class="hero__scraper-msg" [class.hero__scraper-msg--success]="scraperStatus === 'success'" [class.hero__scraper-msg--error]="scraperStatus === 'error'">
-            {{ scraperMessage }}
-          </div>
+        <div class="hero__scraper-msg" [class.hero__scraper-msg--success]="scraperStatus === 'success'"
+          [class.hero__scraper-msg--error]="scraperStatus === 'error'">
+          {{ scraperMessage }}
+        </div>
         }
       </div>
 
       <div class="hero__tags">
         <span class="hero__tags-label">Популярное:</span>
         @for (tag of popularTags; track tag) {
-          <a routerLink="/catalog" class="hero__tag">{{ tag }}</a>
+        <a routerLink="/catalog" class="hero__tag">{{ tag }}</a>
         }
       </div>
     </div>
@@ -44,198 +42,207 @@
 
 <!-- Лоты из базы -->
 @if (!loading && lots.length > 0) {
-  <section class="auctions">
-    <div class="container">
-      <div class="auctions__header">
-        <div>
-          <h2 class="auctions__title">Автомобили на аукционе</h2>
-          <p class="auctions__count">{{ stats.totalLots | number }} автомобилей в базе</p>
-        </div>
-      </div>
-      <div class="auctions__layout">
-        @if (brands.length > 0) {
-          <aside class="auctions__sidebar">
-            <div class="auctions__sidebar-section">
-              <h3 class="auctions__sidebar-title">Популярные марки</h3>
-              <ul class="auctions__brands">
-                @for (brand of brands; track brand.brand) {
-                  <li class="auctions__brand">
-                    <a routerLink="/catalog" [queryParams]="{ brand: brand.brand }" class="auctions__brand-name">{{ brand.brand }}</a>
-                    <span class="auctions__brand-count">{{ brand.count }}</span>
-                  </li>
-                }
-              </ul>
-            </div>
-          </aside>
-        }
-        <div class="auctions__grid">
-          @for (lot of lots; track lot.id) {
-            <div class="auctions__card">
-              <a [routerLink]="['/catalog', lot.id]" class="auctions__card-image">
-                @if (getMainImage(lot)) {
-                  <img [src]="getMainImage(lot)" [alt]="lot.title">
-                } @else {
-                  <div class="auctions__card-placeholder">
-                    <span class="material-symbols-rounded">directions_car</span>
-                  </div>
-                }
-              </a>
-              <div class="auctions__card-body">
-                <a [routerLink]="['/catalog', lot.id]" class="auctions__card-title">{{ lot.title }}</a>
-                <div class="auctions__card-specs">
-                  @if (lot.year) { <span>{{ lot.year }}</span> }
-                  @if (lot.mileage) { <span>{{ lot.mileage | number }} км</span> }
-                  @if (lot.fuelType) { <span>{{ getFuelLabel(lot.fuelType) }}</span> }
-                  @if (lot.saleCountry) { <span>{{ lot.saleCountry }}</span> }
-                </div>
-                <div class="auctions__card-footer">
-                  <div class="auctions__card-bid">
-                    @if (lot.startingBid) {
-                      <span class="auctions__card-bid-label">Стартовая цена</span>
-                      <span class="auctions__card-bid-value">{{ lot.startingBid | number }} {{ lot.originalCurrency || 'EUR' }}</span>
-                    } @else if (lot.buyNowPrice) {
-                      <span class="auctions__card-bid-label">Buy Now</span>
-                      <span class="auctions__card-bid-value">{{ lot.buyNowPrice | number }} {{ lot.originalCurrency || 'EUR' }}</span>
-                    } @else {
-                      <span class="auctions__card-bid-label">{{ lot.saleChannel || 'Аукцион' }}</span>
-                      <span class="auctions__card-bid-value">{{ lot.saleName || '-' }}</span>
-                    }
-                  </div>
-                </div>
-              </div>
-            </div>
-          }
-        </div>
-      </div>
-      <div class="auctions__more">
-        <a routerLink="/catalog" class="auctions__more-btn">
-          Смотреть все автомобили
-          <span class="material-symbols-rounded">arrow_forward</span>
-        </a>
+<section class="auctions">
+  <div class="container">
+    <div class="auctions__header">
+      <div>
+        <h2 class="auctions__title">Автомобили на аукционе</h2>
+        <p class="auctions__count">{{ stats.totalLots | number }} автомобилей в базе</p>
       </div>
     </div>
-  </section>
+    <div class="auctions__layout">
+      @if (brands.length > 0) {
+      <aside class="auctions__sidebar">
+        <div class="auctions__sidebar-section">
+          <h3 class="auctions__sidebar-title">Популярные марки</h3>
+          <ul class="auctions__brands">
+            @for (brand of brands; track brand.brand) {
+            <li>
+              <a routerLink="/catalog" [queryParams]="{ brand: brand.brand }" class="auctions__brand"
+                routerLinkActive="auctions__brand--active">
+                <div class="auctions__brand-info">
+                  <app-brand-icon [brand]="brand.brand" [size]="20"></app-brand-icon>
+                  <span class="auctions__brand-name">{{ brand.brand }}</span>
+                </div>
+                <span class="auctions__brand-count">{{ brand.count }}</span>
+              </a>
+            </li>
+            }
+          </ul>
+        </div>
+      </aside>
+      }
+      <div class="auctions__grid">
+        @for (lot of lots; track lot.id) {
+        <div class="auctions__card">
+          <a [routerLink]="['/catalog', lot.id]" class="auctions__card-image">
+            @if (getMainImage(lot)) {
+            <img [src]="getMainImage(lot)" [alt]="lot.title">
+            } @else {
+            <div class="auctions__card-placeholder">
+              <span class="material-symbols-rounded">directions_car</span>
+            </div>
+            }
+          </a>
+          <div class="auctions__card-body">
+            <a [routerLink]="['/catalog', lot.id]" class="auctions__card-title">{{ lot.title }}</a>
+            <div class="auctions__card-specs">
+              @if (lot.year) { <span>{{ lot.year }}</span> }
+              @if (lot.mileage) { <span>{{ lot.mileage | number }} км</span> }
+              @if (lot.fuelType) { <span>{{ getFuelLabel(lot.fuelType) }}</span> }
+              @if (lot.saleCountry) { <span>{{ lot.saleCountry }}</span> }
+            </div>
+            <div class="auctions__card-footer">
+              <div class="auctions__card-bid">
+                @if (lot.startingBid) {
+                <span class="auctions__card-bid-label">Стартовая цена</span>
+                <span class="auctions__card-bid-value">{{ lot.startingBid | number }} {{ lot.originalCurrency || 'EUR'
+                  }}</span>
+                } @else if (lot.buyNowPrice) {
+                <span class="auctions__card-bid-label">Buy Now</span>
+                <span class="auctions__card-bid-value">{{ lot.buyNowPrice | number }} {{ lot.originalCurrency || 'EUR'
+                  }}</span>
+                } @else {
+                <span class="auctions__card-bid-label">{{ lot.saleChannel || 'Аукцион' }}</span>
+                <span class="auctions__card-bid-value">{{ lot.saleName || '-' }}</span>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+    <div class="auctions__more">
+      <a routerLink="/catalog" class="auctions__more-btn">
+        Смотреть все автомобили
+        <span class="material-symbols-rounded">arrow_forward</span>
+      </a>
+    </div>
+  </div>
+</section>
 }
 
 <!-- Недавно добавленные -->
 @if (!loading && recentLots.length > 0) {
-  <section class="ending-soon">
-    <div class="container">
-      <div class="ending-soon__header">
-        <div class="ending-soon__header-left">
-          <span class="material-symbols-rounded ending-soon__header-icon">new_releases</span>
-          <div>
-            <h2 class="ending-soon__title">Недавно добавленные</h2>
-            <p class="ending-soon__subtitle">Новые лоты из BCA Europe</p>
+<section class="ending-soon">
+  <div class="container">
+    <div class="ending-soon__header">
+      <div class="ending-soon__header-left">
+        <span class="material-symbols-rounded ending-soon__header-icon">new_releases</span>
+        <div>
+          <h2 class="ending-soon__title">Недавно добавленные</h2>
+          <p class="ending-soon__subtitle">Новые лоты из BCA Europe</p>
+        </div>
+      </div>
+      <a routerLink="/catalog" class="ending-soon__all">
+        Все автомобили
+        <span class="material-symbols-rounded">arrow_forward</span>
+      </a>
+    </div>
+    <div class="ending-soon__track">
+      @for (lot of recentLots; track lot.id) {
+      <div class="ending-soon__card">
+        <a [routerLink]="['/catalog', lot.id]" class="ending-soon__image-wrap">
+          @if (getMainImage(lot)) {
+          <img [src]="getMainImage(lot)" [alt]="lot.title">
+          } @else {
+          <div class="ending-soon__placeholder">
+            <span class="material-symbols-rounded">directions_car</span>
+          </div>
+          }
+        </a>
+        <div class="ending-soon__info">
+          <div class="ending-soon__car-name">{{ lot.title }}</div>
+          <div class="ending-soon__bottom">
+            <div class="ending-soon__price">
+              @if (lot.startingBid) {
+              <span class="ending-soon__price-label">Стартовая цена</span>
+              <span class="ending-soon__price-value">{{ lot.startingBid | number }} {{ lot.originalCurrency || 'EUR'
+                }}</span>
+              } @else {
+              <span class="ending-soon__price-label">{{ lot.saleChannel || 'Аукцион' }}</span>
+              }
+            </div>
+            <a [routerLink]="['/catalog', lot.id]" class="ending-soon__bid-btn">Подробнее</a>
           </div>
         </div>
-        <a routerLink="/catalog" class="ending-soon__all">
-          Все автомобили
-          <span class="material-symbols-rounded">arrow_forward</span>
-        </a>
       </div>
-      <div class="ending-soon__track">
-        @for (lot of recentLots; track lot.id) {
-          <div class="ending-soon__card">
-            <a [routerLink]="['/catalog', lot.id]" class="ending-soon__image-wrap">
-              @if (getMainImage(lot)) {
-                <img [src]="getMainImage(lot)" [alt]="lot.title">
-              } @else {
-                <div class="ending-soon__placeholder">
-                  <span class="material-symbols-rounded">directions_car</span>
-                </div>
-              }
-            </a>
-            <div class="ending-soon__info">
-              <div class="ending-soon__car-name">{{ lot.title }}</div>
-              <div class="ending-soon__bottom">
-                <div class="ending-soon__price">
-                  @if (lot.startingBid) {
-                    <span class="ending-soon__price-label">Стартовая цена</span>
-                    <span class="ending-soon__price-value">{{ lot.startingBid | number }} {{ lot.originalCurrency || 'EUR' }}</span>
-                  } @else {
-                    <span class="ending-soon__price-label">{{ lot.saleChannel || 'Аукцион' }}</span>
-                  }
-                </div>
-                <a [routerLink]="['/catalog', lot.id]" class="ending-soon__bid-btn">Подробнее</a>
-              </div>
-            </div>
-          </div>
-        }
-      </div>
+      }
     </div>
-  </section>
+  </div>
+</section>
 }
 
 <!-- Loading state -->
 @if (loading) {
-  <section class="auctions">
-    <div class="container">
-      <div class="auctions__header">
-        <div>
-          <h2 class="auctions__title">Загрузка...</h2>
-        </div>
+<section class="auctions">
+  <div class="container">
+    <div class="auctions__header">
+      <div>
+        <h2 class="auctions__title">Загрузка...</h2>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 }
 
 <!-- Empty state -->
 @if (!loading && lots.length === 0) {
-  <section class="auctions">
-    <div class="container">
-      <div class="auctions__header">
-        <div>
-          <h2 class="auctions__title">Автомобили на аукционе</h2>
-          <p class="auctions__count">Пока нет лотов в базе. Запустите парсер в настройках.</p>
-        </div>
+<section class="auctions">
+  <div class="container">
+    <div class="auctions__header">
+      <div>
+        <h2 class="auctions__title">Автомобили на аукционе</h2>
+        <p class="auctions__count">Пока нет лотов в базе. Запустите парсер в настройках.</p>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 }
 
 <!-- Статистика платформы -->
 @if (stats.totalLots > 0) {
-  <section class="platform-stats">
-    <div class="container">
-      <h2 class="platform-stats__title">Автомобили с европейских аукционов</h2>
-      <p class="platform-stats__subtitle">Данные из BCA Europe — обновляются автоматически</p>
-      <div class="platform-stats__grid">
-        <div class="platform-stats__card">
-          <div class="platform-stats__icon" style="color: #4F46E5">
-            <span class="material-symbols-rounded">directions_car</span>
-          </div>
-          <div class="platform-stats__value">{{ stats.totalLots | number }}</div>
-          <div class="platform-stats__label">Автомобилей</div>
-          <div class="platform-stats__sublabel">в базе</div>
+<section class="platform-stats">
+  <div class="container">
+    <h2 class="platform-stats__title">Автомобили с европейских аукционов</h2>
+    <p class="platform-stats__subtitle">Данные из BCA Europe — обновляются автоматически</p>
+    <div class="platform-stats__grid">
+      <div class="platform-stats__card">
+        <div class="platform-stats__icon" style="color: #4F46E5">
+          <span class="material-symbols-rounded">directions_car</span>
         </div>
-        <div class="platform-stats__card">
-          <div class="platform-stats__icon" style="color: #22C55E">
-            <span class="material-symbols-rounded">category</span>
-          </div>
-          <div class="platform-stats__value">{{ stats.totalBrands }}</div>
-          <div class="platform-stats__label">Марок</div>
-          <div class="platform-stats__sublabel">представлено</div>
+        <div class="platform-stats__value">{{ stats.totalLots | number }}</div>
+        <div class="platform-stats__label">Автомобилей</div>
+        <div class="platform-stats__sublabel">в базе</div>
+      </div>
+      <div class="platform-stats__card">
+        <div class="platform-stats__icon" style="color: #22C55E">
+          <span class="material-symbols-rounded">category</span>
         </div>
-        <div class="platform-stats__card">
-          <div class="platform-stats__icon" style="color: #F59E0B">
-            <span class="material-symbols-rounded">public</span>
-          </div>
-          <div class="platform-stats__value">{{ stats.countries }}</div>
-          <div class="platform-stats__label">Стран</div>
-          <div class="platform-stats__sublabel">продаж</div>
+        <div class="platform-stats__value">{{ stats.totalBrands }}</div>
+        <div class="platform-stats__label">Марок</div>
+        <div class="platform-stats__sublabel">представлено</div>
+      </div>
+      <div class="platform-stats__card">
+        <div class="platform-stats__icon" style="color: #F59E0B">
+          <span class="material-symbols-rounded">public</span>
         </div>
-        <div class="platform-stats__card">
-          <div class="platform-stats__icon" style="color: #3B82F6">
-            <span class="material-symbols-rounded">photo_library</span>
-          </div>
-          <div class="platform-stats__value">{{ stats.withPhotos | number }}</div>
-          <div class="platform-stats__label">С фото</div>
-          <div class="platform-stats__sublabel">автомобилей</div>
+        <div class="platform-stats__value">{{ stats.countries }}</div>
+        <div class="platform-stats__label">Стран</div>
+        <div class="platform-stats__sublabel">продаж</div>
+      </div>
+      <div class="platform-stats__card">
+        <div class="platform-stats__icon" style="color: #3B82F6">
+          <span class="material-symbols-rounded">photo_library</span>
         </div>
+        <div class="platform-stats__value">{{ stats.withPhotos | number }}</div>
+        <div class="platform-stats__label">С фото</div>
+        <div class="platform-stats__sublabel">автомобилей</div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 }
 
 <!-- Как это работает -->
@@ -244,11 +251,11 @@
     <h2 class="section__title">Как это работает</h2>
     <div class="steps">
       @for (step of steps; track step.title; let i = $index) {
-        <div class="step">
-          <div class="step__number">{{ i + 1 }}</div>
-          <h3 class="step__title">{{ step.title }}</h3>
-          <p class="step__desc">{{ step.desc }}</p>
-        </div>
+      <div class="step">
+        <div class="step__number">{{ i + 1 }}</div>
+        <h3 class="step__title">{{ step.title }}</h3>
+        <p class="step__desc">{{ step.desc }}</p>
+      </div>
       }
     </div>
   </div>

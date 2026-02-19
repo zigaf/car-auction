@@ -1,0 +1,120 @@
+@use '../../../../styles/variables' as *;
+
+.app-toast {
+    display: flex;
+    align-items: flex-start;
+    gap: $space-md;
+    width: 320px;
+    max-width: 90vw;
+    padding: $space-md;
+    background: $bg-panel;
+    border-radius: $radius-base;
+    box-shadow: $shadow-lg;
+    border-left: 4px solid transparent;
+    pointer-events: auto;
+    animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1), fadeIn 0.3s ease;
+    position: relative;
+    overflow: hidden;
+
+    // Variants
+    &--success {
+        border-left-color: $status-green;
+
+        .app-toast__icon {
+            color: $status-green;
+        }
+    }
+
+    &--error {
+        border-left-color: $status-red;
+
+        .app-toast__icon {
+            color: $status-red;
+        }
+    }
+
+    &--warning {
+        border-left-color: $status-yellow;
+
+        .app-toast__icon {
+            color: $status-yellow;
+        }
+    }
+
+    &--info {
+        border-left-color: $status-blue;
+
+        .app-toast__icon {
+            color: $status-blue;
+        }
+    }
+
+    &__icon-wrapper {
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    &__icon {
+        font-size: 20px;
+    }
+
+    &__content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    &__title {
+        margin: 0 0 4px 0;
+        font-family: $font-ui;
+        font-size: $fs-sm;
+        font-weight: $fw-bold;
+        color: $text-primary;
+    }
+
+    &__message {
+        margin: 0;
+        font-family: $font-ui;
+        font-size: $fs-sm;
+        color: $text-secondary;
+        line-height: 1.4;
+    }
+
+    &__close {
+        flex-shrink: 0;
+        background: transparent;
+        border: none;
+        color: $text-tertiary;
+        cursor: pointer;
+        padding: 0;
+        margin: -4px -4px 0 0;
+        transition: color $transition-fast;
+
+        .material-symbols-rounded {
+            font-size: 18px;
+        }
+
+        &:hover {
+            color: $text-primary;
+        }
+    }
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}

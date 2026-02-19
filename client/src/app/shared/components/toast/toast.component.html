@@ -1,0 +1,14 @@
+<div class="app-toast" [class]="'app-toast--' + toast.type">
+    <div class="app-toast__icon-wrapper">
+        <span class="material-symbols-rounded app-toast__icon">{{ icon }}</span>
+    </div>
+
+    <div class="app-toast__content">
+        <h4 *ngIf="toast.title" class="app-toast__title">{{ toast.title }}</h4>
+        <p class="app-toast__message">{{ toast.message }}</p>
+    </div>
+
+    <button class="app-toast__close" (click)="onClose()" aria-label="Close">
+        <span class="material-symbols-rounded">close</span>
+    </button>
+</div>

@@ -1,0 +1,6 @@
+<div class="toast-container">
+    @for (toast of toastService.toasts(); track toast.id) {
+    <app-toast [toast]="toast" (close)="toastService.remove(toast.id)">
+    </app-toast>
+    }
+</div>

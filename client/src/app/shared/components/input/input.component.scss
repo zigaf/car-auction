@@ -1,0 +1,108 @@
+@use '../../../../styles/variables' as *;
+@use '../../../../styles/mixins' as *;
+
+.app-input-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: $space-xs;
+    width: 100%;
+
+    &--error {
+        .app-input__field {
+            border-color: $status-red;
+
+            &:focus {
+                box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15); // soft red shadow
+            }
+        }
+
+        .app-input__icon {
+            color: $status-red;
+        }
+    }
+}
+
+.app-input {
+    &__label {
+        font-size: $fs-sm;
+        font-weight: $fw-medium;
+        color: $text-secondary;
+    }
+
+    &__required {
+        color: $status-red;
+        margin-left: 2px;
+    }
+
+    &__container {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    &__field {
+        @include input-base;
+
+        &.has-prefix {
+            padding-left: 2.5rem;
+        }
+
+        &.has-suffix {
+            padding-right: 2.5rem;
+        }
+
+        &:disabled {
+            background: $bg-elevated;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+    }
+
+    &__icon {
+        position: absolute;
+        color: $text-tertiary;
+        pointer-events: none;
+        font-size: 1.25rem;
+
+        &--prefix {
+            left: 0.875rem;
+        }
+
+        &--suffix {
+            right: 0.875rem;
+        }
+    }
+
+    &__toggle-btn {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 2.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: none;
+        color: $text-tertiary;
+        cursor: pointer;
+        transition: color $transition-fast;
+        pointer-events: auto;
+
+        &:hover {
+            color: $text-primary;
+        }
+
+        &:focus-visible {
+            outline: 2px solid $accent;
+            outline-offset: -2px;
+            border-radius: 0 $radius-base $radius-base 0;
+        }
+    }
+
+    &__error-msg {
+        font-size: $fs-xs;
+        color: $status-red;
+        margin-top: 2px;
+    }
+}

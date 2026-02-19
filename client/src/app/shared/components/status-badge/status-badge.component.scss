@@ -1,0 +1,43 @@
+@use '../../../../styles/variables' as *;
+@use '../../../../styles/mixins' as *;
+
+.app-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    font-family: $font-ui;
+    font-size: $fs-xs;
+    font-weight: $fw-bold;
+    border-radius: $radius-chip;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+
+    // Variants mapped to design tokens
+    &--success {
+        background: rgba($status-green, 0.1);
+        color: darken($status-green, 10%);
+    }
+
+    &--warning {
+        background: rgba($status-yellow, 0.15);
+        color: darken($status-yellow, 20%);
+    }
+
+    &--error {
+        background: rgba($status-red, 0.1);
+        color: $status-red;
+    }
+
+    &--info {
+        background: rgba($status-blue, 0.1);
+        color: darken($status-blue, 10%);
+    }
+
+    &--neutral {
+        background: $bg-elevated;
+        color: $text-secondary;
+    }
+}

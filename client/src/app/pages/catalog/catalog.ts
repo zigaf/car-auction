@@ -6,11 +6,12 @@ import { DecimalPipe } from '@angular/common';
 import { environment } from '../../../environments/environment';
 import { LotService } from '../../core/services/lot.service';
 import { ILot, ILotFilter } from '../../models/lot.model';
+import { AppBrandIconComponent } from '../../shared/components/brand-icon/brand-icon.component';
 
 @Component({
   selector: 'app-catalog',
   standalone: true,
-  imports: [RouterLink, FormsModule, DecimalPipe],
+  imports: [RouterLink, FormsModule, DecimalPipe, AppBrandIconComponent],
   templateUrl: './catalog.html',
   styleUrl: './catalog.scss',
 })

@@ -4,10 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
 import { StateService } from '../../../core/services/state.service';
 
+import { AppButtonComponent } from '../../../shared/components/button/button.component';
+import { AppInputComponent } from '../../../shared/components/input/input.component';
+import { ToastService } from '../../../core/services/toast.service';
+
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule, AppButtonComponent, AppInputComponent],
   templateUrl: './login.html',
   styleUrl: './login.scss',
 })
@@ -15,17 +19,16 @@ export class LoginComponent {
   email = '';
   password = '';
   showPassword = false;
-  errorMessage = '';
   isLoading = false;
+  apiUrl = environment.apiUrl;
 
   private router = inject(Router);
   private stateService = inject(StateService);
+  private toastService = inject(ToastService);
 
   async onLogin() {
-    this.errorMessage = '';
-
     if (!this.email || !this.password) {
-      this.errorMessage = 'Введите email и пароль';
+      this.toastService.warning('Введите email и пароль');
       return;
     }
 
@@ -55,11 +58,12 @@ export class LoginComponent {
       if (profileResponse.ok) {
         const user = await profileResponse.json();
         this.stateService.setUser(user);
+        this.toastService.success('Вы успешно вошли в систему');
       }
 
       this.router.navigate(['/cabinet']);
     } catch (err: any) {
-      this.errorMessage = err.message || 'Ошибка при входе. Попробуйте позже.';
+      this.toastService.error(err.message || 'Ошибка при входе. Попробуйте позже.');
     } finally {
       this.isLoading = false;
     }

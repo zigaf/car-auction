@@ -71,60 +71,6 @@
   }
 }
 
-.input-wrap {
-  display: flex;
-  align-items: center;
-  background: $bg-input;
-  border: 1px solid $border-color;
-  border-radius: $radius-base;
-  padding: 0 $space-md;
-  transition: border-color $transition-fast;
-
-  &:focus-within {
-    border-color: $accent;
-    box-shadow: 0 0 12px $accent-muted;
-  }
-
-  .material-symbols-rounded {
-    font-size: 20px;
-    color: $text-tertiary;
-    flex-shrink: 0;
-  }
-
-  input {
-    flex: 1;
-    background: transparent;
-    border: none;
-    color: $text-primary;
-    font-family: $font-ui;
-    font-size: $fs-base;
-    padding: $space-md $space-sm;
-    outline: none;
-
-    &::placeholder {
-      color: $text-tertiary;
-    }
-  }
-}
-
-.input-toggle {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  display: flex;
-
-  .material-symbols-rounded {
-    font-size: 18px;
-    color: $text-tertiary;
-    transition: color $transition-fast;
-  }
-
-  &:hover .material-symbols-rounded {
-    color: $text-secondary;
-  }
-}
-
 .auth-form__actions {
   display: flex;
   justify-content: flex-end;
@@ -136,14 +82,12 @@
   text-decoration: none;
   transition: color $transition-fast;
 
-  &:hover { color: $accent; }
+  &:hover {
+    color: $accent;
+  }
 }
 
 .auth-form__submit {
-  @include btn-primary;
-  width: 100%;
-  padding: $space-base;
-  font-size: $fs-md;
   margin-top: $space-sm;
 }
 

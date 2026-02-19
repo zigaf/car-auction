@@ -1,0 +1,25 @@
+@use '../../../../styles/variables' as *;
+
+.toast-container {
+    position: fixed;
+    top: $space-xl;
+    right: $space-lg;
+    z-index: $z-toast;
+    display: flex;
+    flex-direction: column;
+    gap: $space-md;
+    pointer-events: none; // let clicks pass through the container
+
+    @include mobile {
+        top: auto;
+        bottom: $space-xl;
+        left: $space-base;
+        right: $space-base;
+        align-items: center;
+
+        .app-toast {
+            width: 100%; // stretch on mobile
+            max-width: 400px;
+        }
+    }
+}

@@ -1,0 +1,4 @@
+<span class="app-badge" [class]="'app-badge--' + status">
+    <ng-content></ng-content>
+    <ng-container *ngIf="label">{{ label }}</ng-container>
+</span>

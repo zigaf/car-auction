@@ -1,0 +1,25 @@
+<div class="app-input-wrapper" [class.app-input-wrapper--error]="errorMessage">
+    <label *ngIf="label" class="app-input__label">
+        {{ label }}
+        <span *ngIf="required" class="app-input__required">*</span>
+    </label>
+
+    <div class="app-input__container">
+        <span *ngIf="icon" class="material-symbols-rounded app-input__icon app-input__icon--prefix">{{ icon }}</span>
+
+        <input [type]="actualType" [placeholder]="placeholder" [value]="value" [disabled]="isDisabled"
+            (input)="onInput($event)" (blur)="onTouch()" class="app-input__field" [class.has-prefix]="icon"
+            [class.has-suffix]="showPasswordToggle" [class.is-error]="errorMessage">
+
+        <button *ngIf="showPasswordToggle" type="button" class="app-input__toggle-btn app-input__icon--suffix"
+            (click)="togglePasswordVisibility()" tabindex="-1">
+            <span class="material-symbols-rounded">
+                {{ isPasswordVisible ? 'visibility_off' : 'visibility' }}
+            </span>
+        </button>
+    </div>
+
+    <div *ngIf="errorMessage" class="app-input__error-msg">
+        {{ errorMessage }}
+    </div>
+</div>

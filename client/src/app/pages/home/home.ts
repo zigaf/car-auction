@@ -5,11 +5,12 @@ import { forkJoin } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { LotService } from '../../core/services/lot.service';
 import { ILot, ILotStats, IBrandCount } from '../../models/lot.model';
+import { AppBrandIconComponent } from '../../shared/components/brand-icon/brand-icon.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, DecimalPipe],
+  imports: [RouterLink, DecimalPipe, AppBrandIconComponent],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })

@@ -1,0 +1,10 @@
+<button [type]="type" [class]="classes" [disabled]="disabled || loading" (click)="onClick($event)">
+
+    <span *ngIf="loading" class="material-symbols-rounded app-btn__spinner">progress_activity</span>
+
+    <span *ngIf="icon && !loading" class="material-symbols-rounded app-btn__icon">{{ icon }}</span>
+
+    <span class="app-btn__content">
+        <ng-content></ng-content>
+    </span>
+</button>
