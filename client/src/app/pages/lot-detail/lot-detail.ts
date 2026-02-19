@@ -182,7 +182,7 @@ export class LotDetailComponent implements OnInit, OnDestroy {
   }
 
   get tires(): TireInfo[] {
-    return this.sections?.tires || [];
+    return (this.sections?.tires || []).slice(0, 4);
   }
 
   get stoneChips(): ConditionItem[] {

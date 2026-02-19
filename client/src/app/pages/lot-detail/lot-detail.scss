@@ -83,15 +83,24 @@
   }
 }
 
+// Prevent grid child from overflowing (images have intrinsic width > column)
+.lot-detail__left {
+  min-width: 0;
+}
+
 // ─── Gallery ────────────────────────────────────────
 .gallery {
   @include panel;
   overflow: hidden;
   margin-bottom: $space-lg;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.gallery__main {
+// Main image viewer — fixed height, dark bg, image centered
+.gallery__viewer {
   position: relative;
+  width: 100%;
   height: 360px;
   background: #111827;
   display: flex;
@@ -104,262 +113,122 @@
   }
 }
 
-// Main gallery image — contain to show full photo, dark bg fills the rest
-.gallery__main-img {
+.gallery__img {
+  display: block;
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+  cursor: pointer;
   user-select: none;
-  display: block;
 }
 
-.gallery__placeholder {
-  width: 100%;
-  height: 100%;
+.gallery__empty {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: $space-sm;
   color: $text-tertiary;
-
-  .material-symbols-rounded {
-    font-size: 64px;
-  }
+  .material-symbols-rounded { font-size: 48px; }
 }
 
-// Prev / Next navigation arrows
-.gallery__arrow {
+// Nav arrows
+.gallery__nav {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   z-index: 2;
-  width: 40px;
-  height: 40px;
-  border: none;
-  border-radius: $radius-round;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity $transition-fast, background $transition-fast;
-
-  .material-symbols-rounded {
-    font-size: 24px;
-    color: #fff;
-  }
-
-  &:hover {
-    background: rgba(0, 0, 0, 0.6);
-  }
-
-  &--prev {
-    left: $space-md;
-  }
-
-  &--next {
-    right: $space-md;
-  }
-
-  .gallery__main:hover & {
-    opacity: 1;
-  }
-}
-
-// Image counter overlay
-.gallery__counter {
-  position: absolute;
-  bottom: $space-md;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(8px);
-  color: #fff;
-  font-size: $fs-xs;
-  font-weight: $fw-semibold;
-  padding: 4px $space-sm;
-  border-radius: $radius-chip;
-  pointer-events: none;
-  letter-spacing: 0.5px;
-  font-family: $font-mono;
-}
-
-// Fullscreen / zoom button
-.gallery__fullscreen-btn {
-  position: absolute;
-  bottom: $space-md;
-  right: $space-md;
-  z-index: 2;
   width: 36px;
   height: 36px;
   border: none;
-  border-radius: $radius-base;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
+  border-radius: $radius-round;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   opacity: 0;
-  transition: opacity $transition-fast, background $transition-fast;
-
-  .material-symbols-rounded {
-    font-size: 20px;
-    color: #fff;
-  }
-
-  &:hover {
-    background: rgba(0, 0, 0, 0.6);
-  }
-
-  .gallery__main:hover & {
-    opacity: 1;
-  }
+  transition: opacity 0.2s, background 0.2s;
+  .material-symbols-rounded { font-size: 22px; color: #fff; }
+  &:hover { background: rgba(0, 0, 0, 0.7); }
+  &--prev { left: $space-sm; }
+  &--next { right: $space-sm; }
+  .gallery__viewer:hover & { opacity: 1; }
 }
 
-.gallery__like {
+// Counter pill
+.gallery__count {
   position: absolute;
-  top: $space-md;
-  right: $space-md;
-  background: rgba(0, 0, 0, 0.4);
-  border: none;
-  border-radius: $radius-round;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  backdrop-filter: blur(8px);
-  transition: all $transition-fast;
-
-  .material-symbols-rounded {
-    font-size: 20px;
-    color: $text-secondary;
-  }
-
-  &:hover {
-    background: rgba($status-red, 0.3);
-    .material-symbols-rounded { color: $status-red; }
-  }
+  bottom: $space-sm;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: $fs-xs;
+  font-weight: $fw-semibold;
+  font-family: $font-mono;
+  padding: 3px $space-sm;
+  border-radius: $radius-chip;
+  pointer-events: none;
 }
 
-// Gallery category tabs
+// Tabs
 .gallery__tabs {
   display: flex;
   border-top: 1px solid $border-color;
 
-  button,
-  a {
+  button {
     flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: $space-xs;
-    padding: $space-md;
+    padding: $space-sm $space-xs;
     background: none;
     border: none;
+    border-bottom: 2px solid transparent;
     color: $text-secondary;
     font-size: $fs-sm;
     font-family: $font-ui;
     cursor: pointer;
-    transition: all $transition-fast;
-    text-decoration: none;
-    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
 
-    .material-symbols-rounded { font-size: 18px; }
-
-    &:hover {
-      color: $text-primary;
-      background: $bg-elevated;
-    }
-
-    &.active {
-      color: $accent;
-      border-bottom-color: $accent;
-    }
+    &:hover { color: $text-primary; }
+    &.active { color: $accent; border-bottom-color: $accent; }
   }
 }
 
-// Thumbnails wrapper with scroll indicators
-.gallery__thumbs-wrapper {
-  position: relative;
+// Horizontal scrollable thumbnail strip
+.gallery__strip {
+  display: flex;
+  gap: $space-xs;
+  padding: $space-sm;
+  overflow-x: auto;
   border-top: 1px solid $border-color;
 
-  // Fade-out scroll hints on left/right edges
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 24px;
-    z-index: 1;
-    pointer-events: none;
-  }
-
-  &::before {
-    left: 0;
-    background: linear-gradient(to right, $bg-panel, transparent);
-  }
-
-  &::after {
-    right: 0;
-    background: linear-gradient(to left, $bg-panel, transparent);
-  }
-}
-
-.gallery__thumbs {
-  display: flex;
-  gap: $space-sm;
-  padding: $space-sm $space-base;
-  overflow-x: auto;
-  scroll-behavior: smooth;
-  @include custom-scrollbar;
-
-  &::-webkit-scrollbar {
-    height: 4px;
-  }
+  &::-webkit-scrollbar { height: 3px; }
+  &::-webkit-scrollbar-thumb { background: $border-color; border-radius: 2px; }
 }
 
 .gallery__thumb {
-  width: 84px;
-  height: 64px;
+  width: 72px;
+  height: 54px;
   flex-shrink: 0;
-  background: $bg-elevated;
   border: 2px solid $border-color;
   border-radius: $radius-base;
   overflow: hidden;
   cursor: pointer;
-  transition: border-color $transition-fast, box-shadow $transition-fast;
+  transition: border-color 0.15s;
 
-  .material-symbols-rounded {
-    font-size: 20px;
-    color: $text-tertiary;
-  }
+  &:hover { border-color: $accent; }
 
-  &:hover {
-    border-color: $accent;
-  }
-
-  // Thumbnail image inside
   img {
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: inherit;
-    display: block;
   }
 }
 
-// Active thumbnail — highlighted border
 .gallery__thumb--active {
   border-color: $accent;
-  border-width: 2px;
-  box-shadow: 0 0 0 2px rgba($accent, 0.2);
+  box-shadow: 0 0 0 2px rgba($accent, 0.18);
 }
 
 // ─── Damage Photos Grid ─────────────────────────────

@@ -27,73 +27,44 @@
         <div class="lot-detail__left">
           <!-- Gallery -->
           <div class="gallery">
-            <div class="gallery__main">
+            <!-- Main image -->
+            <div class="gallery__viewer">
               @if (currentImage) {
-                <img [src]="currentImage" [alt]="lot.title" class="gallery__main-img">
+                <img [src]="currentImage" [alt]="lot.title" class="gallery__img" (click)="toggleFullscreen()">
               } @else {
-                <div class="gallery__placeholder">
+                <div class="gallery__empty">
                   <span class="material-symbols-rounded">directions_car</span>
-                  <span>Фото автомобиля</span>
+                  <span>Нет фото</span>
                 </div>
               }
 
-              <!-- Prev / Next arrows -->
               @if (filteredImages.length > 1) {
-                <button class="gallery__arrow gallery__arrow--prev" (click)="prevImage()" aria-label="Предыдущее фото">
+                <button class="gallery__nav gallery__nav--prev" (click)="prevImage()">
                   <span class="material-symbols-rounded">chevron_left</span>
                 </button>
-                <button class="gallery__arrow gallery__arrow--next" (click)="nextImage()" aria-label="Следующее фото">
+                <button class="gallery__nav gallery__nav--next" (click)="nextImage()">
                   <span class="material-symbols-rounded">chevron_right</span>
                 </button>
+                <span class="gallery__count">{{ imageCounter }}</span>
               }
-
-              <!-- Image counter -->
-              @if (filteredImages.length > 1) {
-                <span class="gallery__counter">{{ imageCounter }}</span>
-              }
-
-              <!-- Fullscreen button -->
-              @if (currentImage) {
-                <button class="gallery__fullscreen-btn" (click)="toggleFullscreen()" aria-label="Полный экран">
-                  <span class="material-symbols-rounded">fullscreen</span>
-                </button>
-              }
-
-              <button class="gallery__like">
-                <span class="material-symbols-rounded">favorite</span>
-              </button>
             </div>
 
-            <!-- Gallery tabs -->
+            <!-- Tabs -->
             <div class="gallery__tabs">
-              <button [class.active]="activeGalleryTab === 'all'" (click)="setGalleryTab('all')">
-                <span class="material-symbols-rounded">photo_library</span>
-                Все фото
-              </button>
-              <button [class.active]="activeGalleryTab === 'exterior'" (click)="setGalleryTab('exterior')">
-                <span class="material-symbols-rounded">directions_car</span>
-                Экстерьер
-              </button>
-              <button [class.active]="activeGalleryTab === 'interior'" (click)="setGalleryTab('interior')">
-                <span class="material-symbols-rounded">airline_seat_recline_normal</span>
-                Интерьер
-              </button>
-              <button [class.active]="activeGalleryTab === 'damage'" (click)="setGalleryTab('damage')">
-                <span class="material-symbols-rounded">warning</span>
-                Повреждения
-              </button>
+              <button [class.active]="activeGalleryTab === 'all'" (click)="setGalleryTab('all')">Все фото</button>
+              <button [class.active]="activeGalleryTab === 'exterior'" (click)="setGalleryTab('exterior')">Экстерьер</button>
+              <button [class.active]="activeGalleryTab === 'interior'" (click)="setGalleryTab('interior')">Интерьер</button>
+              <button [class.active]="activeGalleryTab === 'damage'" (click)="setGalleryTab('damage')">Повреждения</button>
             </div>
 
-            <!-- Thumbnails -->
-            @if (filteredImages.length > 1) {
-              <div class="gallery__thumbs-wrapper">
-                <div class="gallery__thumbs">
-                  @for (img of filteredImages; track img.url; let i = $index) {
-                    <div class="gallery__thumb" [class.gallery__thumb--active]="selectedImageIndex === i" (click)="selectImage(i)">
-                      <img [src]="getImageUrl(img.url)" [alt]="'Фото ' + (i + 1)">
-                    </div>
-                  }
-                </div>
+            <!-- Scrollable thumbnails -->
+            @if (filteredImages.length > 0) {
+              <div class="gallery__strip">
+                @for (img of filteredImages; track img.url; let i = $index) {
+                  <div class="gallery__thumb" [class.gallery__thumb--active]="selectedImageIndex === i" (click)="selectImage(i)">
+                    <img [src]="getImageUrl(img.url)" [alt]="'Фото ' + (i + 1)">
+                  </div>
+                }
               </div>
             }
           </div>
