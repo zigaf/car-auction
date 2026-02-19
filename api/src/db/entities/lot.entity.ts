@@ -28,7 +28,7 @@ export class Lot {
   @Column({ name: 'source_vehicle_id', type: 'varchar', nullable: true })
   sourceVehicleId: string | null;
 
-  @Column({ name: 'source', type: 'varchar', nullable: true, default: "'autobid'" })
+  @Column({ name: 'source', type: 'varchar', nullable: true, default: 'autobid' })
   source: string | null;
 
   // Core vehicle data
