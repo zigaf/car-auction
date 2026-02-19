@@ -66,13 +66,8 @@ export class AppBrandIconComponent implements OnChanges {
         const normalizedBrand = this.brand.toLowerCase().trim().replace(/\s+/g, '-');
         const domain = this.brandDomains[normalizedBrand];
 
-        if (domain) {
-            // Using Clearbit Logo API
-            this.iconUrl = `https://logo.clearbit.com/${domain}?size=${this.size}&format=png`;
-        } else {
-            // Fallback attempt with just the name + .com
-            this.iconUrl = `https://logo.clearbit.com/${normalizedBrand}.com?size=${this.size}&format=png`;
-        }
+        const resolvedDomain = domain ?? `${normalizedBrand}.com`;
+        this.iconUrl = `https://img.logo.dev/${resolvedDomain}?token=pk_Vi55Q2apTvK73ITtWI81zA&size=${this.size}&format=png`;
     }
 
     onError(): void {
