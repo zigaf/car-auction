@@ -58,6 +58,12 @@ export class BalanceTransaction {
   @Column({ name: 'order_id', type: 'uuid', nullable: true })
   orderId: string | null;
 
+  @Column({ name: 'lot_id', type: 'uuid', nullable: true })
+  lotId: string | null;
+
+  @Column({ name: 'bid_id', type: 'uuid', nullable: true })
+  bidId: string | null;
+
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'created_by' })
   createdByUser: User | null;

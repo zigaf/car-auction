@@ -5,6 +5,8 @@ export enum BalanceTransactionType {
   DELIVERY = 'delivery',
   CUSTOMS = 'customs',
   REFUND = 'refund',
+  BID_LOCK = 'bid_lock',
+  BID_UNLOCK = 'bid_unlock',
 }
 
 export interface IBalanceResponse {
@@ -19,6 +21,8 @@ export interface IBalanceTransaction {
   balanceAfter: number;
   description: string;
   orderId: string | null;
+  lotId: string | null;
+  bidId: string | null;
   createdBy: string | null;
   createdAt: string;
 }

@@ -10,6 +10,11 @@ import { Bid } from '../../db/entities/bid.entity';
 import { Lot } from '../../db/entities/lot.entity';
 import { BalanceTransaction } from '../../db/entities/balance-transaction.entity';
 import { LotStatus } from '../../common/enums/lot-status.enum';
+import { BalanceTransactionType } from '../../common/enums/balance-transaction-type.enum';
+import { OrderStatus } from '../../common/enums/order-status.enum';
+import { Order } from '../../db/entities/order.entity';
+import { OrderStatusHistory } from '../../db/entities/order-status-history.entity';
+import { BalanceService } from '../balance/balance.service';
 
 /** Anti-sniping: if a bid arrives in the last N milliseconds, extend the auction */
 const ANTI_SNIPE_WINDOW_MS = 30 * 1000; // 30 seconds
@@ -29,6 +34,7 @@ export class AuctionService {
     @InjectRepository(Lot)
     private readonly lotRepository: Repository<Lot>,
     private readonly dataSource: DataSource,
+    private readonly balanceService: BalanceService,
   ) {}
 
   /**
@@ -99,8 +105,38 @@ export class AuctionService {
         .where('tx.user_id = :userId', { userId })
         .getRawOne();
 
-      const balance = parseFloat(balanceResult?.balance || '0');
-      if (balance < amount) {
+      let availableBalance = parseFloat(balanceResult?.balance || '0');
+
+      // If user already has a BID_LOCK on this lot (raising own bid), that lock
+      // will be released, so add it back to the available balance for the check
+      const existingLock = await manager
+        .createQueryBuilder(BalanceTransaction, 'tx')
+        .where('tx.user_id = :userId', { userId })
+        .andWhere('tx.lot_id = :lotId', { lotId })
+        .andWhere('tx.type = :lockType', {
+          lockType: BalanceTransactionType.BID_LOCK,
+        })
+        .orderBy('tx.created_at', 'DESC')
+        .getOne();
+
+      if (existingLock) {
+        // Check this lock hasn't already been unlocked
+        const alreadyUnlocked = await manager
+          .createQueryBuilder(BalanceTransaction, 'tx')
+          .where('tx.user_id = :userId', { userId })
+          .andWhere('tx.lot_id = :lotId', { lotId })
+          .andWhere('tx.type = :unlockType', {
+            unlockType: BalanceTransactionType.BID_UNLOCK,
+          })
+          .andWhere('tx.bid_id = :bidId', { bidId: existingLock.bidId })
+          .getOne();
+
+        if (!alreadyUnlocked) {
+          availableBalance += Math.abs(existingLock.amount);
+        }
+      }
+
+      if (availableBalance < amount) {
         throw new BadRequestException('Insufficient balance');
       }
 
@@ -122,6 +158,33 @@ export class AuctionService {
         maxAutoBid: null,
       });
       const savedBid = await manager.save(Bid, bid);
+
+      // --- Balance locking ---
+      // Find the previous highest bidder to refund their lock
+      const previousHighBid = await manager
+        .createQueryBuilder(Bid, 'bid')
+        .where('bid.lot_id = :lotId', { lotId })
+        .andWhere('bid.id != :currentBidId', { currentBidId: savedBid.id })
+        .orderBy('bid.amount', 'DESC')
+        .getOne();
+
+      if (previousHighBid) {
+        // Unlock the previous leader's balance (could be same user raising bid)
+        await this.balanceService.unlockBalanceForBid(
+          manager,
+          previousHighBid.userId,
+          lotId,
+        );
+      }
+
+      // Lock the new bidder's balance
+      await this.balanceService.lockBalanceForBid(
+        manager,
+        userId,
+        lotId,
+        savedBid.id,
+        amount,
+      );
 
       // Update lot current price
       lot.currentPrice = amount;
@@ -158,7 +221,7 @@ export class AuctionService {
 
   /**
    * Buy Now: Instantly purchase a lot at the buy-now price.
-   * Sets the lot status to SOLD and records the winner.
+   * Sets the lot status to SOLD, deducts balance, refunds other bidders, creates order.
    */
   async buyNow(
     userId: string,
@@ -185,6 +248,9 @@ export class AuctionService {
       }
 
       const buyNowPrice = parseFloat(String(lot.buyNowPrice));
+      const commissionRate = parseFloat(process.env.COMMISSION_RATE || '0.05');
+      const commission = Math.round(buyNowPrice * commissionRate * 100) / 100;
+      const totalCost = buyNowPrice + commission;
 
       // Check user balance INSIDE the transaction with row-level locking
       const balanceResult = await manager
@@ -194,8 +260,34 @@ export class AuctionService {
         .where('tx.user_id = :userId', { userId })
         .getRawOne();
 
-      const balance = parseFloat(balanceResult?.balance || '0');
-      if (balance < buyNowPrice) {
+      let availableBalance = parseFloat(balanceResult?.balance || '0');
+
+      // If buyer already has a BID_LOCK on this lot, it will be released
+      const buyerExistingLock = await manager
+        .createQueryBuilder(BalanceTransaction, 'tx')
+        .where('tx.user_id = :userId', { userId })
+        .andWhere('tx.lot_id = :lotId', { lotId })
+        .andWhere('tx.type = :lockType', {
+          lockType: BalanceTransactionType.BID_LOCK,
+        })
+        .orderBy('tx.created_at', 'DESC')
+        .getOne();
+
+      if (buyerExistingLock) {
+        const alreadyUnlocked = await manager
+          .createQueryBuilder(BalanceTransaction, 'tx')
+          .where('tx.bid_id = :bidId', { bidId: buyerExistingLock.bidId })
+          .andWhere('tx.type = :unlockType', {
+            unlockType: BalanceTransactionType.BID_UNLOCK,
+          })
+          .getOne();
+
+        if (!alreadyUnlocked) {
+          availableBalance += Math.abs(buyerExistingLock.amount);
+        }
+      }
+
+      if (availableBalance < totalCost) {
         throw new BadRequestException('Insufficient balance');
       }
 
@@ -215,6 +307,95 @@ export class AuctionService {
       lot.winnerId = userId;
       lot.currentPrice = buyNowPrice;
       const updatedLot = await manager.save(Lot, lot);
+
+      // --- Refund all existing bid locks on this lot ---
+      const allLocks = await manager
+        .createQueryBuilder(BalanceTransaction, 'tx')
+        .where('tx.lot_id = :lotId', { lotId })
+        .andWhere('tx.type = :lockType', {
+          lockType: BalanceTransactionType.BID_LOCK,
+        })
+        .getMany();
+
+      const refundedUsers = new Set<string>();
+      for (const lock of allLocks) {
+        if (!refundedUsers.has(lock.userId)) {
+          await this.balanceService.unlockBalanceForBid(
+            manager,
+            lock.userId,
+            lotId,
+          );
+          refundedUsers.add(lock.userId);
+        }
+      }
+
+      // --- Deduct car price and commission from buyer ---
+      const afterRefundBalance = await manager
+        .createQueryBuilder(BalanceTransaction, 'tx')
+        .select('COALESCE(SUM(tx.amount), 0)', 'balance')
+        .where('tx.user_id = :userId', { userId })
+        .getRawOne();
+
+      let currentBalance = parseFloat(afterRefundBalance?.balance || '0');
+
+      currentBalance -= buyNowPrice;
+      const carPaymentTx = manager.create(BalanceTransaction, {
+        userId,
+        type: BalanceTransactionType.CAR_PAYMENT,
+        amount: -buyNowPrice,
+        balanceAfter: currentBalance,
+        description: `Car payment - ${lot.title || 'Buy Now'}`,
+        lotId,
+        bidId: savedBid.id,
+        createdBy: null,
+      });
+      await manager.save(BalanceTransaction, carPaymentTx);
+
+      currentBalance -= commission;
+      const commissionTx = manager.create(BalanceTransaction, {
+        userId,
+        type: BalanceTransactionType.COMMISSION,
+        amount: -commission,
+        balanceAfter: currentBalance,
+        description: `Commission - ${lot.title || 'Buy Now'}`,
+        lotId,
+        bidId: null,
+        createdBy: null,
+      });
+      await manager.save(BalanceTransaction, commissionTx);
+
+      // --- Create order ---
+      const order = manager.create(Order, {
+        lotId,
+        userId,
+        carPrice: buyNowPrice,
+        commission,
+        deliveryCost: 0,
+        customsCost: 0,
+        total: totalCost,
+        status: OrderStatus.PENDING,
+      });
+      const savedOrder = await manager.save(Order, order);
+
+      const history = manager.create(OrderStatusHistory, {
+        orderId: savedOrder.id,
+        status: OrderStatus.PENDING,
+        comment: 'Order created via Buy Now',
+        changedBy: null,
+      });
+      await manager.save(OrderStatusHistory, history);
+
+      // Link balance transactions to order
+      await manager.update(
+        BalanceTransaction,
+        { id: carPaymentTx.id },
+        { orderId: savedOrder.id },
+      );
+      await manager.update(
+        BalanceTransaction,
+        { id: commissionTx.id },
+        { orderId: savedOrder.id },
+      );
 
       return { bid: savedBid, lot: updatedLot };
     });
@@ -303,5 +484,276 @@ export class AuctionService {
       relations: ['images'],
       order: { auctionEndAt: 'ASC' },
     });
+  }
+
+  /**
+   * Place a pre-bid (auto-bid). The system will automatically bid on behalf
+   * of the user up to maxAutoBid amount.
+   */
+  async placePreBid(
+    userId: string,
+    lotId: string,
+    maxAutoBid: number,
+    idempotencyKey: string,
+  ): Promise<PlaceBidResult> {
+    const existingBid = await this.bidRepository.findOne({
+      where: { idempotencyKey },
+    });
+    if (existingBid) {
+      return { bid: existingBid, auctionExtended: false, newEndAt: null };
+    }
+
+    return this.dataSource.transaction(async (manager) => {
+      const lot = await manager
+        .createQueryBuilder(Lot, 'lot')
+        .setLock('pessimistic_write')
+        .where('lot.id = :lotId', { lotId })
+        .getOne();
+
+      if (!lot) throw new NotFoundException('Lot not found');
+      if (lot.status !== LotStatus.TRADING) {
+        throw new BadRequestException('Lot is not currently in trading');
+      }
+      if (userId === lot.createdBy) {
+        throw new ForbiddenException('Cannot bid on your own lot');
+      }
+      if (lot.auctionEndAt && new Date() > lot.auctionEndAt) {
+        throw new BadRequestException('Auction has ended');
+      }
+
+      const currentPrice = lot.currentPrice
+        ? parseFloat(String(lot.currentPrice))
+        : lot.startingBid
+          ? parseFloat(String(lot.startingBid))
+          : 0;
+      const bidStep = parseFloat(String(lot.bidStep)) || 100;
+      const minimumBid = currentPrice + bidStep;
+
+      if (maxAutoBid < minimumBid) {
+        throw new BadRequestException(
+          `Max auto-bid too low. Minimum is ${minimumBid}`,
+        );
+      }
+
+      // Check balance for the full maxAutoBid amount
+      const balanceResult = await manager
+        .createQueryBuilder(BalanceTransaction, 'tx')
+        .setLock('pessimistic_write')
+        .select('COALESCE(SUM(tx.amount), 0)', 'balance')
+        .where('tx.user_id = :userId', { userId })
+        .getRawOne();
+
+      let availableBalance = parseFloat(balanceResult?.balance || '0');
+
+      // Account for existing lock on this lot
+      const existingLock = await manager
+        .createQueryBuilder(BalanceTransaction, 'tx')
+        .where('tx.user_id = :userId', { userId })
+        .andWhere('tx.lot_id = :lotId', { lotId })
+        .andWhere('tx.type = :lockType', {
+          lockType: BalanceTransactionType.BID_LOCK,
+        })
+        .orderBy('tx.created_at', 'DESC')
+        .getOne();
+
+      if (existingLock) {
+        const alreadyUnlocked = await manager
+          .createQueryBuilder(BalanceTransaction, 'tx')
+          .where('tx.bid_id = :bidId', { bidId: existingLock.bidId })
+          .andWhere('tx.type = :unlockType', {
+            unlockType: BalanceTransactionType.BID_UNLOCK,
+          })
+          .getOne();
+
+        if (!alreadyUnlocked) {
+          availableBalance += Math.abs(existingLock.amount);
+        }
+      }
+
+      if (availableBalance < maxAutoBid) {
+        throw new BadRequestException('Insufficient balance for max auto-bid');
+      }
+
+      // Idempotency double-check
+      const duplicateBid = await manager.findOne(Bid, {
+        where: { idempotencyKey },
+      });
+      if (duplicateBid) {
+        return { bid: duplicateBid, auctionExtended: false, newEndAt: null };
+      }
+
+      // Initial bid is at the minimum amount
+      const initialAmount = minimumBid;
+
+      const bid = manager.create(Bid, {
+        lotId,
+        userId,
+        amount: initialAmount,
+        idempotencyKey,
+        isPreBid: true,
+        maxAutoBid,
+      });
+      const savedBid = await manager.save(Bid, bid);
+
+      // Unlock previous leader
+      const previousHighBid = await manager
+        .createQueryBuilder(Bid, 'bid')
+        .where('bid.lot_id = :lotId', { lotId })
+        .andWhere('bid.id != :currentBidId', { currentBidId: savedBid.id })
+        .orderBy('bid.amount', 'DESC')
+        .getOne();
+
+      if (previousHighBid) {
+        await this.balanceService.unlockBalanceForBid(
+          manager,
+          previousHighBid.userId,
+          lotId,
+        );
+      }
+
+      // Lock balance for the full maxAutoBid amount
+      await this.balanceService.lockBalanceForBid(
+        manager,
+        userId,
+        lotId,
+        savedBid.id,
+        maxAutoBid,
+      );
+
+      // Update lot price
+      lot.currentPrice = initialAmount;
+
+      // Anti-sniping
+      let auctionExtended = false;
+      let newEndAt: Date | null = null;
+
+      if (lot.auctionEndAt) {
+        const timeUntilEnd = lot.auctionEndAt.getTime() - Date.now();
+        if (timeUntilEnd > 0 && timeUntilEnd <= ANTI_SNIPE_WINDOW_MS) {
+          const extendedEnd = new Date(Date.now() + ANTI_SNIPE_EXTENSION_MS);
+          lot.auctionEndAt = extendedEnd;
+          auctionExtended = true;
+          newEndAt = extendedEnd;
+        }
+      }
+
+      await manager.save(Lot, lot);
+
+      // Resolve auto-bids (in case another pre-bid exists)
+      await this.resolveAutoBids(manager, lot, savedBid.id, userId);
+
+      const fullBid = await manager.findOne(Bid, {
+        where: { id: savedBid.id },
+        relations: ['lot'],
+      });
+
+      return {
+        bid: fullBid || savedBid,
+        auctionExtended,
+        newEndAt,
+      };
+    });
+  }
+
+  /**
+   * Resolve auto-bids after a new bid is placed.
+   * Checks if any pre-bidders can counter-bid, and processes them.
+   */
+  private async resolveAutoBids(
+    manager: ReturnType<DataSource['createQueryRunner']>['manager'],
+    lot: Lot,
+    excludeBidId: string,
+    currentBidderId: string,
+    depth: number = 0,
+  ): Promise<void> {
+    if (depth >= 50) return; // Safety limit
+
+    const currentPrice = parseFloat(String(lot.currentPrice)) || 0;
+    const bidStep = parseFloat(String(lot.bidStep)) || 100;
+    const nextBidAmount = currentPrice + bidStep;
+
+    // Find active pre-bids that can still auto-bid
+    const preBids = await manager
+      .createQueryBuilder(Bid, 'bid')
+      .where('bid.lot_id = :lotId', { lotId: lot.id })
+      .andWhere('bid.is_pre_bid = true')
+      .andWhere('bid.max_auto_bid >= :nextAmount', {
+        nextAmount: nextBidAmount,
+      })
+      .andWhere('bid.user_id != :currentBidderId', { currentBidderId })
+      .orderBy('bid.max_auto_bid', 'DESC')
+      .addOrderBy('bid.created_at', 'ASC')
+      .getMany();
+
+    if (preBids.length === 0) return;
+
+    const topPreBid = preBids[0];
+    const topMaxBid = parseFloat(String(topPreBid.maxAutoBid));
+
+    // Determine auto-bid amount
+    let autoBidAmount = nextBidAmount;
+
+    // If the current bidder also has a pre-bid, compete
+    const currentBidderPreBid = await manager
+      .createQueryBuilder(Bid, 'bid')
+      .where('bid.lot_id = :lotId', { lotId: lot.id })
+      .andWhere('bid.is_pre_bid = true')
+      .andWhere('bid.user_id = :currentBidderId', { currentBidderId })
+      .andWhere('bid.max_auto_bid >= :nextAmount', {
+        nextAmount: nextBidAmount,
+      })
+      .orderBy('bid.max_auto_bid', 'DESC')
+      .getOne();
+
+    if (currentBidderPreBid) {
+      const currentMax = parseFloat(String(currentBidderPreBid.maxAutoBid));
+      // Second-price + bidStep logic
+      autoBidAmount = Math.min(topMaxBid, currentMax + bidStep);
+      if (autoBidAmount > topMaxBid) {
+        autoBidAmount = topMaxBid;
+      }
+    }
+
+    // Cap at the pre-bidder's max
+    autoBidAmount = Math.min(autoBidAmount, topMaxBid);
+
+    // Create the auto-bid
+    const autoBid = manager.create(Bid, {
+      lotId: lot.id,
+      userId: topPreBid.userId,
+      amount: autoBidAmount,
+      idempotencyKey: `auto:${lot.id}:${topPreBid.userId}:${Date.now()}:${depth}`,
+      isPreBid: true,
+      maxAutoBid: topMaxBid,
+    });
+    const savedAutoBid = await manager.save(Bid, autoBid);
+
+    // Unlock previous leader's balance, lock auto-bidder's
+    // The previous leader was currentBidderId
+    await this.balanceService.unlockBalanceForBid(
+      manager,
+      currentBidderId,
+      lot.id,
+    );
+    await this.balanceService.lockBalanceForBid(
+      manager,
+      topPreBid.userId,
+      lot.id,
+      savedAutoBid.id,
+      autoBidAmount,
+    );
+
+    // Update lot price
+    lot.currentPrice = autoBidAmount;
+    await manager.save(Lot, lot);
+
+    // Recurse in case the outbid user also has a pre-bid
+    await this.resolveAutoBids(
+      manager,
+      lot,
+      savedAutoBid.id,
+      topPreBid.userId,
+      depth + 1,
+    );
   }
 }

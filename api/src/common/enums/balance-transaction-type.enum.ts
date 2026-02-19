@@ -5,4 +5,6 @@ export enum BalanceTransactionType {
   DELIVERY = 'delivery',
   CUSTOMS = 'customs',
   REFUND = 'refund',
+  BID_LOCK = 'bid_lock',
+  BID_UNLOCK = 'bid_unlock',
 }

@@ -203,12 +203,67 @@ export class AutobidBrowserService implements OnModuleDestroy {
           ? best.href
           : best.href.replace(/\/?$/, '/podrobnosti');
 
+        // Extract additional fields from card text
+        const cardText = container.textContent || '';
+
+        // Lot number: "Кат.Nr: 37" or "Кат.№: 37" or "Cat.Nr: 37"
+        let lotNumber: string | null = null;
+        const lotNrMatch = cardText.match(
+          /(?:Кат[\.\s]*(?:Nr|№|номер)|Cat[\.\s]*(?:Nr|No))[:\s]*(\d+)/i,
+        );
+        if (lotNrMatch) lotNumber = lotNrMatch[1];
+
+        // Auction number: "Номер аукциона: 80636"
+        let auctionNumber: string | null = null;
+        const auctionNrMatch = cardText.match(
+          /(?:Номер аукциона|Auktionsnummer|Auction\s*(?:number|nr))[:\s]*(\d+)/i,
+        );
+        if (auctionNrMatch) auctionNumber = auctionNrMatch[1];
+
+        // Auction end date: "D-3119.02.2026" + "10:00 часов (CET)" or "19.02.2026 10:00"
+        let auctionEndDate: string | null = null;
+        const dateMatch = cardText.match(
+          /(\d{2}\.\d{2}\.\d{4})\s*(\d{2}:\d{2})\s*(?:часов\s*)?\(?(CET|CEST|MEZ)?\)?/i,
+        );
+        if (dateMatch) {
+          auctionEndDate = `${dateMatch[1]} ${dateMatch[2]} ${dateMatch[3] || 'CET'}`;
+        }
+
+        // VAT type: "нетто" or "брутто"
+        let vatType: string | null = null;
+        if (/\bнетто\b|netto\b/i.test(cardText)) vatType = 'netto';
+        else if (/\bбрутто\b|brutto\b/i.test(cardText)) vatType = 'brutto';
+
+        // Summary line: "Комби, 1.5 литров, Бензин, 6-скоростная коробка передач"
+        // It's the text line with engine/fuel/transmission data at the bottom of the card
+        let summaryLine: string | null = null;
+        const leafEls = container.querySelectorAll('*');
+        for (const el of Array.from(leafEls)) {
+          if (el.children.length > 0) continue;
+          const t = el.textContent?.trim() || '';
+          if (t.length > 15 && t.length < 200 &&
+              (t.includes('литр') || t.includes('Liter') ||
+               t.includes('Бензин') || t.includes('Дизель') ||
+               t.includes('Benzin') || t.includes('Diesel') ||
+               t.includes('Электр') || t.includes('Elektr') ||
+               t.includes('Гибрид') || t.includes('Hybrid')) &&
+              (t.includes(',') || t.includes('коробк') || t.includes('Automat') || t.includes('Manual'))) {
+            summaryLine = t;
+            break;
+          }
+        }
+
         cards.push({
           title,
           detailUrl: detailHref,
           vehicleId,
           thumbnailUrl,
           price,
+          lotNumber,
+          auctionNumber,
+          auctionEndDate,
+          vatType,
+          summaryLine,
         });
       });
 
@@ -788,22 +843,130 @@ export class AutobidBrowserService implements OnModuleDestroy {
         if (descEl) description = descEl.textContent?.trim() || null;
       }
 
-      // ===================== AUCTION END DATE =====================
-      let auctionEndDate: string | null = null;
+      // ===================== AUCTION HEADER INFO =====================
+      // Pattern: "Номер аукциона 80636 | 19.02.2026 | Старт 10:00 часов (CET)"
       const bodyText = document.body?.innerText || '';
-      const dateMatch = bodyText.match(
-        /(?:Аукцион|Окончание|Auction|Ende|Endet)[:\s]*(\d{2}\.\d{2}\.\d{4}\s+\d{2}:\d{2})/i,
+
+      let auctionNumber: string | null = null;
+      const auctionNrMatch = bodyText.match(
+        /(?:Номер аукциона|Auktionsnummer|Auction\s*(?:number|nr))[:\s]*(\d+)/i,
       );
-      if (dateMatch) {
-        auctionEndDate = dateMatch[1];
+      if (auctionNrMatch) auctionNumber = auctionNrMatch[1];
+
+      // Auction date: "19.02.2026 | Старт 10:00 часов (CET)"
+      let auctionEndDate: string | null = null;
+      const headerDateMatch = bodyText.match(
+        /(?:Номер аукциона\s*\d+\s*\|?\s*)(\d{2}\.\d{2}\.\d{4})\s*\|?\s*(?:Старт|Start)\s*(\d{2}:\d{2})\s*(?:часов\s*)?\(?(CET|CEST|MEZ|UTC)?\)?/i,
+      );
+      if (headerDateMatch) {
+        auctionEndDate = `${headerDateMatch[1]} ${headerDateMatch[2]} ${headerDateMatch[3] || 'CET'}`;
       } else {
-        const timerEl = document.querySelector(
-          '[class*="timer"], [class*="countdown"], [class*="end"]',
+        // Fallback: generic date pattern
+        const fallbackDate = bodyText.match(
+          /(?:Аукцион|Окончание|Auction|Ende|Endet)[:\s]*(\d{2}\.\d{2}\.\d{4}\s+\d{2}:\d{2})/i,
         );
-        if (timerEl) {
-          auctionEndDate = timerEl.textContent?.trim() || null;
+        if (fallbackDate) auctionEndDate = fallbackDate[1];
+      }
+
+      // ===================== LOT NUMBER (Номер в каталоге) =====================
+      let lotNumber: string | null = null;
+      const lotNrMatch = bodyText.match(
+        /(?:Номер в каталоге|Katalognummer|Кат[\.\s]*(?:Nr|№)|Cat[\.\s]*(?:Nr|No))[:\s]*(\d+)/i,
+      );
+      if (lotNrMatch) lotNumber = lotNrMatch[1];
+
+      // ===================== VAT TYPE (Налог: нетто/брутто) =====================
+      let vatType: string | null = null;
+      const taxValue = specs['Налог'] || specs['Steuer'] || specs['Tax'] || null;
+      if (taxValue) {
+        vatType = taxValue.toLowerCase().includes('нетто') || taxValue.toLowerCase().includes('netto')
+          ? 'netto'
+          : taxValue.toLowerCase().includes('брутто') || taxValue.toLowerCase().includes('brutto')
+            ? 'brutto'
+            : taxValue;
+      }
+
+      // ===================== SUMMARY LINE (subtitle) =====================
+      // "2.0 литров, Дизель, Автомат, Пылевой фильтр для двигателя"
+      let summaryLine: string | null = null;
+      // The summary line appears right after the title, typically as a smaller text
+      if (title) {
+        const allText = bodyText.split('\n').map((l: string) => l.trim()).filter(Boolean);
+        for (let i = 0; i < allText.length; i++) {
+          if (allText[i].includes(title.substring(0, 20))) {
+            // Next non-empty line after title is the summary
+            const next = allText[i + 1]?.trim();
+            if (next && next.length > 10 && next.length < 200 &&
+                (next.includes('литр') || next.includes('Liter') ||
+                 next.includes('Дизель') || next.includes('Diesel') ||
+                 next.includes('Бензин') || next.includes('Benzin') ||
+                 next.includes('Автомат') || next.includes('Automat') ||
+                 next.includes('кВт') || next.includes('kW'))) {
+              summaryLine = next;
+            }
+            break;
+          }
         }
       }
+
+      // ===================== CATEGORIZED IMAGES =====================
+      // Collect images from SPECIFIC sections first (damage/interior),
+      // then remaining gallery images as exterior.
+      // This ensures damage thumbnails get proper category instead of
+      // being lumped into exterior by the global img scan.
+      const categorizedImages: { url: string; category: string }[] = [];
+      const assignedUrls = new Set<string>();
+
+      const normalizeCdnUrl = (src: string): string | null => {
+        if (!src || src.startsWith('data:')) return null;
+        let url: string;
+        try { url = new URL(src, window.location.href).href; } catch { return null; }
+        if (url.includes('logo') || url.includes('icon')) return null;
+        if (!url.includes('cdn.autobid.de')) return null;
+        return url.replace(/_(?:xs|s|m|l)\.(jpg|jpeg|png|webp)/i, '_l.$1');
+      };
+
+      const collectFromSection = (keywords: string[], category: string) => {
+        const container = findSectionContainer(keywords);
+        if (!container) return;
+        container.querySelectorAll('img').forEach((img) => {
+          const rawSrc = img.getAttribute('src') || (img as HTMLImageElement).src || '';
+          const url = normalizeCdnUrl(rawSrc);
+          if (url && !assignedUrls.has(url)) {
+            assignedUrls.add(url);
+            categorizedImages.push({ url, category });
+          }
+        });
+      };
+
+      // 1) Damage sections first — body, interior wear, stone chips, accident
+      collectFromSection(['КУЗОВ', 'KAROSSERIE', 'BODY'], 'damage');
+      collectFromSection(['ВМЯТИНА ОТ КАМНЕЙ', 'STEINSCHLAG'], 'damage');
+      // Damage images from the existing damageImageUrls collector
+      damageImageUrls.forEach((url: string) => {
+        const normalized = normalizeCdnUrl(url);
+        if (normalized && !assignedUrls.has(normalized)) {
+          assignedUrls.add(normalized);
+          categorizedImages.push({ url: normalized, category: 'damage' });
+        }
+      });
+
+      // 2) Interior sections — dashboard, interior wear photos
+      collectFromSection(['ВИД НА ПРИБОРНУЮ ПАНЕЛЬ', 'ARMATURENBRETT', 'DASHBOARD'], 'interior');
+      collectFromSection(['САЛОН', 'INNENRAUM', 'INTERIOR'], 'damage');
+
+      // 3) Exterior sections — additional photos, details, tires
+      collectFromSection(['ОБЩИЕ ДОПОЛНИТЕЛЬНЫЕ ФОТОГРАФИИ', 'ALLGEMEINE ZUSÄTZLICHE FOTOS'], 'exterior');
+      collectFromSection(['ДЕТАЛИ', 'DETAILS'], 'exterior');
+      collectFromSection(['ШИНЫ', 'REIFEN', 'TIRES'], 'exterior');
+
+      // 4) Remaining gallery images → exterior (these are the main slider photos)
+      imageUrls.forEach((url: string) => {
+        if (!assignedUrls.has(url)) {
+          assignedUrls.add(url);
+          categorizedImages.push({ url, category: 'exterior' });
+        }
+      });
 
       return {
         title,
@@ -812,6 +975,9 @@ export class AutobidBrowserService implements OnModuleDestroy {
         price,
         description,
         auctionEndDate,
+        lotNumber,
+        auctionNumber,
+        vatType,
         equipment,
         sections: {
           accidentInfo,
@@ -823,6 +989,8 @@ export class AutobidBrowserService implements OnModuleDestroy {
           parkingFee,
           generalInfo,
           damageImageUrls,
+          summaryLine,
+          categorizedImages,
         },
       };
     }, vehicleId);

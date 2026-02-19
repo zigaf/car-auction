@@ -24,6 +24,10 @@ export class AuctionService {
     return this.api.get<IPaginatedResponse<IBid>>('/bids/my', { page, limit });
   }
 
+  placePreBid(lotId: string, maxAutoBid: number, idempotencyKey: string): Observable<IPlaceBidResult> {
+    return this.api.post<IPlaceBidResult>('/bids/pre-bid', { lotId, maxAutoBid, idempotencyKey });
+  }
+
   getActiveLots(): Observable<ILot[]> {
     return this.api.get<ILot[]>('/auction/active');
   }

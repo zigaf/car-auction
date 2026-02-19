@@ -442,6 +442,49 @@
   }
 }
 
+// --- Pre-bid (auto-bid) form ---
+.lot__prebid-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: $space-sm;
+  margin-bottom: $space-base;
+  padding-top: $space-sm;
+  border-top: 1px dashed $divider;
+
+  @include mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lot__prebid-btn {
+  background: transparent;
+  border: 1px solid rgba($accent, 0.3);
+  border-radius: $radius-base;
+  color: $accent;
+  font-family: $font-ui;
+  font-size: $fs-sm;
+  font-weight: $fw-semibold;
+  padding: $space-md $space-base;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+  transition: all $transition-fast;
+
+  .material-symbols-rounded { font-size: 18px; }
+
+  &:hover {
+    background: rgba($accent, 0.08);
+    border-color: $accent;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
 // --- Bid history ---
 .lot__history {
   border-top: 1px solid $divider;

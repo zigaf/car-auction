@@ -7,6 +7,16 @@ export interface AutobidVehicleCard {
   vehicleId: string;
   thumbnailUrl: string | null;
   price: string | null;
+  /** Кат.Nr — lot number within the auction */
+  lotNumber: string | null;
+  /** Номер аукциона — auction sale number */
+  auctionNumber: string | null;
+  /** "D-21 19.02.2026 10:00 часов (CET)" — auction end date string */
+  auctionEndDate: string | null;
+  /** "нетто" or "брутто" — VAT type */
+  vatType: string | null;
+  /** Summary line: "Комби, 1.5 литров, Бензин, 6-скоростная коробка передач" */
+  summaryLine: string | null;
 }
 
 /**
@@ -19,6 +29,12 @@ export interface AutobidVehicleDetail {
   price: string | null;
   description: string | null;
   auctionEndDate: string | null;
+  /** Кат.Nr — lot number within the auction */
+  lotNumber: string | null;
+  /** Номер аукциона */
+  auctionNumber: string | null;
+  /** "нетто" / "брутто" — VAT type */
+  vatType: string | null;
   /** Equipment list (Комплектация) - array of feature strings */
   equipment: string[];
   /** Structured section data for body/interior/tire condition */
@@ -47,6 +63,10 @@ export interface AutobidDetailSections {
   generalInfo: string | null;
   /** Image URLs extracted from damage/condition sections (body, interior, stone chips, accident) */
   damageImageUrls: string[];
+  /** Summary line below title: "2.0 литров, Дизель, Автомат, ..." */
+  summaryLine: string | null;
+  /** All images with assigned categories (exterior/interior/damage) */
+  categorizedImages: { url: string; category: string }[];
 }
 
 export interface AutobidConditionItem {

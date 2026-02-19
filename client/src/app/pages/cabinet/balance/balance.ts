@@ -62,6 +62,10 @@ export class BalanceComponent implements OnInit {
         return 'local_shipping';
       case BalanceTransactionType.CUSTOMS:
         return 'assured_workload';
+      case BalanceTransactionType.BID_LOCK:
+        return 'lock';
+      case BalanceTransactionType.BID_UNLOCK:
+        return 'lock_open';
       default:
         return 'swap_vert';
     }
@@ -81,6 +85,10 @@ export class BalanceComponent implements OnInit {
         return 'Доставка';
       case BalanceTransactionType.CUSTOMS:
         return 'Растаможка';
+      case BalanceTransactionType.BID_LOCK:
+        return 'Блокировка ставки';
+      case BalanceTransactionType.BID_UNLOCK:
+        return 'Разблокировка ставки';
       default:
         return 'Операция';
     }

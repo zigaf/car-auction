@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { AutobidVehicleDetail } from './interfaces/autobid-vehicle.interface';
+import { AutobidVehicleCard, AutobidVehicleDetail } from './interfaces/autobid-vehicle.interface';
 import { Lot } from '../../db/entities/lot.entity';
 import { FuelType } from '../../common/enums/fuel-type.enum';
 import { LotStatus } from '../../common/enums/lot-status.enum';
+import { AuctionType } from '../../common/enums/auction-type.enum';
 
 @Injectable()
 export class AutobidDataMapperService {
@@ -32,7 +33,8 @@ export class AutobidDataMapperService {
     detail: AutobidVehicleDetail,
     vehicleId: string,
     detailUrl: string,
-  ): Partial<Lot> {
+    card?: AutobidVehicleCard,
+  ): Partial<Lot> & { _categorizedImages?: { url: string; category: string }[] } {
     const specs = detail.specs;
     const brand = this.findSpec(specs, ['Марка', 'Marke']) || this.extractBrandFromTitle(detail.title);
     const model = this.findSpec(specs, ['Модель', 'Modell']) || this.extractModelFromTitle(detail.title, brand);
@@ -57,6 +59,24 @@ export class AutobidDataMapperService {
 
     // Build description from sections
     const description = this.buildDescription(detail);
+
+    // Auction end date → auctionEndAt (prefer detail, fallback to card)
+    const auctionEndStr = detail.auctionEndDate || card?.auctionEndDate || null;
+    const auctionEndAt = this.parseAuctionDateTime(auctionEndStr);
+    const saleDate = auctionEndAt || this.parseGermanDate(detail.auctionEndDate);
+
+    // Lot number (prefer detail, fallback to card)
+    const lotNumber = detail.lotNumber || card?.lotNumber || null;
+
+    // Auction number → saleName (prefer detail, fallback to card)
+    const auctionNumber = detail.auctionNumber || card?.auctionNumber || null;
+
+    // VAT type (prefer detail, fallback to card)
+    const vatType = detail.vatType || card?.vatType || null;
+    const vatTypeCode = vatType ? (vatType.toLowerCase().includes('netto') ? 'netto' : 'brutto') : null;
+
+    // Categorized images for LotImage creation
+    const categorizedImages = detail.sections?.categorizedImages || [];
 
     return {
       sourceId: vehicleId,
@@ -90,9 +110,15 @@ export class AutobidDataMapperService {
         ...(detail.sections ? { _sections: detail.sections } : {}),
       },
       description,
-      saleDate: this.parseGermanDate(detail.auctionEndDate),
+      lotNumber,
+      vatTypeCode,
+      saleName: auctionNumber ? `Auction ${auctionNumber}` : null,
+      saleDate,
+      auctionEndAt,
+      auctionType: AuctionType.TIMED,
       status: LotStatus.IMPORTED,
-    };
+      _categorizedImages: categorizedImages.length > 0 ? categorizedImages : undefined,
+    } as Partial<Lot> & { _categorizedImages?: { url: string; category: string }[] };
   }
 
   private parseLeadingInt(str: string | null): number | null {
@@ -281,5 +307,29 @@ export class AutobidDataMapperService {
       );
     }
     return null;
+  }
+
+  /**
+   * Parse auction date/time with timezone: "19.02.2026 10:00 CET"
+   * CET = UTC+1, CEST = UTC+2
+   */
+  private parseAuctionDateTime(str: string | null): Date | null {
+    if (!str) return null;
+    const match = str.match(/(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}):(\d{2})\s*(CET|CEST|MEZ|MESZ|UTC)?/i);
+    if (!match) return this.parseGermanDate(str);
+
+    const [, day, month, year, hours, minutes, tz] = match;
+    const d = parseInt(day, 10);
+    const m = parseInt(month, 10) - 1;
+    const y = parseInt(year, 10);
+    const h = parseInt(hours, 10);
+    const min = parseInt(minutes, 10);
+
+    // CET/MEZ = UTC+1, CEST/MESZ = UTC+2
+    const tzUpper = (tz || 'CET').toUpperCase();
+    const offsetHours = (tzUpper === 'CEST' || tzUpper === 'MESZ') ? 2 : 1;
+
+    // Create UTC date by subtracting the offset
+    return new Date(Date.UTC(y, m, d, h - offsetHours, min));
   }
 }

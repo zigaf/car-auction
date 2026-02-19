@@ -14,6 +14,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '../../db/entities/user.entity';
 import { PlaceBidDto } from './dto/place-bid.dto';
 import { BuyNowDto } from './dto/buy-now.dto';
+import { PlacePreBidDto } from './dto/place-pre-bid.dto';
 import { GetBidsDto } from './dto/get-bids.dto';
 
 @Controller()
@@ -27,6 +28,17 @@ export class AuctionController {
       user.id,
       dto.lotId,
       dto.amount,
+      dto.idempotencyKey,
+    );
+  }
+
+  @Post('bids/pre-bid')
+  @UseGuards(JwtAuthGuard)
+  placePreBid(@CurrentUser() user: User, @Body() dto: PlacePreBidDto) {
+    return this.auctionService.placePreBid(
+      user.id,
+      dto.lotId,
+      dto.maxAutoBid,
       dto.idempotencyKey,
     );
   }

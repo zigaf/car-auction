@@ -14,6 +14,7 @@ import { AutobidBrowserService } from './autobid-browser.service';
 import { AutobidDataMapperService } from './autobid-data-mapper.service';
 import { PhotoDownloadService } from './photo-download.service';
 import { AutobidVehicleCard } from './interfaces/autobid-vehicle.interface';
+import { ImageCategory } from '../../common/enums/image-category.enum';
 
 @Injectable()
 export class ScraperService {
@@ -210,12 +211,17 @@ export class ScraperService {
           vehicleId,
         );
 
-        // Map to lot entity
+        // Map to lot entity (pass card for fallback data)
         const lotData = this.dataMapper.mapVehicleToLot(
           detail,
           vehicleId,
           card.detailUrl,
+          card,
         );
+
+        // Extract categorized images from mapper result
+        const categorizedImages = (lotData as any)._categorizedImages || [];
+        delete (lotData as any)._categorizedImages;
 
         // Use card price as fallback if detail page price is missing
         if (!lotData.startingBid && card.price) {
@@ -228,12 +234,15 @@ export class ScraperService {
           run.lotsUpdated++;
 
           // Add images if lot has none
-          const damageUrls = detail.sections?.damageImageUrls || [];
-          if (
-            (!lot.images || lot.images.length === 0) &&
-            (detail.imageUrls.length > 0 || damageUrls.length > 0)
-          ) {
-            await this.saveImageRefs(lot, detail.imageUrls, run, damageUrls);
+          if (!lot.images || lot.images.length === 0) {
+            if (categorizedImages.length > 0) {
+              await this.saveCategorizedImages(lot, categorizedImages, run);
+            } else {
+              const damageUrls = detail.sections?.damageImageUrls || [];
+              if (detail.imageUrls.length > 0 || damageUrls.length > 0) {
+                await this.saveImageRefs(lot, detail.imageUrls, run, damageUrls);
+              }
+            }
           }
         } else {
           // Create new lot
@@ -241,10 +250,14 @@ export class ScraperService {
           lot = await this.lotRepository.save(lot);
           run.lotsCreated++;
 
-          // Save image references
-          const damageUrls = detail.sections?.damageImageUrls || [];
-          if (detail.imageUrls.length > 0 || damageUrls.length > 0) {
-            await this.saveImageRefs(lot, detail.imageUrls, run, damageUrls);
+          // Save image references with categories
+          if (categorizedImages.length > 0) {
+            await this.saveCategorizedImages(lot, categorizedImages, run);
+          } else {
+            const damageUrls = detail.sections?.damageImageUrls || [];
+            if (detail.imageUrls.length > 0 || damageUrls.length > 0) {
+              await this.saveImageRefs(lot, detail.imageUrls, run, damageUrls);
+            }
           }
         }
       } catch (error) {
@@ -276,6 +289,45 @@ export class ScraperService {
     } catch (error) {
       this.logger.warn(
         `Failed to save image refs for lot ${lot.id}: ${error.message}`,
+      );
+      run.errorsCount++;
+    }
+  }
+
+  private async saveCategorizedImages(
+    lot: Lot,
+    categorizedImages: { url: string; category: string }[],
+    run: ScraperRun,
+  ): Promise<void> {
+    try {
+      const categoryMap: Record<string, ImageCategory> = {
+        main: ImageCategory.MAIN,
+        exterior: ImageCategory.EXTERIOR,
+        interior: ImageCategory.INTERIOR,
+        damage: ImageCategory.DAMAGE,
+        document: ImageCategory.DOCUMENT,
+      };
+
+      const seen = new Set<string>();
+      let sortOrder = 0;
+
+      for (const img of categorizedImages) {
+        if (seen.has(img.url)) continue;
+        seen.add(img.url);
+
+        const category = categoryMap[img.category] || ImageCategory.EXTERIOR;
+        const lotImage = this.lotImageRepository.create({
+          url: img.url,
+          category,
+          sortOrder: sortOrder++,
+          lotId: lot.id,
+        });
+        await this.lotImageRepository.save(lotImage);
+        run.imagesDownloaded++;
+      }
+    } catch (error) {
+      this.logger.warn(
+        `Failed to save categorized images for lot ${lot.id}: ${error.message}`,
       );
       run.errorsCount++;
     }

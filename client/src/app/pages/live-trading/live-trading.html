@@ -169,6 +169,23 @@
                 </button>
               }
             </div>
+
+            <!-- Auto-bid (pre-bid) -->
+            <div class="lot__prebid-form">
+              <div class="lot__bid-input-wrap">
+                <input
+                  type="number"
+                  [(ngModel)]="maxAutoBidAmount"
+                  [placeholder]="'Max auto-bid from ' + getMinBid(activeLot)"
+                  class="lot__bid-input mono"
+                >
+                <span class="lot__bid-currency mono">EUR</span>
+              </div>
+              <button class="lot__prebid-btn" (click)="placePreBid()" [disabled]="bidding">
+                <span class="material-symbols-rounded">auto_mode</span>
+                Set Max Bid
+              </button>
+            </div>
           }
 
           <!-- Bid history -->

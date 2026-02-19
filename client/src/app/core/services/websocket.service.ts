@@ -129,6 +129,18 @@ export class WebsocketService implements OnDestroy {
     });
   }
 
+  placePreBid(lotId: string, maxAutoBid: number): void {
+    if (!this.socket?.connected) return;
+
+    this.socket.emit('place_pre_bid', { lotId, maxAutoBid }, (response: any) => {
+      if (response?.event === 'bid_placed') {
+        this._bidPlaced$.next(response.data);
+      } else if (response?.event === 'bid_error') {
+        this._bidError$.next(response.data);
+      }
+    });
+  }
+
   /**
    * Extracts the user ID from a JWT token (client-side only, no signature verification).
    * The project uses `sub` as the standard JWT subject claim.

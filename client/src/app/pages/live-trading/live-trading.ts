@@ -21,6 +21,7 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
   customBidAmount: number | null = null;
+  maxAutoBidAmount: number | null = null;
   activeTab: 'list' | 'feed' = 'list';
 
   // Data
@@ -251,6 +252,22 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
 
     // Use WebSocket for real-time bid placement
     this.wsService.placeBid(this.activeLot.id, this.customBidAmount);
+  }
+
+  placePreBid(): void {
+    if (!this.activeLot || !this.maxAutoBidAmount || this.bidding) return;
+
+    const minBid = this.getMinBid(this.activeLot);
+    if (this.maxAutoBidAmount < minBid) {
+      this.bidError = `Max auto-bid must be at least ${minBid} EUR`;
+      return;
+    }
+
+    this.bidding = true;
+    this.bidError = null;
+
+    this.wsService.placePreBid(this.activeLot.id, this.maxAutoBidAmount);
+    this.maxAutoBidAmount = null;
   }
 
   buyNow(): void {

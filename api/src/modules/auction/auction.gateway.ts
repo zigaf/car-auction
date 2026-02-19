@@ -18,6 +18,11 @@ interface PlaceBidPayload {
   idempotencyKey: string;
 }
 
+interface PlacePreBidPayload {
+  lotId: string;
+  maxAutoBid: number;
+}
+
 const WS_CORS_ORIGINS = [
   'http://localhost:4200',
   'http://localhost:4000',
@@ -165,6 +170,57 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
       return { event: 'bid_placed', data: result.bid };
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to place bid';
+      return { event: 'bid_error', data: { message } };
+    }
+  }
+
+  @SubscribeMessage('place_pre_bid')
+  async handlePlacePreBid(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: PlacePreBidPayload,
+  ) {
+    try {
+      const userId = client.data.userId as string | undefined;
+
+      if (!userId) {
+        return { event: 'bid_error', data: { message: 'Authentication required' } };
+      }
+
+      const idempotencyKey = `pre:${payload.lotId}:${userId}:${Date.now()}`;
+      const result: PlaceBidResult = await this.auctionService.placePreBid(
+        userId,
+        payload.lotId,
+        payload.maxAutoBid,
+        idempotencyKey,
+      );
+
+      const room = `auction:${payload.lotId}`;
+      const anonymizedBidder = `bidder-${userId.slice(-4)}`;
+
+      this.server.to(room).emit('bid_update', {
+        lotId: payload.lotId,
+        amount: result.bid.amount,
+        bidderFlag: anonymizedBidder,
+        timestamp: result.bid.createdAt,
+      });
+
+      if (result.auctionExtended && result.newEndAt) {
+        this.server.to(room).emit('auction_extended', {
+          lotId: payload.lotId,
+          newEndAt: result.newEndAt,
+        });
+      }
+
+      this.server.to('feed:global').emit('feed_update', {
+        lotId: payload.lotId,
+        amount: result.bid.amount,
+        bidderFlag: anonymizedBidder,
+        timestamp: result.bid.createdAt,
+      });
+
+      return { event: 'bid_placed', data: result.bid };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to place pre-bid';
       return { event: 'bid_error', data: { message } };
     }
   }
