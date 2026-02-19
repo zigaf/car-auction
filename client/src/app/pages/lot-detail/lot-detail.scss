@@ -12,6 +12,41 @@
   padding: 0 $space-lg;
 }
 
+.lot-detail__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: $text-secondary;
+  font-size: $fs-md;
+}
+
+.lot-detail__not-found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $space-md;
+  min-height: 400px;
+  color: $text-secondary;
+
+  .material-symbols-rounded {
+    font-size: 64px;
+    color: $text-tertiary;
+  }
+
+  h2 {
+    margin: 0;
+    color: $text-primary;
+  }
+
+  a {
+    color: $accent;
+    text-decoration: none;
+    &:hover { text-decoration: underline; }
+  }
+}
+
 .breadcrumb {
   display: flex;
   align-items: center;
@@ -57,24 +92,25 @@
 
 .gallery__main {
   position: relative;
-  height: 320px;
-  background: $bg-elevated;
+  height: 360px;
+  background: #111827;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
 
   @include mobile {
-    height: 220px;
+    height: 240px;
   }
 }
 
-// Main gallery image
+// Main gallery image — contain to show full photo, dark bg fills the rest
 .gallery__main-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
   user-select: none;
+  display: block;
 }
 
 .gallery__placeholder {
@@ -879,6 +915,50 @@
   font-size: $fs-2xl;
   font-weight: $fw-bold;
   color: $accent;
+}
+
+.auction-panel__buynow {
+  padding: $space-sm $space-base;
+  margin-bottom: $space-md;
+  background: rgba($status-yellow, 0.08);
+  border: 1px solid rgba($status-yellow, 0.2);
+  border-radius: $radius-base;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .auction-panel__price-label {
+    margin: 0;
+    color: $status-yellow;
+    font-weight: $fw-semibold;
+  }
+
+  .auction-panel__price-value {
+    font-size: $fs-lg;
+    color: $status-yellow;
+  }
+}
+
+.auction-panel__info-rows {
+  display: flex;
+  flex-direction: column;
+  gap: $space-xs;
+  padding-top: $space-md;
+  border-top: 1px solid $divider;
+}
+
+.auction-panel__info-row {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  font-size: $fs-sm;
+  color: $text-secondary;
+
+  .material-symbols-rounded {
+    font-size: 18px;
+    color: $text-tertiary;
+    flex-shrink: 0;
+  }
 }
 
 .auction-panel__timer {
