@@ -28,8 +28,8 @@ export class OrderController {
     @CurrentUser() user: User,
     @Query() query: GetOrdersDto,
   ) {
-    const page = parseInt(query.page || '1', 10);
-    const limit = parseInt(query.limit || '20', 10);
+    const page = Math.max(parseInt(query.page || '1', 10), 1);
+    const limit = Math.min(Math.max(parseInt(query.limit || '20', 10), 1), 100);
 
     if (user.role === Role.MANAGER || user.role === Role.ADMIN) {
       return this.orderService.getAllOrders({ page, limit });

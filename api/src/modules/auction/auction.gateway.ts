@@ -93,6 +93,28 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
     return { event: 'left', data: { lotId, room } };
   }
 
+  @SubscribeMessage('join_feed')
+  handleJoinFeed(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() feedId: string,
+  ) {
+    const room = `feed:${feedId}`;
+    client.join(room);
+    this.logger.log(`Client ${client.id} joined feed ${room}`);
+    return { event: 'joined_feed', data: { feedId, room } };
+  }
+
+  @SubscribeMessage('leave_feed')
+  handleLeaveFeed(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() feedId: string,
+  ) {
+    const room = `feed:${feedId}`;
+    client.leave(room);
+    this.logger.log(`Client ${client.id} left feed ${room}`);
+    return { event: 'left_feed', data: { feedId, room } };
+  }
+
   @SubscribeMessage('place_bid')
   async handlePlaceBid(
     @ConnectedSocket() client: Socket,
@@ -153,15 +175,16 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
    */
   emitAuctionEnded(lotId: string, winnerId: string | null, finalPrice: number) {
     const room = `auction:${lotId}`;
+    const anonymizedWinner = winnerId ? `bidder-${winnerId.slice(-4)}` : null;
     this.server.to(room).emit('auction_ended', {
       lotId,
-      winnerId,
+      winnerId: anonymizedWinner,
       finalPrice,
     });
 
     this.server.to('feed:global').emit('auction_ended', {
       lotId,
-      winnerId,
+      winnerId: anonymizedWinner,
       finalPrice,
     });
   }

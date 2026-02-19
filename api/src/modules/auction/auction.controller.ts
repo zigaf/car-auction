@@ -42,16 +42,16 @@ export class AuctionController {
     @Param('lotId', ParseUUIDPipe) lotId: string,
     @Query() query: GetBidsDto,
   ) {
-    const page = parseInt(query.page || '1', 10);
-    const limit = parseInt(query.limit || '20', 10);
+    const page = Math.max(parseInt(query.page || '1', 10), 1);
+    const limit = Math.min(Math.max(parseInt(query.limit || '20', 10), 1), 100);
     return this.auctionService.getBidsByLot(lotId, page, limit);
   }
 
   @Get('bids/my')
   @UseGuards(JwtAuthGuard)
   getMyBids(@CurrentUser() user: User, @Query() query: GetBidsDto) {
-    const page = parseInt(query.page || '1', 10);
-    const limit = parseInt(query.limit || '20', 10);
+    const page = Math.max(parseInt(query.page || '1', 10), 1);
+    const limit = Math.min(Math.max(parseInt(query.limit || '20', 10), 1), 100);
     return this.auctionService.getMyBids(user.id, page, limit);
   }
 

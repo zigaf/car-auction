@@ -16,7 +16,7 @@ export class Bid {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Lot, { eager: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => Lot, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'lot_id' })
   lot: Lot;
 

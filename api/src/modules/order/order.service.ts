@@ -2,12 +2,25 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Order } from '../../db/entities/order.entity';
 import { OrderStatusHistory } from '../../db/entities/order-status-history.entity';
 import { OrderStatus } from '../../common/enums/order-status.enum';
+
+/** Defines the valid order status transitions */
+const ALLOWED_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  [OrderStatus.PENDING]: [OrderStatus.APPROVED],
+  [OrderStatus.APPROVED]: [OrderStatus.PAID],
+  [OrderStatus.PAID]: [OrderStatus.DELIVERED_SVH],
+  [OrderStatus.DELIVERED_SVH]: [OrderStatus.CUSTOMS],
+  [OrderStatus.CUSTOMS]: [OrderStatus.CLEARED],
+  [OrderStatus.CLEARED]: [OrderStatus.DELIVERING],
+  [OrderStatus.DELIVERING]: [OrderStatus.COMPLETED],
+  [OrderStatus.COMPLETED]: [],
+};
 
 @Injectable()
 export class OrderService {
@@ -90,30 +103,43 @@ export class OrderService {
   ): Promise<Order> {
     const total = carPrice + commission;
 
-    const order = this.orderRepository.create({
-      lotId,
-      userId,
-      carPrice,
-      commission,
-      deliveryCost: 0,
-      customsCost: 0,
-      total,
-      status: OrderStatus.PENDING,
-    });
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    const saved = await this.orderRepository.save(order);
+    try {
+      const order = queryRunner.manager.create(Order, {
+        lotId,
+        userId,
+        carPrice,
+        commission,
+        deliveryCost: 0,
+        customsCost: 0,
+        total,
+        status: OrderStatus.PENDING,
+      });
 
-    // Create initial status history entry
-    const history = this.historyRepository.create({
-      orderId: saved.id,
-      status: OrderStatus.PENDING,
-      comment: 'Заказ создан',
-      changedBy: null,
-    });
+      const saved = await queryRunner.manager.save(Order, order);
 
-    await this.historyRepository.save(history);
+      // Create initial status history entry within the same transaction
+      const history = queryRunner.manager.create(OrderStatusHistory, {
+        orderId: saved.id,
+        status: OrderStatus.PENDING,
+        comment: 'Заказ создан',
+        changedBy: null,
+      });
 
-    return saved;
+      await queryRunner.manager.save(OrderStatusHistory, history);
+
+      await queryRunner.commitTransaction();
+
+      return saved;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async updateStatus(
@@ -134,6 +160,14 @@ export class OrderService {
 
       if (!order) {
         throw new NotFoundException('Order not found');
+      }
+
+      // Validate status transition
+      const allowedNextStatuses = ALLOWED_STATUS_TRANSITIONS[order.status];
+      if (!allowedNextStatuses || !allowedNextStatuses.includes(status)) {
+        throw new BadRequestException(
+          `Invalid status transition from '${order.status}' to '${status}'`,
+        );
       }
 
       order.status = status;
@@ -169,6 +203,8 @@ export class OrderService {
 
   async getOrderTracking(
     orderId: string,
+    userId: string,
+    isManager: boolean,
   ): Promise<OrderStatusHistory[]> {
     const order = await this.orderRepository.findOne({
       where: { id: orderId },
@@ -176,6 +212,11 @@ export class OrderService {
 
     if (!order) {
       throw new NotFoundException('Order not found');
+    }
+
+    // Verify ownership: only the order owner or a manager can view tracking
+    if (!isManager && order.userId !== userId) {
+      throw new ForbiddenException('Access denied');
     }
 
     return this.historyRepository.find({
