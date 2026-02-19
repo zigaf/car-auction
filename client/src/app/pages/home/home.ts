@@ -1,4 +1,4 @@
-import { Component, afterNextRender } from '@angular/core';
+import { Component, ChangeDetectorRef, afterNextRender } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { environment } from '../../../environments/environment';
@@ -33,7 +33,7 @@ export class HomeComponent {
 
   popularTags = ['Porsche 911', 'BMW M3', 'Mercedes W124', 'Land Cruiser', 'Ferrari'];
 
-  constructor() {
+  constructor(private cdr: ChangeDetectorRef) {
     afterNextRender(() => {
       this.loadData();
     });
@@ -67,6 +67,7 @@ export class HomeComponent {
       /* keep defaults */
     } finally {
       this.loading = false;
+      this.cdr.detectChanges();
     }
   }
 
@@ -75,6 +76,13 @@ export class HomeComponent {
       const main = lot.images.find((img: any) => img.category === 'main');
       const img = main || lot.images[0];
       return this.getImageUrl(img.url);
+    }
+    // Fallback to BCA CDN image
+    if (lot.bcaImageUrl) {
+      const url = lot.bcaImageUrl.startsWith('//')
+        ? 'https:' + lot.bcaImageUrl
+        : lot.bcaImageUrl;
+      return url;
     }
     return null;
   }
@@ -89,6 +97,7 @@ export class HomeComponent {
     this.scraperLoading = true;
     this.scraperMessage = '';
     this.scraperStatus = 'idle';
+    this.cdr.detectChanges();
     try {
       const resp = await fetch(`${environment.apiUrl}/scraper/run`, {
         method: 'POST',
@@ -109,6 +118,7 @@ export class HomeComponent {
       this.scraperMessage = 'Не удалось подключиться к серверу';
     } finally {
       this.scraperLoading = false;
+      this.cdr.detectChanges();
     }
   }
 

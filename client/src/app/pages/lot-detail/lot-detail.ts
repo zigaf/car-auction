@@ -1,4 +1,4 @@
-import { Component, inject, afterNextRender } from '@angular/core';
+import { Component, ChangeDetectorRef, inject, afterNextRender } from '@angular/core';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
@@ -13,6 +13,7 @@ import { environment } from '../../../environments/environment';
 })
 export class LotDetailComponent {
   private route = inject(ActivatedRoute);
+  private cdr = inject(ChangeDetectorRef);
 
   loading = true;
   lot: any = null;
@@ -35,11 +36,20 @@ export class LotDetailComponent {
       this.lot = null;
     } finally {
       this.loading = false;
+      this.cdr.detectChanges();
     }
   }
 
   get images(): any[] {
-    return this.lot?.images || [];
+    if (this.lot?.images?.length > 0) return this.lot.images;
+    // Fallback: create virtual image from bcaImageUrl
+    if (this.lot?.bcaImageUrl) {
+      const url = this.lot.bcaImageUrl.startsWith('//')
+        ? 'https:' + this.lot.bcaImageUrl
+        : this.lot.bcaImageUrl;
+      return [{ url, category: 'main' }];
+    }
+    return [];
   }
 
   get currentImage(): string | null {

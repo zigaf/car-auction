@@ -1,4 +1,4 @@
-import { Component, afterNextRender } from '@angular/core';
+import { Component, ChangeDetectorRef, afterNextRender } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
@@ -48,7 +48,7 @@ export class CatalogComponent {
 
   lots: any[] = [];
 
-  constructor() {
+  constructor(private cdr: ChangeDetectorRef) {
     afterNextRender(() => {
       this.loadBrands();
       this.loadLots();
@@ -61,6 +61,7 @@ export class CatalogComponent {
       if (resp.ok) {
         const data = await resp.json();
         this.brands = data.map((b: any) => b.brand).filter(Boolean);
+        this.cdr.detectChanges();
       }
     } catch { /* keep empty */ }
   }
@@ -92,6 +93,7 @@ export class CatalogComponent {
       this.totalLots = 0;
     } finally {
       this.loading = false;
+      this.cdr.detectChanges();
     }
   }
 
@@ -105,6 +107,9 @@ export class CatalogComponent {
       const main = lot.images.find((img: any) => img.category === 'main');
       const img = main || lot.images[0];
       return this.getImageUrl(img.url);
+    }
+    if (lot.bcaImageUrl) {
+      return lot.bcaImageUrl.startsWith('//') ? 'https:' + lot.bcaImageUrl : lot.bcaImageUrl;
     }
     return null;
   }
