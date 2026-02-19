@@ -57,24 +57,19 @@
 
 .gallery__main {
   position: relative;
-  height: 480px;
-  background: linear-gradient(135deg, $bg-panel, $bg-elevated);
+  aspect-ratio: 4 / 3;
+  background: $bg-elevated;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-
-  @include mobile {
-    height: 280px;
-  }
 }
 
-// Main gallery image — fills the entire gallery area
+// Main gallery image
 .gallery__main-img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  transition: opacity $transition-base;
+  object-fit: cover;
   user-select: none;
 }
 
