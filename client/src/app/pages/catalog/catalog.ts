@@ -3,9 +3,12 @@ import { isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { LotService } from '../../core/services/lot.service';
-import { ILot, ILotFilter } from '../../models/lot.model';
+import { AuctionStateService } from '../../core/services/auction-state.service';
+import { ILot, ILotFilter, LotStatus } from '../../models/lot.model';
 import { AppBrandIconComponent } from '../../shared/components/brand-icon/brand-icon.component';
 
 @Component({
@@ -17,7 +20,9 @@ import { AppBrandIconComponent } from '../../shared/components/brand-icon/brand-
 })
 export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly lotService = inject(LotService);
+  private readonly auctionState = inject(AuctionStateService);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly destroy$ = new Subject<void>();
   private observer: IntersectionObserver | null = null;
 
   @ViewChild('scrollAnchor') scrollAnchor!: ElementRef<HTMLDivElement>;
@@ -66,6 +71,19 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit(): void {
     this.loadBrands();
     this.loadLots();
+
+    // Reactively patch lot prices when WebSocket bid events arrive
+    this.auctionState.priceUpdate$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((update) => {
+        const lot = this.lots.find((l) => l.id === update.lotId);
+        if (lot) {
+          lot.currentPrice = update.currentPrice;
+          if (update.auctionEndAt !== undefined) {
+            lot.auctionEndAt = update.auctionEndAt;
+          }
+        }
+      });
   }
 
   ngAfterViewInit(): void {
@@ -74,6 +92,8 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnDestroy(): void {
     this.observer?.disconnect();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private setupIntersectionObserver(): void {
@@ -125,6 +145,8 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
         this.lots = result.data;
         this.totalLots = result.total;
         this.loading = false;
+        // Pre-populate global state; WebSocket will override with live values
+        this.auctionState.seedFromLots(result.data);
       },
       error: () => {
         this.lots = [];
@@ -159,6 +181,7 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
         this.lots = [...this.lots, ...result.data];
         this.totalLots = result.total;
         this.loadingMore = false;
+        this.auctionState.seedFromLots(result.data);
       },
       error: () => {
         this.loadingMore = false;
@@ -202,5 +225,24 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
     };
     this.currentPage = 1;
     this.loadLots();
+  }
+
+  // ─── Real-time helpers ────────────────────────────────────────────────────
+
+  /** True when the lot is actively trading (live auction in progress). */
+  isLiveLot(lot: ILot): boolean {
+    return lot.status === LotStatus.TRADING;
+  }
+
+  /**
+   * Returns the most up-to-date price for a lot.
+   * Prefers the live WebSocket value; falls back to the HTTP snapshot.
+   */
+  getLivePrice(lot: ILot): number {
+    const livePrice = this.auctionState.getLotPrice(lot.id);
+    if (livePrice !== null) return livePrice;
+    if (lot.currentPrice) return parseFloat(String(lot.currentPrice));
+    if (lot.startingBid) return parseFloat(String(lot.startingBid));
+    return 0;
   }
 }

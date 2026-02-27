@@ -14,8 +14,11 @@ import {
 @Injectable({ providedIn: 'root' })
 export class WebsocketService implements OnDestroy {
   private socket: Socket | null = null;
+  /** Tracks whether the socket was ever connected (to detect re-connects). */
+  private wasConnected = false;
 
   private readonly _connected$ = new BehaviorSubject<boolean>(false);
+  private readonly _reconnected$ = new Subject<void>();
   private readonly _bidUpdate$ = new Subject<IBidUpdate>();
   private readonly _auctionExtended$ = new Subject<IAuctionExtended>();
   private readonly _auctionEnded$ = new Subject<IAuctionEnded>();
@@ -25,6 +28,8 @@ export class WebsocketService implements OnDestroy {
   private readonly _watcherCount$ = new Subject<IWatcherCount>();
 
   readonly connected$: Observable<boolean> = this._connected$.asObservable();
+  /** Emits whenever the socket reconnects after a previous disconnect. */
+  readonly reconnected$: Observable<void> = this._reconnected$.asObservable();
   readonly bidUpdate$: Observable<IBidUpdate> = this._bidUpdate$.asObservable();
   readonly auctionExtended$: Observable<IAuctionExtended> = this._auctionExtended$.asObservable();
   readonly auctionEnded$: Observable<IAuctionEnded> = this._auctionEnded$.asObservable();
@@ -54,6 +59,11 @@ export class WebsocketService implements OnDestroy {
       });
 
       this.socket.on('connect', () => {
+        if (this.wasConnected) {
+          // This is a re-connect after a prior disconnect
+          this._reconnected$.next();
+        }
+        this.wasConnected = true;
         this._connected$.next(true);
       });
 
@@ -172,6 +182,7 @@ export class WebsocketService implements OnDestroy {
     this._bidPlaced$.complete();
     this._bidError$.complete();
     this._connected$.complete();
+    this._reconnected$.complete();
     this._watcherCount$.complete();
   }
 }

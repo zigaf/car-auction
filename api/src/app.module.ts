@@ -16,6 +16,7 @@ import { NotificationModule } from './modules/notification/notification.module';
 import { CalculatorModule } from './modules/calculator/calculator.module';
 import { TaskModule } from './modules/task/task.module';
 import { BotModule } from './modules/bot/bot.module';
+import { SystemModule } from './modules/system/system.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { BotModule } from './modules/bot/bot.module';
     CalculatorModule,
     TaskModule,
     BotModule,
+    SystemModule,
   ],
 })
 export class AppModule {}

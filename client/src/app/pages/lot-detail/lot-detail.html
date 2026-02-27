@@ -469,6 +469,168 @@
               }
             </div>
 
+            <!-- ═══ LIVE AUCTION PANEL (trading status only) ═══ -->
+            @if (isTrading) {
+              <div class="live-panel">
+
+                <!-- Current price + timer -->
+                <div class="live-panel__header">
+                  <div class="live-panel__price-block">
+                    <span class="live-panel__badge">LIVE</span>
+                    <span class="live-panel__price-label">Текущая ставка</span>
+                    <span class="live-panel__price-value mono">{{ getCurrentPrice(lot) | number }} {{ lot.originalCurrency || 'EUR' }}</span>
+                  </div>
+                  <div class="live-panel__timer-block" [class]="getTimerClass(lot.auctionEndAt)">
+                    <span class="material-symbols-rounded">timer</span>
+                    <span class="live-panel__timer mono">{{ getTimeLeft(lot.auctionEndAt) }}</span>
+                  </div>
+                </div>
+
+                <!-- Watchers -->
+                @if (watcherCount > 0) {
+                  <div class="live-panel__meta">
+                    <span class="material-symbols-rounded">visibility</span>
+                    <span>{{ watcherCount }} наблюдают</span>
+                  </div>
+                }
+
+                <!-- Auction ended -->
+                @if (auctionEnded) {
+                  <div class="live-panel__ended">
+                    <span class="material-symbols-rounded">gavel</span>
+                    Торги завершены
+                  </div>
+                }
+
+                <!-- Winning / outbid banners -->
+                @if (!auctionEnded && isWinning) {
+                  <div class="live-panel__status live-panel__status--winning">
+                    <span class="material-symbols-rounded">emoji_events</span>
+                    Вы лидируете!
+                  </div>
+                }
+                @if (!auctionEnded && isOutbid) {
+                  <div class="live-panel__status live-panel__status--outbid">
+                    <span class="material-symbols-rounded">trending_up</span>
+                    Ваша ставка перебита
+                  </div>
+                }
+
+                <!-- Active auto-bid indicator -->
+                @if (activeAutoBidMax && activeAutoBidLotId === lot.id) {
+                  <div class="live-panel__autobid">
+                    <span class="material-symbols-rounded">smart_toy</span>
+                    Авто-ставка до {{ activeAutoBidMax | number }} {{ lot.originalCurrency || 'EUR' }}
+                    <button class="live-panel__autobid-clear" (click)="clearAutoBid()">✕</button>
+                  </div>
+                }
+
+                <!-- Bid success / error -->
+                @if (bidSuccess) {
+                  <div class="live-panel__msg live-panel__msg--success">
+                    <span class="material-symbols-rounded">check_circle</span>
+                    Ставка принята!
+                  </div>
+                }
+                @if (bidError) {
+                  <div class="live-panel__msg live-panel__msg--error">
+                    <span class="material-symbols-rounded">error</span>
+                    {{ bidError }}
+                  </div>
+                }
+
+                <!-- Bid form -->
+                @if (isAuthenticated && !auctionEnded) {
+                  <div class="live-panel__bid-form">
+                    <div class="live-panel__quick-bids">
+                      @for (inc of getQuickBidIncrements(); track inc) {
+                        <button class="live-panel__quick-btn" [disabled]="bidding" (click)="quickBid(inc)">
+                          +{{ inc | number }}
+                        </button>
+                      }
+                    </div>
+                    <div class="live-panel__custom-bid">
+                      <input
+                        type="number"
+                        [(ngModel)]="customBidAmount"
+                        [placeholder]="'Мин. ' + (getMinBid(lot) | number)"
+                        class="live-panel__bid-input mono"
+                        [disabled]="bidding"
+                      />
+                      <button
+                        class="live-panel__bid-btn"
+                        [disabled]="bidding || !customBidAmount"
+                        (click)="placeBid()"
+                      >
+                        @if (bidding) {
+                          <span class="material-symbols-rounded spinning">progress_activity</span>
+                          Обработка...
+                        } @else {
+                          <span class="material-symbols-rounded">gavel</span>
+                          Сделать ставку
+                        }
+                      </button>
+                    </div>
+
+                    <!-- Auto-bid -->
+                    <details class="live-panel__prebid">
+                      <summary class="live-panel__prebid-toggle">
+                        <span class="material-symbols-rounded">smart_toy</span>
+                        Авто-ставка (Pre-bid)
+                      </summary>
+                      <div class="live-panel__prebid-body">
+                        <p class="live-panel__prebid-hint">
+                          Система автоматически перебивает конкурентов до указанного лимита.
+                        </p>
+                        <div class="live-panel__custom-bid">
+                          <input
+                            type="number"
+                            [(ngModel)]="maxAutoBidAmount"
+                            [placeholder]="'Лимит от ' + (getMinBid(lot) | number)"
+                            class="live-panel__bid-input mono"
+                            [disabled]="bidding"
+                          />
+                          <button
+                            class="live-panel__prebid-btn"
+                            [disabled]="bidding || !maxAutoBidAmount"
+                            (click)="placePreBid()"
+                          >
+                            Установить
+                          </button>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+                }
+
+                @if (!isAuthenticated && !auctionEnded) {
+                  <div class="live-panel__auth-prompt">
+                    <span class="material-symbols-rounded">lock</span>
+                    <a routerLink="/auth/login">Войдите</a>, чтобы сделать ставку
+                  </div>
+                }
+
+                <!-- Recent bid history -->
+                @if (bidHistory.length > 0) {
+                  <div class="live-panel__history">
+                    <h4 class="live-panel__history-title">Последние ставки</h4>
+                    <div class="live-panel__history-list">
+                      @for (bid of bidHistory; track bid.createdAt) {
+                        <div class="live-panel__history-row" [class.live-panel__history-row--mine]="isMyBid(bid)">
+                          <span class="live-panel__bidder mono">{{ bid.bidderFlag || 'bidder-????' }}</span>
+                          @if (bid.isPreBid) {
+                            <span class="material-symbols-rounded" title="Авто-ставка" style="font-size:14px">smart_toy</span>
+                          }
+                          <span class="live-panel__bid-amount mono">{{ bid.amount | number }} {{ lot.originalCurrency || 'EUR' }}</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+            <!-- ═══ END LIVE AUCTION PANEL ═══ -->
+
             <!-- Min payment -->
             @if (minPayment) {
               <div class="auction-panel__min-payment">

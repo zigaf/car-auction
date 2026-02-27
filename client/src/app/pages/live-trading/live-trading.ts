@@ -6,6 +6,7 @@ import { takeUntil } from 'rxjs/operators';
 import { AuctionService } from '../../core/services/auction.service';
 import { WebsocketService } from '../../core/services/websocket.service';
 import { StateService } from '../../core/services/state.service';
+import { TimeService } from '../../core/services/time.service';
 import { ILot } from '../../models/lot.model';
 import { IBid, IBidUpdate, IFeedUpdate, IWatcherCount } from '../../models/auction.model';
 
@@ -60,8 +61,8 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
   watcherCount = 0;
   uniqueBidders = 0;
 
-  // Timer tick
-  now = Date.now();
+  // Timer tick (server-aligned via TimeService)
+  now = 0;
 
   // Stats
   stats = {
@@ -73,10 +74,12 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
     private readonly auctionService: AuctionService,
     private readonly wsService: WebsocketService,
     private readonly stateService: StateService,
+    private readonly timeService: TimeService,
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
+    this.now = this.timeService.now();
     this.currentUserId = this.stateService.snapshot.user?.id ?? null;
     this.loadActiveLots();
     this.connectWebSocket();
@@ -284,8 +287,20 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       }, 700);
 
-      // Reload bid history for the active lot
-      this.loadBidHistory(update.lotId);
+      // Prepend the new bid directly from the WebSocket payload — no HTTP round-trip.
+      // The initial bid history is loaded once via HTTP when the lot is selected.
+      const newBid: IBid = {
+        id: '',
+        lotId: update.lotId,
+        userId: update.userId,
+        amount: update.amount,
+        isPreBid: update.isAutoBid ?? false,
+        maxAutoBid: null,
+        createdAt: update.timestamp,
+        bidderFlag: update.bidderFlag,
+      };
+      this.bidHistory = [newBid, ...this.bidHistory].slice(0, 10);
+      this.stats.totalBids += 1;
     }
   }
 
@@ -306,7 +321,7 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
     interval(1000)
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        this.now = Date.now();
+        this.now = this.timeService.now();
         this.cdr.markForCheck();
       });
   }
@@ -494,7 +509,7 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
   }
 
   getRelativeTime(dateStr: string): string {
-    const diff = this.now - new Date(dateStr).getTime();
+    const diff = this.timeService.now() - new Date(dateStr).getTime();
     if (diff < 60000) return `${Math.floor(diff / 1000)}s`;
     if (diff < 3600000) return `${Math.floor(diff / 60000)}m`;
     return `${Math.floor(diff / 3600000)}h`;

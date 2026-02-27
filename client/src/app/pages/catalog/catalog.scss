@@ -561,3 +561,19 @@
     transform: rotate(360deg);
   }
 }
+// ─── Live auction styles ──────────────────────────────────────────────────────
+
+.lot-badge--live {
+  background: $status-green;
+  color: #fff;
+  animation: pulse-live 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.75; }
+}
+
+.lot-card__price-value--live {
+  color: $status-green;
+}

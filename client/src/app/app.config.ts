@@ -8,6 +8,7 @@ import { provideClientHydration, withEventReplay } from '@angular/platform-brows
 import { routes } from './app.routes';
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { StateService } from './core/services/state.service';
+import { TimeService } from './core/services/time.service';
 import { environment } from '../environments/environment';
 
 function initializeAuth(platformId: object, stateService: StateService): () => Promise<void> {
@@ -81,6 +82,17 @@ export const appConfig: ApplicationConfig = {
       provide: APP_INITIALIZER,
       useFactory: initializeAuth,
       deps: [PLATFORM_ID, StateService],
+      multi: true,
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: (platformId: object, timeService: TimeService) => {
+        return () => {
+          if (!isPlatformBrowser(platformId)) return Promise.resolve();
+          return timeService.init();
+        };
+      },
+      deps: [PLATFORM_ID, TimeService],
       multi: true,
     },
   ],

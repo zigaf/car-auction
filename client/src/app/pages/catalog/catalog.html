@@ -126,6 +126,9 @@
             </div>
             }
             <div class="lot-card__badges">
+              @if (isLiveLot(lot)) {
+              <span class="lot-badge lot-badge--live">LIVE</span>
+              }
               @if (lot.saleCountry) {
               <span class="lot-badge lot-badge--docs">{{ lot.saleCountry }}</span>
               }
@@ -152,7 +155,10 @@
 
             <div class="lot-card__auction">
               <div class="lot-card__price">
-                @if (lot.startingBid) {
+                @if (isLiveLot(lot)) {
+                <span class="lot-card__price-label">Текущая ставка</span>
+                <span class="lot-card__price-value lot-card__price-value--live mono">{{ getLivePrice(lot) | number }} EUR</span>
+                } @else if (lot.startingBid) {
                 <span class="lot-card__price-label">Стартовая цена</span>
                 <span class="lot-card__price-value mono">{{ lot.startingBid | number }} EUR</span>
                 } @else {
