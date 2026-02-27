@@ -233,16 +233,18 @@ export class LotDetailComponent implements OnInit, OnDestroy {
   toggleFavorite(): void {
     if (!this.stateService.snapshot.isAuthenticated || !this.lot || this.favoriteLoading) return;
     this.favoriteLoading = true;
-    const action = this.isFavorite
-      ? this.favoritesService.removeFavorite(this.lot.id)
-      : this.favoritesService.addFavorite(this.lot.id);
-    action.subscribe({
-      next: () => {
-        this.isFavorite = !this.isFavorite;
-        this.favoriteLoading = false;
-      },
-      error: () => (this.favoriteLoading = false),
-    });
+    const lotId = this.lot.id;
+    if (this.isFavorite) {
+      this.favoritesService.removeFavorite(lotId).subscribe({
+        next: () => { this.isFavorite = false; this.favoriteLoading = false; },
+        error: () => (this.favoriteLoading = false),
+      });
+    } else {
+      this.favoritesService.addFavorite(lotId).subscribe({
+        next: () => { this.isFavorite = true; this.favoriteLoading = false; },
+        error: () => (this.favoriteLoading = false),
+      });
+    }
   }
 
   get minPayment(): number | null {
