@@ -113,7 +113,6 @@ export class AuctionService {
       if (!isBotUser) {
         const balanceResult = await manager
           .createQueryBuilder(BalanceTransaction, 'tx')
-          .setLock('pessimistic_write')
           .select('COALESCE(SUM(tx.amount), 0)', 'balance')
           .where('tx.user_id = :userId', { userId })
           .getRawOne();
@@ -286,10 +285,9 @@ export class AuctionService {
       const commission = Math.round(buyNowPrice * commissionRate * 100) / 100;
       const totalCost = buyNowPrice + commission;
 
-      // Check user balance INSIDE the transaction with row-level locking
+      // Check user balance INSIDE the transaction
       const balanceResult = await manager
         .createQueryBuilder(BalanceTransaction, 'tx')
-        .setLock('pessimistic_write')
         .select('COALESCE(SUM(tx.amount), 0)', 'balance')
         .where('tx.user_id = :userId', { userId })
         .getRawOne();
@@ -574,7 +572,6 @@ export class AuctionService {
       // Check balance for the full maxAutoBid amount
       const balanceResult = await manager
         .createQueryBuilder(BalanceTransaction, 'tx')
-        .setLock('pessimistic_write')
         .select('COALESCE(SUM(tx.amount), 0)', 'balance')
         .where('tx.user_id = :userId', { userId })
         .getRawOne();
