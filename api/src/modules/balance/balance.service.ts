@@ -58,7 +58,6 @@ export class BalanceService {
     try {
       const result = await queryRunner.manager
         .createQueryBuilder(BalanceTransaction, 'tx')
-        .setLock('pessimistic_write')
         .select('COALESCE(SUM(tx.amount), 0)', 'balance')
         .where('tx.user_id = :userId', { userId })
         .getRawOne();
