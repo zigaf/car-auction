@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { User } from '../../db/entities/user.entity';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateUserManagerDto } from './dto/update-user-manager.dto';
@@ -27,11 +27,49 @@ export class UserService {
     return this.getProfile(userId);
   }
 
-  async findAll() {
-    const users = await this.userRepository.find({
+  async findAll(params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    role?: string;
+    status?: string;
+  } = {}) {
+    const { page = 1, limit = 20, search, role, status } = params;
+    const where: any = {};
+    if (role) where.role = role;
+    if (status) where.status = status;
+
+    const baseWhere = search
+      ? [
+          { ...where, email: ILike(`%${search}%`) },
+          { ...where, firstName: ILike(`%${search}%`) },
+          { ...where, lastName: ILike(`%${search}%`) },
+        ]
+      : where;
+
+    const [users, total] = await this.userRepository.findAndCount({
+      where: baseWhere,
       order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
-    return users.map((u) => this.authService.toUserResponse(u));
+
+    const data = users.map((u) => ({
+      id: u.id,
+      email: u.email,
+      firstName: u.firstName,
+      lastName: u.lastName,
+      phone: u.phone ?? null,
+      avatarUrl: u.avatarUrl ?? null,
+      countryFlag: u.countryFlag,
+      role: u.role,
+      status: u.status,
+      isVerified: u.isVerified,
+      documentsVerified: u.isVerified,
+      createdAt: u.createdAt,
+    }));
+
+    return { data, total, page, limit };
   }
 
   async findById(id: string) {

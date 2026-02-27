@@ -4,6 +4,7 @@ import {
   Post,
   Patch,
   Param,
+  Query,
   Body,
   UseGuards,
   ParseUUIDPipe,
@@ -45,8 +46,20 @@ export class UserController {
   @Get()
   @UseGuards(RolesGuard)
   @Roles(Role.MANAGER, Role.ADMIN)
-  findAll() {
-    return this.userService.findAll();
+  findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('role') role?: string,
+    @Query('status') status?: string,
+  ) {
+    return this.userService.findAll({
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+      search,
+      role,
+      status,
+    });
   }
 
   @Get(':id')
