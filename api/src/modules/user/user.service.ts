@@ -7,6 +7,7 @@ import { UpdateUserManagerDto } from './dto/update-user-manager.dto';
 import { UserStatus } from '../../common/enums/user-status.enum';
 import { Role } from '../../common/enums/role.enum';
 import { AuthService } from '../auth/auth.service';
+import { BalanceService } from '../balance/balance.service';
 
 @Injectable()
 export class UserService {
@@ -14,12 +15,14 @@ export class UserService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly authService: AuthService,
+    private readonly balanceService: BalanceService,
   ) {}
 
   async getProfile(userId: string) {
     const user = await this.userRepository.findOneBy({ id: userId });
     if (!user) throw new NotFoundException('User not found');
-    return this.authService.toUserResponse(user);
+    const { balance } = await this.balanceService.getBalance(userId);
+    return { ...this.authService.toUserResponse(user), balance };
   }
 
   async updateProfile(userId: string, dto: UpdateProfileDto) {

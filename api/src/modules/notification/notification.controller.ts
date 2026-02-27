@@ -24,17 +24,16 @@ export class NotificationController {
     @CurrentUser() user: User,
     @Query() query: GetNotificationsDto,
   ) {
-    const page = parseInt(query.page ?? '1', 10);
-    const limit = parseInt(query.limit ?? '20', 10);
+    const page = Math.max(parseInt(query.page ?? '1', 10), 1);
+    const limit = Math.min(Math.max(parseInt(query.limit ?? '20', 10), 1), 100);
     const unreadOnly = query.unreadOnly ?? false;
     return this.notificationService.getForUser(user.id, page, limit, unreadOnly);
   }
 
   @Get('unread-count')
-  getUnreadCount(@CurrentUser() user: User) {
-    return this.notificationService
-      .getUnreadCount(user.id)
-      .then((count) => ({ count }));
+  async getUnreadCount(@CurrentUser() user: User) {
+    const count = await this.notificationService.getUnreadCount(user.id);
+    return { count };
   }
 
   @Patch(':id/read')

@@ -3,6 +3,7 @@ import {
   BadRequestException,
   NotFoundException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, MoreThan } from 'typeorm';
@@ -32,6 +33,8 @@ export interface PlaceBidResult {
 
 @Injectable()
 export class AuctionService {
+  private readonly logger = new Logger(AuctionService.name);
+
   constructor(
     @InjectRepository(Bid)
     private readonly bidRepository: Repository<Bid>,
@@ -246,7 +249,7 @@ export class AuctionService {
           message: `Ваша ставка на «${lotTitle}» перебита. Новая ставка: €${amount.toLocaleString()}`,
           data: { lotId, amount },
         })
-        .catch(() => {});
+        .catch((err) => this.logger.warn('Failed to send notification', err));
     }
 
     return result;
@@ -700,7 +703,7 @@ export class AuctionService {
           message: `Ваша ставка на «${lotTitle}» перебита. Новая максимальная ставка: €${maxAutoBid.toLocaleString()}`,
           data: { lotId, maxAutoBid },
         })
-        .catch(() => {});
+        .catch((err) => this.logger.warn('Failed to send notification', err));
     }
 
     return preBidResult;

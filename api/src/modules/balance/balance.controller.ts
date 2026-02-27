@@ -33,8 +33,8 @@ export class BalanceController {
     @CurrentUser() user: User,
     @Query() query: GetTransactionsDto,
   ) {
-    const page = parseInt(query.page || '1', 10);
-    const limit = parseInt(query.limit || '20', 10);
+    const page = Math.max(parseInt(query.page || '1', 10), 1);
+    const limit = Math.min(Math.max(parseInt(query.limit || '20', 10), 1), 100);
     return this.balanceService.getTransactions(user.id, { page, limit });
   }
 
@@ -52,8 +52,8 @@ export class BalanceController {
     @Param('userId', ParseUUIDPipe) userId: string,
     @Query() query: GetTransactionsDto,
   ) {
-    const page = parseInt(query.page || '1', 10);
-    const limit = parseInt(query.limit || '20', 10);
+    const page = Math.max(parseInt(query.page || '1', 10), 1);
+    const limit = Math.min(Math.max(parseInt(query.limit || '20', 10), 1), 100);
     return this.balanceService.getTransactions(userId, { page, limit });
   }
 

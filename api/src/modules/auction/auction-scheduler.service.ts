@@ -41,15 +41,19 @@ export class AuctionSchedulerService {
       });
 
       for (const lot of lotsToStart) {
-        if (!lot.auctionEndAt || lot.auctionEndAt <= new Date()) continue;
-        lot.status = LotStatus.TRADING;
-        await this.lotRepository.save(lot);
-        this.auctionGateway.server?.to('feed:global').emit('auction_started', {
-          lotId: lot.id,
-          title: lot.title,
-          auctionEndAt: lot.auctionEndAt,
-        });
-        this.logger.log(`Auction auto-started: lot=${lot.id}`);
+        try {
+          if (!lot.auctionEndAt || lot.auctionEndAt <= new Date()) continue;
+          lot.status = LotStatus.TRADING;
+          await this.lotRepository.save(lot);
+          this.auctionGateway.server?.to('feed:global').emit('auction_started', {
+            lotId: lot.id,
+            title: lot.title,
+            auctionEndAt: lot.auctionEndAt,
+          });
+          this.logger.log(`Auction auto-started: lot=${lot.id}`);
+        } catch (error) {
+          this.logger.error(`Failed to start auction for lot=${lot.id}`, error);
+        }
       }
     } catch (error) {
       this.logger.error('Error in auction start scheduler', error);
@@ -70,7 +74,11 @@ export class AuctionSchedulerService {
       });
 
       for (const lot of expiredLots) {
-        await this.processAuctionEnd(lot);
+        try {
+          await this.processAuctionEnd(lot);
+        } catch (error) {
+          this.logger.error(`Failed to process auction end for lot=${lot.id}`, error);
+        }
       }
     } catch (error) {
       this.logger.error('Error in auction scheduler', error);
