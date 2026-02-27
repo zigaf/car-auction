@@ -16,6 +16,7 @@ async function bootstrap() {
       'http://localhost:4200',
       'http://localhost:4000',
       'https://car-auction-production-5f48.up.railway.app',
+      'https://gentle-courtesy-production-2aea.up.railway.app',
     ],
     credentials: true,
   });
