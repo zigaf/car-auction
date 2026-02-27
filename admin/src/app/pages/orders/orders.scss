@@ -1,0 +1,8 @@
+@use 'shared-page' as *;
+@use 'styles/variables' as *;
+
+.order-lot {
+  font-size: $fs-sm;
+  font-weight: $fw-medium;
+  color: $text-primary;
+}

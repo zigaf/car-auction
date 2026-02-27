@@ -9,63 +9,32 @@
     <form class="auth-form" (ngSubmit)="onRegister()">
       <div class="form-row">
         <div class="form-group">
-          <label>Имя</label>
-          <div class="input-wrap">
-            <span class="material-symbols-rounded">person</span>
-            <input type="text" [(ngModel)]="firstName" name="firstName" placeholder="Ваше имя">
-          </div>
+          <app-input label="Имя" type="text" placeholder="Ваше имя" icon="person" name="firstName" [(ngModel)]="firstName" [required]="true"></app-input>
         </div>
         <div class="form-group">
-          <label>Фамилия</label>
-          <div class="input-wrap">
-            <span class="material-symbols-rounded">person</span>
-            <input type="text" [(ngModel)]="lastName" name="lastName" placeholder="Ваша фамилия">
-          </div>
+          <app-input label="Фамилия" type="text" placeholder="Ваша фамилия" icon="person" name="lastName" [(ngModel)]="lastName" [required]="true"></app-input>
         </div>
       </div>
 
       <div class="form-group">
-        <label>Email</label>
-        <div class="input-wrap">
-          <span class="material-symbols-rounded">mail</span>
-          <input type="email" [(ngModel)]="email" name="email" placeholder="your@email.com">
-        </div>
+        <app-input label="Email" type="email" placeholder="your@email.com" icon="mail" name="email" [(ngModel)]="email" [required]="true"></app-input>
       </div>
 
       <div class="form-group">
-        <label>Телефон</label>
-        <div class="input-wrap">
-          <span class="material-symbols-rounded">phone</span>
-          <input type="tel" [(ngModel)]="phone" name="phone" placeholder="+380 __ ___ __ __">
-        </div>
+        <app-input label="Телефон" type="tel" placeholder="+380 __ ___ __ __" icon="phone" name="phone" [(ngModel)]="phone"></app-input>
       </div>
 
       <div class="form-group">
-        <label>Пароль</label>
-        <div class="input-wrap">
-          <span class="material-symbols-rounded">lock</span>
-          <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="password" name="password" placeholder="Минимум 8 символов">
-          <button type="button" class="input-toggle" (click)="showPassword = !showPassword">
-            <span class="material-symbols-rounded">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
-          </button>
-        </div>
+        <app-input label="Пароль" type="password" placeholder="Минимум 8 символов" icon="lock" name="password" [(ngModel)]="password" [required]="true"></app-input>
       </div>
 
       <div class="form-group">
-        <label>Подтверждение пароля</label>
-        <div class="input-wrap">
-          <span class="material-symbols-rounded">lock</span>
-          <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="confirmPassword" name="confirmPassword" placeholder="Повторите пароль">
-        </div>
+        <app-input label="Подтверждение пароля" type="password" placeholder="Повторите пароль" icon="lock" name="confirmPassword" [(ngModel)]="confirmPassword" [required]="true"></app-input>
       </div>
 
-      @if (errorMessage) {
-        <div class="auth-form__error">{{ errorMessage }}</div>
-      }
-
-      <button type="submit" class="auth-form__submit" [disabled]="isLoading">
-        {{ isLoading ? 'Регистрация...' : 'Зарегистрироваться' }}
-      </button>
+      <app-button type="submit" variant="primary" [fullWidth]="true" [loading]="isLoading" class="auth-form__submit">
+        Зарегистрироваться
+      </app-button>
     </form>
 
     <div class="social-divider">
@@ -73,7 +42,7 @@
     </div>
 
     <div class="social-buttons">
-      <a class="social-btn social-btn--google" href="/api/auth/google">
+      <a class="social-btn social-btn--google" [href]="apiUrl.replace('/api', '') + '/api/auth/google'">
         <svg class="social-btn__icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
           <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -82,14 +51,14 @@
         </svg>
         <span>Google</span>
       </a>
-      <a class="social-btn social-btn--yandex" href="/api/auth/yandex">
+      <a class="social-btn social-btn--yandex" [href]="apiUrl.replace('/api', '') + '/api/auth/yandex'">
         <svg class="social-btn__icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill="#FC3F1D"/>
           <path d="M13.6 7.2h-.9c-1.4 0-2.1.8-2.1 1.9 0 1.2.5 1.8 1.5 2.5l.9.6-2.5 4.3H8.8l2.2-3.8c-1.3-.9-2-2-2-3.5 0-2.2 1.5-3.7 3.8-3.7h2.4v11h-1.6V7.2z" fill="#fff"/>
         </svg>
         <span>Яндекс</span>
       </a>
-      <a class="social-btn social-btn--vk" href="/api/auth/vk">
+      <a class="social-btn social-btn--vk" [href]="apiUrl.replace('/api', '') + '/api/auth/vk'">
         <svg class="social-btn__icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill="#0077FF"/>
           <path d="M12.7 16.9h.8s.2 0 .4-.2c.1-.2.1-.5.1-.5s0-1.5.7-1.7c.7-.2 1.5 1.4 2.4 2 .7.5 1.2.4 1.2.4l2.5-.1s1.3-.1.7-.9c-.1-.1-.3-.5-1.6-1.5-1.3-1-1.1-.9.5-2.7.9-1.1 1.3-1.8 1.2-2.1-.1-.3-.9-.2-.9-.2l-2.8 0s-.2 0-.3.1c-.1.1-.2.3-.2.3s-.4 1.1-.9 2c-1.1 1.9-1.5 2-1.7 1.9-.4-.3-.3-1.1-.3-1.7 0-1.8.3-2.5-.5-2.7-.3-.1-.5-.1-1.2-.1-1 0-1.8 0-2.3.2-.3.2-.5.5-.4.5.2 0 .6.1.8.4.3.4.3 1.3.3 1.3s.2 2.1-.4 2.4c-.4.2-1-.2-2.2-2-.6-.9-1-1.9-1-1.9s-.1-.2-.2-.3c-.2-.1-.4-.1-.4-.1l-2.7 0s-.4 0-.5.2c-.1.1 0 .4 0 .4s1.8 4.3 3.9 6.5c1.9 2 4.1 1.9 4.1 1.9z" fill="#fff"/>

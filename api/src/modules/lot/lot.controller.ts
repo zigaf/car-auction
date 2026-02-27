@@ -24,6 +24,7 @@ import { Role } from '../../common/enums/role.enum';
 import { User } from '../../db/entities/user.entity';
 import { CreateLotDto } from './dto/create-lot.dto';
 import { UpdateLotDto, UpdateLotStatusDto } from './dto/update-lot.dto';
+import { ScheduleLotDto } from './dto/schedule-lot.dto';
 
 @Controller('lots')
 export class LotController {
@@ -134,5 +135,15 @@ export class LotController {
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     await this.lotService.remove(id);
     return { message: 'Lot deleted' };
+  }
+
+  @Patch(':id/schedule')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.MANAGER, Role.ADMIN)
+  async schedule(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ScheduleLotDto,
+  ) {
+    return this.lotService.scheduleLot(id, dto);
   }
 }

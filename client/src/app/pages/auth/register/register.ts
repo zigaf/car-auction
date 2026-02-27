@@ -3,11 +3,14 @@ import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
 import { StateService } from '../../../core/services/state.service';
+import { ToastService } from '../../../core/services/toast.service';
+import { AppButtonComponent } from '../../../shared/components/button/button.component';
+import { AppInputComponent } from '../../../shared/components/input/input.component';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule, AppButtonComponent, AppInputComponent],
   templateUrl: './register.html',
   styleUrl: './register.scss',
 })
@@ -18,28 +21,26 @@ export class RegisterComponent {
   phone = '';
   password = '';
   confirmPassword = '';
-  showPassword = false;
-  errorMessage = '';
   isLoading = false;
+  apiUrl = environment.apiUrl;
 
   private router = inject(Router);
   private stateService = inject(StateService);
+  private toastService = inject(ToastService);
 
   async onRegister() {
-    this.errorMessage = '';
-
     if (!this.firstName || !this.lastName || !this.email || !this.password) {
-      this.errorMessage = 'Заполните все обязательные поля';
+      this.toastService.warning('Заполните все обязательные поля');
       return;
     }
 
     if (this.password !== this.confirmPassword) {
-      this.errorMessage = 'Пароли не совпадают';
+      this.toastService.error('Пароли не совпадают');
       return;
     }
 
     if (this.password.length < 8) {
-      this.errorMessage = 'Пароль должен содержать минимум 8 символов';
+      this.toastService.error('Пароль должен содержать минимум 8 символов');
       return;
     }
 
@@ -67,7 +68,6 @@ export class RegisterComponent {
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
 
-      // Load user profile
       const profileResponse = await fetch(`${environment.apiUrl}/users/me`, {
         headers: { Authorization: `Bearer ${data.accessToken}` },
       });
@@ -77,9 +77,10 @@ export class RegisterComponent {
         this.stateService.setUser(user);
       }
 
+      this.toastService.success('Аккаунт создан! Добро пожаловать.');
       this.router.navigate(['/cabinet']);
     } catch (err: any) {
-      this.errorMessage = err.message || 'Ошибка при регистрации. Попробуйте позже.';
+      this.toastService.error(err.message || 'Ошибка при регистрации. Попробуйте позже.');
     } finally {
       this.isLoading = false;
     }
@@ -94,22 +95,15 @@ export class RegisterComponent {
     const left = (screen.width - width) / 2;
     const top = (screen.height - height) / 2;
 
-    const authUrl =
-      `https://oauth.telegram.org/auth?bot_id=${botName}` +
-      `&origin=${encodeURIComponent(window.location.origin)}` +
-      `&request_access=write`;
-
     window.open(
-      authUrl,
+      `https://oauth.telegram.org/auth?bot_id=${botName}&origin=${encodeURIComponent(window.location.origin)}&request_access=write`,
       'TelegramAuth',
       `width=${width},height=${height},left=${left},top=${top}`,
     );
 
     (window as any).Telegram = {
       Login: {
-        auth: (user: any) => {
-          this.handleTelegramAuth(user);
-        },
+        auth: (user: any) => this.handleTelegramAuth(user),
       },
     };
   }
@@ -129,7 +123,7 @@ export class RegisterComponent {
       localStorage.setItem('refreshToken', data.refreshToken);
       this.router.navigate(['/cabinet/dashboard']);
     } catch {
-      // Telegram auth failed — user stays on register page
+      this.toastService.error('Ошибка входа через Telegram');
     }
   }
 }

@@ -5,11 +5,13 @@ import { OrderStatusHistory } from '../../db/entities/order-status-history.entit
 import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
 import { AuthModule } from '../auth/auth.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Order, OrderStatusHistory]),
     AuthModule,
+    NotificationModule,
   ],
   controllers: [OrderController],
   providers: [OrderService],

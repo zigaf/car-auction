@@ -8,6 +8,7 @@ import { FuelType } from '../../common/enums/fuel-type.enum';
 import { ImageCategory } from '../../common/enums/image-category.enum';
 import { CreateLotDto } from './dto/create-lot.dto';
 import { UpdateLotDto, UpdateLotStatusDto } from './dto/update-lot.dto';
+import { ScheduleLotDto } from './dto/schedule-lot.dto';
 
 @Injectable()
 export class LotService {
@@ -415,6 +416,35 @@ export class LotService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async scheduleLot(id: string, dto: ScheduleLotDto): Promise<Lot> {
+    const lot = await this.lotRepository.findOne({
+      where: { id },
+      relations: ['images'],
+    });
+    if (!lot) throw new NotFoundException('Lot not found');
+
+    const startAt = new Date(dto.auctionStartAt);
+    const endAt = new Date(dto.auctionEndAt);
+
+    if (endAt <= startAt) {
+      throw new BadRequestException('auctionEndAt must be after auctionStartAt');
+    }
+    if (endAt <= new Date()) {
+      throw new BadRequestException('auctionEndAt must be in the future');
+    }
+
+    lot.auctionStartAt = startAt;
+    lot.auctionEndAt = endAt;
+    if (dto.auctionType) lot.auctionType = dto.auctionType;
+
+    // Ensure the lot is in ACTIVE state so the auto-start cron can pick it up
+    if (lot.status === LotStatus.IMPORTED) {
+      lot.status = LotStatus.ACTIVE;
+    }
+
+    return this.lotRepository.save(lot);
   }
 
   private parseCsvLine(line: string): string[] {

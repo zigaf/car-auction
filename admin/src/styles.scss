@@ -1,0 +1,73 @@
+@use '@angular/material' as mat;
+@use 'styles/variables' as *;
+
+// --- Angular Material M3 Light Theme ---
+html {
+  @include mat.theme((
+    color: (
+      theme-type: light,
+      primary: mat.$violet-palette,
+      tertiary: mat.$blue-palette,
+    ),
+    typography: Manrope,
+    density: -1,
+  ));
+}
+
+// --- Global Reset & Base ---
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: $bg-secondary;
+  color: $text-primary;
+  font-family: $font-ui;
+  font-size: $fs-base;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color-scheme: light;
+}
+
+a {
+  color: $accent;
+  text-decoration: none;
+  transition: color $transition-fast;
+  &:hover { color: $accent-hover; }
+}
+
+::selection {
+  background: rgba(79, 70, 229, 0.15);
+  color: $text-primary;
+}
+
+// --- Scrollbar ---
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: $border-color; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: $border-hover; }
+
+// --- Utilities ---
+.mono { font-family: $font-mono; }
+.accent-text { color: $accent; }
+.text-muted { color: $text-secondary; }
+.text-green { color: $status-green; }
+.text-red { color: $status-red; }
+.text-yellow { color: $status-yellow; }
+.text-blue { color: $status-blue; }
+
+// --- Material overrides ---
+.mat-mdc-snack-bar-container {
+  --mdc-snackbar-container-color: #{$text-primary};
+  --mdc-snackbar-supporting-text-color: #FFFFFF;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin .8s linear infinite; }

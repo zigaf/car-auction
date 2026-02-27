@@ -1,0 +1,233 @@
+@use 'styles/variables' as *;
+@use 'styles/mixins' as *;
+
+// Shared page styles — используются во всех страницах adminки через @use 'shared-page' as *
+
+.page {
+  padding: $space-xl;
+  max-width: $content-max-width;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+  margin-bottom: $space-xl;
+}
+
+.page-title {
+  font-size: $fs-xl;
+  font-weight: $fw-bold;
+  color: $text-primary;
+}
+
+.page-count {
+  font-size: $fs-sm;
+  color: $text-secondary;
+  background: $bg-elevated;
+  padding: 2px 10px;
+  border-radius: $radius-chip;
+}
+
+// ── Filters ──────────────────────────────────────────────────────────────────
+.filters {
+  display: flex;
+  gap: $space-sm;
+  margin-bottom: $space-lg;
+  flex-wrap: wrap;
+}
+
+.filters__search {
+  flex: 1;
+  min-width: 200px;
+}
+
+.filters__select {
+  min-width: 160px;
+  width: auto;
+}
+
+// ── Common form controls ──────────────────────────────────────────────────────
+.form-control {
+  @include input-base;
+}
+
+// ── Common buttons ────────────────────────────────────────────────────────────
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-xs;
+  padding: $space-sm $space-md;
+  border: none;
+  border-radius: $radius-base;
+  font-family: $font-ui;
+  font-size: $fs-sm;
+  font-weight: $fw-semibold;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &--primary {
+    background: $accent;
+    color: #fff;
+    &:hover { background: $accent-hover; box-shadow: $shadow-accent; }
+    &:active { background: $accent-pressed; }
+  }
+
+  &--secondary {
+    background: transparent;
+    color: $text-primary;
+    border: 1px solid $border-color;
+    &:hover { border-color: $border-hover; background: $bg-elevated; }
+  }
+
+  &--danger {
+    background: rgba(239, 68, 68, .08);
+    color: $status-red;
+    border: 1px solid rgba(239, 68, 68, .2);
+    &:hover { background: rgba(239, 68, 68, .15); }
+  }
+
+  &--ghost {
+    background: none;
+    color: $text-secondary;
+    &:hover { color: $text-primary; background: $bg-elevated; }
+  }
+
+  &--sm { padding: 4px 10px; font-size: $fs-xs; }
+
+  &--icon {
+    padding: $space-xs;
+    background: none;
+    color: $text-secondary;
+    border: none;
+    border-radius: $radius-sm;
+    display: flex;
+    align-items: center;
+    &:hover { color: $text-primary; background: $bg-elevated; }
+    .material-symbols-rounded { font-size: 18px; }
+  }
+
+  &:disabled { opacity: .4; cursor: not-allowed; }
+
+  .material-symbols-rounded { font-size: 16px; flex-shrink: 0; }
+}
+
+// ── Status badge ──────────────────────────────────────────────────────────────
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: $radius-chip;
+  font-size: $fs-xs;
+  font-weight: $fw-semibold;
+
+  &--green  { background: rgba(34, 197, 94, .1); color: darken($status-green, 10%); }
+  &--red    { background: rgba(239, 68, 68, .1); color: darken($status-red, 8%); }
+  &--amber  { background: rgba(245, 158, 11, .12); color: darken($status-yellow, 10%); }
+  &--blue   { background: rgba(59, 130, 246, .1); color: darken($status-blue, 8%); }
+  &--gray   { background: $bg-elevated; color: $text-secondary; }
+}
+
+// ── Table ─────────────────────────────────────────────────────────────────────
+.table-wrap {
+  background: $bg-card;
+  border: 1px solid $border-color;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  box-shadow: $shadow-xs;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    padding: $space-sm $space-base;
+    text-align: left;
+    font-size: $fs-xs;
+    font-weight: $fw-semibold;
+    color: $text-tertiary;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    background: $bg-secondary;
+    border-bottom: 1px solid $border-color;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: $space-md $space-base;
+    font-size: $fs-sm;
+    color: $text-primary;
+    border-bottom: 1px solid $divider;
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: $accent-subtle; }
+}
+
+.text-muted { color: $text-secondary; }
+
+// ── States ───────────────────────────────────────────────────────────────────
+.state-loading {
+  display: flex;
+  justify-content: center;
+  padding: $space-2xl;
+  color: $text-tertiary;
+  .material-symbols-rounded { font-size: 28px; }
+}
+
+.state-error {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-md $space-base;
+  background: rgba(239, 68, 68, .06);
+  border: 1px solid rgba(239, 68, 68, .2);
+  border-radius: $radius-base;
+  color: $status-red;
+  margin-bottom: $space-lg;
+  font-size: $fs-sm;
+  .material-symbols-rounded { font-size: 18px; flex-shrink: 0; }
+}
+
+.empty-state {
+  text-align: center;
+  padding: $space-2xl;
+  color: $text-tertiary;
+  .material-symbols-rounded { font-size: 40px; display: block; margin-bottom: $space-md; }
+  p { font-size: $fs-base; }
+}
+
+// ── Pagination ───────────────────────────────────────────────────────────────
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-md;
+  margin-top: $space-lg;
+}
+
+.pagination__info {
+  font-size: $fs-sm;
+  color: $text-secondary;
+  min-width: 60px;
+  text-align: center;
+}
+
+// ── Status select (inline table control) ──────────────────────────────────────
+.status-select {
+  background: $bg-input;
+  border: 1px solid $border-color;
+  border-radius: $radius-sm;
+  color: $text-primary;
+  font-size: $fs-xs;
+  font-family: $font-ui;
+  padding: 3px 8px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color $transition-fast;
+  &:hover { border-color: $border-hover; }
+  &:focus { border-color: $accent; box-shadow: 0 0 0 2px $accent-muted; }
+}

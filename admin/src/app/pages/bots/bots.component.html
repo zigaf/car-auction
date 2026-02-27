@@ -1,0 +1,140 @@
+<div class="page">
+  <div class="page-header">
+    <h1 class="page-title">Торговые боты</h1>
+    <button class="btn btn--primary btn--sm" (click)="showCreateForm = !showCreateForm">
+      <span class="material-symbols-rounded">{{ showCreateForm ? 'close' : 'add' }}</span>
+      {{ showCreateForm ? 'Отмена' : 'Создать бота' }}
+    </button>
+  </div>
+
+  @if (showCreateForm) {
+    <div class="card create-form">
+      <h2 class="card-title">Новый бот-пользователь</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Email *</label>
+          <input class="form-control" [(ngModel)]="newEmail" placeholder="bot&#64;example.com" type="email" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Имя *</label>
+          <input class="form-control" [(ngModel)]="newFirstName" placeholder="Иван" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Фамилия *</label>
+          <input class="form-control" [(ngModel)]="newLastName" placeholder="Петров" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Флаг страны (emoji)</label>
+          <input class="form-control" [(ngModel)]="newCountryFlag" placeholder="🇩🇪" maxlength="8" />
+        </div>
+      </div>
+      <div class="form-actions">
+        <button
+          class="btn btn--primary btn--sm"
+          [disabled]="creating || !newEmail || !newFirstName || !newLastName"
+          (click)="createBot()"
+        >
+          @if (creating) { <span class="material-symbols-rounded spin">progress_activity</span> }
+          Создать
+        </button>
+        @if (createError) { <span class="save-error">{{ createError }}</span> }
+      </div>
+    </div>
+  }
+
+  @if (loading) {
+    <div class="state-loading">
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    </div>
+  }
+
+  @if (!loading) {
+    <section class="section">
+      <h2 class="section-title">Профили ботов ({{ botUsers.length }})</h2>
+
+      @if (botUsers.length === 0) {
+        <div class="empty-state">
+          <span class="material-symbols-rounded">smart_toy</span>
+          <p>Ботов пока нет</p>
+        </div>
+      }
+
+      <div class="bot-grid">
+        @for (bot of botUsers; track bot.id) {
+          <div class="bot-card card">
+            <div class="bot-card__avatar">{{ bot.countryFlag || '🤖' }}</div>
+            <div class="bot-card__info">
+              <div class="bot-card__name">{{ bot.firstName }} {{ bot.lastName }}</div>
+              <div class="bot-card__email text-muted">{{ bot.email }}</div>
+            </div>
+            <button class="icon-btn icon-btn--danger" (click)="deleteBot(bot.id)" title="Удалить бота">
+              <span class="material-symbols-rounded">delete</span>
+            </button>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Активные конфиги ({{ configs.length }})</h2>
+
+      @if (configs.length === 0) {
+        <p class="text-muted">
+          Конфиги создаются на странице
+          <a href="/auctions/schedule" class="link">Планирование аукционов</a>.
+        </p>
+      }
+
+      <div class="table-wrap">
+        @if (configs.length > 0) {
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Лот</th>
+                <th>Бот</th>
+                <th>Макс. цена</th>
+                <th>Паттерн</th>
+                <th>Статус</th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (cfg of configs; track cfg.id) {
+                <tr>
+                  <td class="text-muted">
+                    {{ cfg.lot?.title ?? cfg.lotId.slice(0, 8) + '…' }}
+                  </td>
+                  <td>
+                    {{ cfg.botUser?.firstName ?? '—' }} {{ cfg.botUser?.lastName ?? '' }}
+                    {{ cfg.botUser?.countryFlag ?? '' }}
+                  </td>
+                  <td>€{{ cfg.maxPrice | number }}</td>
+                  <td>
+                    <span class="badge badge--gray">{{ cfg.pattern }}</span>
+                  </td>
+                  <td>
+                    <span class="badge" [class]="cfg.isActive ? 'badge--green' : 'badge--gray'">
+                      {{ cfg.isActive ? 'Активен' : 'Отключён' }}
+                    </span>
+                  </td>
+                  <td class="actions-cell">
+                    <button
+                      class="btn btn--sm"
+                      [class]="cfg.isActive ? 'btn--secondary' : 'btn--primary'"
+                      (click)="toggleConfig(cfg)"
+                    >
+                      {{ cfg.isActive ? 'Выключить' : 'Включить' }}
+                    </button>
+                    <button class="icon-btn icon-btn--danger" (click)="deleteConfig(cfg.id)" title="Удалить">
+                      <span class="material-symbols-rounded">delete</span>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </section>
+  }
+</div>

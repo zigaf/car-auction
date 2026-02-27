@@ -18,6 +18,10 @@ export class FavoritesService {
     });
   }
 
+  checkFavorite(lotId: string): Observable<{ isFavorite: boolean }> {
+    return this.api.get<{ isFavorite: boolean }>(`/favorites/${lotId}/check`);
+  }
+
   addFavorite(lotId: string): Observable<IFavorite> {
     return this.api.post<IFavorite>(`/favorites/${lotId}`);
   }

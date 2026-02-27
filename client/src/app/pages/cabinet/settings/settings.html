@@ -10,31 +10,23 @@
       } @else {
         <div class="form-grid">
           <div class="form-group">
-            <label class="form-label">Имя</label>
-            <input type="text" class="form-input" [(ngModel)]="profile.firstName" placeholder="Имя">
+            <app-input label="Имя" type="text" placeholder="Имя" icon="person" name="firstName" [(ngModel)]="profile.firstName"></app-input>
           </div>
           <div class="form-group">
-            <label class="form-label">Фамилия</label>
-            <input type="text" class="form-input" [(ngModel)]="profile.lastName" placeholder="Фамилия">
+            <app-input label="Фамилия" type="text" placeholder="Фамилия" icon="person" name="lastName" [(ngModel)]="profile.lastName"></app-input>
           </div>
           <div class="form-group">
             <label class="form-label">Email</label>
             <div class="form-input form-input--readonly">{{ profile.email }}</div>
           </div>
           <div class="form-group">
-            <label class="form-label">Телефон</label>
-            <input type="text" class="form-input" [(ngModel)]="profile.phone" placeholder="+380 XX XXX XXXX">
+            <app-input label="Телефон" type="tel" placeholder="+380 XX XXX XXXX" icon="phone" name="phone" [(ngModel)]="profile.phone"></app-input>
           </div>
         </div>
         <div class="settings__save-row">
-          <button class="settings__save-btn" (click)="saveProfile()" [disabled]="profileSaving">
-            {{ profileSaving ? 'Сохранение...' : 'Сохранить профиль' }}
-          </button>
-          @if (profileSaveMessage) {
-            <span class="settings__save-msg" [class.settings__save-msg--success]="profileSaveStatus === 'success'" [class.settings__save-msg--error]="profileSaveStatus === 'error'">
-              {{ profileSaveMessage }}
-            </span>
-          }
+          <app-button type="button" variant="primary" [loading]="profileSaving" (click)="saveProfile()">
+            Сохранить профиль
+          </app-button>
         </div>
       }
     </div>
@@ -44,13 +36,24 @@
   <section class="settings__section">
     <h2 class="section-title">Региональные настройки</h2>
     <div class="settings__panel">
+
+      @if (isRestrictedCountry) {
+        <div class="restriction-notice">
+          <span class="material-symbols-rounded">warning</span>
+          <div>
+            <strong>Ограниченный регион</strong>
+            По требованию партнёра <strong>autobid.de</strong>, для пользователей из России и Республики Беларусь функционал платформы, включая пополнение баланса, может быть ограничен.
+          </div>
+        </div>
+      }
+
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">Страна</label>
           <div class="select-wrapper">
             <select class="form-select" [(ngModel)]="selectedCountry">
-              @for (country of countries; track country.code) {
-                <option [value]="country.code">{{ country.flag }} {{ country.name }}</option>
+              @for (country of countries; track country.flag) {
+                <option [value]="country.flag">{{ country.flag }} {{ country.name }}</option>
               }
             </select>
             <span class="material-symbols-rounded select-arrow">expand_more</span>
@@ -77,6 +80,11 @@
             }
           </div>
         </div>
+      </div>
+      <div class="settings__save-row">
+        <app-button type="button" variant="secondary" [loading]="regionalSaving" (click)="saveRegional()">
+          Сохранить региональные настройки
+        </app-button>
       </div>
     </div>
   </section>
@@ -119,33 +127,19 @@
 
         <div class="scraper__controls">
           <div class="form-group">
-            <label class="form-label">Кол-во страниц (50 авто/стр.)</label>
-            <input
-              type="number"
-              class="form-input scraper__pages-input"
-              [(ngModel)]="scraperMaxPages"
-              min="1"
-              max="200"
-            />
+            <app-input label="Кол-во страниц (50 авто/стр.)" type="number" icon="layers" name="scraperMaxPages" [(ngModel)]="scraperMaxPages"></app-input>
           </div>
 
           <div class="scraper__buttons">
-            <button
-              class="scraper__btn scraper__btn--start"
-              (click)="startScraper()"
-              [disabled]="scraperLoading"
-            >
+            <app-button type="button" variant="primary" [loading]="scraperLoading" (click)="startScraper()">
               <span class="material-symbols-rounded">play_arrow</span>
-              {{ scraperLoading ? 'Парсинг...' : 'Запустить парсинг' }}
-            </button>
+              Запустить парсинг
+            </app-button>
 
-            <button
-              class="scraper__btn scraper__btn--status"
-              (click)="checkScraperStatus()"
-            >
+            <app-button type="button" variant="secondary" (click)="checkScraperStatus()">
               <span class="material-symbols-rounded">refresh</span>
               Проверить статус
-            </button>
+            </app-button>
           </div>
         </div>
 

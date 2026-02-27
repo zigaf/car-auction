@@ -19,6 +19,8 @@ import { IBid, IBidUpdate, IFeedUpdate } from '../../models/auction.model';
 })
 export class LiveTradingComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
+  private readonly lotTitleMap = new Map<string, string>();
+  private bidFlashTimer: ReturnType<typeof setTimeout> | null = null;
 
   customBidAmount: number | null = null;
   maxAutoBidAmount: number | null = null;
@@ -36,6 +38,8 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
   bidError: string | null = null;
   bidSuccess = false;
   auctionEnded = false;
+  wsConnected = false;
+  animatingBidLotId: string | null = null;
 
   // Stats
   stats = {
@@ -64,6 +68,9 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
       this.wsService.leaveAuction(this.activeLot.id);
     }
     this.wsService.leaveGlobalFeed();
+    if (this.bidFlashTimer) {
+      clearTimeout(this.bidFlashTimer);
+    }
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -77,6 +84,9 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
           this.auctionList = lots;
           this.stats.activeAuctions = lots.length;
           this.loading = false;
+
+          // Build lot title map for Live Feed labels
+          lots.forEach(lot => this.lotTitleMap.set(lot.id, lot.title));
 
           // Auto-select first lot
           if (lots.length > 0 && !this.activeLot) {
@@ -94,20 +104,26 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
   private connectWebSocket(): void {
     this.wsService.connect();
 
-    // Listen for connection status
+    // Track WS connection status
     this.wsService.connected$
       .pipe(takeUntil(this.destroy$))
       .subscribe((connected) => {
+        this.wsConnected = connected;
         if (connected && this.activeLot) {
           this.wsService.joinAuction(this.activeLot.id);
           this.wsService.joinGlobalFeed();
         }
+        this.cdr.markForCheck();
       });
 
     // Real-time bid updates
     this.wsService.bidUpdate$
       .pipe(takeUntil(this.destroy$))
       .subscribe((update: IBidUpdate) => {
+        // Cache lot title from WS event if available
+        if (update.lotTitle) {
+          this.lotTitleMap.set(update.lotId, update.lotTitle);
+        }
         this.handleBidUpdate(update);
         this.cdr.markForCheck();
       });
@@ -144,6 +160,10 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
     this.wsService.feedUpdate$
       .pipe(takeUntil(this.destroy$))
       .subscribe((feed: IFeedUpdate) => {
+        // Cache lot title from feed event if available
+        if (feed.lotTitle) {
+          this.lotTitleMap.set(feed.lotId, feed.lotTitle);
+        }
         this.liveFeed = [feed, ...this.liveFeed].slice(0, 50);
         this.cdr.markForCheck();
       });
@@ -187,6 +207,15 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
     // Update active lot
     if (this.activeLot?.id === update.lotId) {
       this.activeLot = { ...this.activeLot, currentPrice: update.amount };
+
+      // Trigger price flash animation
+      this.animatingBidLotId = update.lotId;
+      if (this.bidFlashTimer) clearTimeout(this.bidFlashTimer);
+      this.bidFlashTimer = setTimeout(() => {
+        this.animatingBidLotId = null;
+        this.cdr.markForCheck();
+      }, 700);
+
       // Reload bid history for the active lot
       this.loadBidHistory(update.lotId);
     }
@@ -224,6 +253,9 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
     this.bidError = null;
     this.bidSuccess = false;
     this.customBidAmount = null;
+
+    // Cache lot title
+    this.lotTitleMap.set(lot.id, lot.title);
 
     // Join new auction room
     this.wsService.joinAuction(lot.id);
@@ -332,10 +364,14 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
     return lot.sourceImageUrl || null;
   }
 
+  getLotTitle(lotId: string): string {
+    return this.lotTitleMap.get(lotId) || `#${lotId.substring(0, 8)}`;
+  }
+
   getRelativeTime(dateStr: string): string {
     const diff = this.now - new Date(dateStr).getTime();
-    if (diff < 60000) return `${Math.floor(diff / 1000)} sec`;
-    if (diff < 3600000) return `${Math.floor(diff / 60000)} min`;
+    if (diff < 60000) return `${Math.floor(diff / 1000)}s`;
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}m`;
     return `${Math.floor(diff / 3600000)}h`;
   }
 

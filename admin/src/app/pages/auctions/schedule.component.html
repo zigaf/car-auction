@@ -1,0 +1,105 @@
+<div class="page">
+  <div class="page-header">
+    <h1 class="page-title">Планирование аукционов</h1>
+  </div>
+
+  <div class="schedule-layout">
+    <!-- Lot picker -->
+    <div class="card lot-picker">
+      <h2 class="card-title">1. Выберите лот</h2>
+      <input
+        class="form-control"
+        type="text"
+        placeholder="Поиск лота..."
+        [(ngModel)]="lotSearch"
+        (input)="loadLots()"
+      />
+      @if (lotsLoading) {
+        <div class="state-loading" style="padding: 20px 0">
+          <span class="material-symbols-rounded spin">progress_activity</span>
+        </div>
+      }
+      <div class="lot-list">
+        @for (lot of lots; track lot.id) {
+          <button
+            class="lot-item"
+            [class.lot-item--selected]="selectedLot?.id === lot.id"
+            (click)="selectLot(lot)"
+          >
+            <div class="lot-item__title">{{ lot.brand }} {{ lot.model }} {{ lot.year }}</div>
+            <div class="lot-item__meta text-muted">{{ lot.status }} · €{{ lot.startingBid | number }}</div>
+          </button>
+        }
+        @if (!lotsLoading && lots.length === 0) {
+          <p class="text-muted" style="padding: 12px 0">Нет лотов в статусе IMPORTED / ACTIVE</p>
+        }
+      </div>
+    </div>
+
+    <!-- Schedule form -->
+    <div class="card schedule-form">
+      <h2 class="card-title">2. Расписание</h2>
+
+      @if (!selectedLot) {
+        <p class="text-muted">Сначала выберите лот слева</p>
+      } @else {
+        <div class="selected-lot-banner">
+          <span class="material-symbols-rounded">directions_car</span>
+          {{ selectedLot.brand }} {{ selectedLot.model }} {{ selectedLot.year }} — {{ selectedLot.title }}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Тип аукциона</label>
+          <select class="form-control" [(ngModel)]="auctionType">
+            @for (t of auctionTypes; track t.value) {
+              <option [value]="t.value">{{ t.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Начало</label>
+            <input class="form-control" type="datetime-local" [(ngModel)]="auctionStartAt" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Конец</label>
+            <input class="form-control" type="datetime-local" [(ngModel)]="auctionEndAt" />
+          </div>
+        </div>
+
+        <!-- Bot section -->
+        <div class="bot-toggle">
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="enableBot" />
+            Подключить торгового бота
+          </label>
+        </div>
+
+        @if (enableBot && selectedLot) {
+          <app-bot-settings [lotId]="selectedLot.id" />
+        }
+
+        <div class="form-actions">
+          <button
+            class="btn btn--primary"
+            [disabled]="saving || !auctionStartAt || !auctionEndAt"
+            (click)="save()"
+          >
+            @if (saving) { <span class="material-symbols-rounded spin">progress_activity</span> }
+            <span class="material-symbols-rounded">save</span>
+            Сохранить расписание
+          </button>
+          @if (saved) {
+            <span class="save-success">
+              <span class="material-symbols-rounded">check_circle</span> Сохранено
+            </span>
+          }
+          @if (saveError) {
+            <span class="save-error">{{ saveError }}</span>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>

@@ -12,6 +12,10 @@ import { WatchlistModule } from './modules/watchlist/watchlist.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { AuctionModule } from './modules/auction/auction.module';
 import { OrderModule } from './modules/order/order.module';
+import { NotificationModule } from './modules/notification/notification.module';
+import { CalculatorModule } from './modules/calculator/calculator.module';
+import { TaskModule } from './modules/task/task.module';
+import { BotModule } from './modules/bot/bot.module';
 
 @Module({
   imports: [
@@ -27,6 +31,10 @@ import { OrderModule } from './modules/order/order.module';
     DocumentsModule,
     AuctionModule,
     OrderModule,
+    NotificationModule,
+    CalculatorModule,
+    TaskModule,
+    BotModule,
   ],
 })
 export class AppModule {}

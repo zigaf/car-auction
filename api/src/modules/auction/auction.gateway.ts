@@ -144,10 +144,13 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
       // Emit bid update to everyone in the auction room
       // Use anonymized bidder identifier instead of raw userId
       const anonymizedBidder = `bidder-${userId.slice(-4)}`;
+      const lotTitle = (result.bid as any).lot?.title || `Lot ${payload.lotId.slice(0, 8)}`;
+
       this.server.to(room).emit('bid_update', {
         lotId: payload.lotId,
         amount: result.bid.amount,
         bidderFlag: anonymizedBidder,
+        lotTitle,
         timestamp: result.bid.createdAt,
       });
 
@@ -164,6 +167,7 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
         lotId: payload.lotId,
         amount: result.bid.amount,
         bidderFlag: anonymizedBidder,
+        lotTitle,
         timestamp: result.bid.createdAt,
       });
 
@@ -196,11 +200,13 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
 
       const room = `auction:${payload.lotId}`;
       const anonymizedBidder = `bidder-${userId.slice(-4)}`;
+      const lotTitle = (result.bid as any).lot?.title || `Lot ${payload.lotId.slice(0, 8)}`;
 
       this.server.to(room).emit('bid_update', {
         lotId: payload.lotId,
         amount: result.bid.amount,
         bidderFlag: anonymizedBidder,
+        lotTitle,
         timestamp: result.bid.createdAt,
       });
 
@@ -215,6 +221,7 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
         lotId: payload.lotId,
         amount: result.bid.amount,
         bidderFlag: anonymizedBidder,
+        lotTitle,
         timestamp: result.bid.createdAt,
       });
 

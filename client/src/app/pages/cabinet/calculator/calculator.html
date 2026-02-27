@@ -1,0 +1,181 @@
+<div class="calculator">
+  <div class="calculator__header">
+    <div>
+      <h1 class="calculator__title">Калькулятор растаможки</h1>
+      <p class="calculator__subtitle">Расчёт ориентировочных таможенных расходов при ввозе автомобиля в Украину</p>
+    </div>
+  </div>
+
+  <div class="calculator__body">
+    <!-- Form -->
+    <div class="calc-form">
+      <h2 class="calc-form__title">Параметры автомобиля</h2>
+
+      <div class="calc-form__grid">
+        <div class="calc-field">
+          <label class="calc-label">Стоимость авто (EUR)</label>
+          <app-input
+            type="number"
+            placeholder="Например: 12000"
+            icon="euro"
+            [(ngModel)]="carPrice"
+            name="carPrice"
+          />
+        </div>
+
+        <div class="calc-field">
+          <label class="calc-label">Год выпуска</label>
+          <app-input
+            type="number"
+            placeholder="Например: 2019"
+            icon="calendar_today"
+            [(ngModel)]="year"
+            name="year"
+          />
+        </div>
+
+        <div class="calc-field">
+          <label class="calc-label">Тип топлива</label>
+          <div class="fuel-tabs">
+            @for (opt of fuelOptions; track opt.value) {
+              <button
+                type="button"
+                class="fuel-tab"
+                [class.fuel-tab--active]="fuelType === opt.value"
+                (click)="fuelType = opt.value; reset()"
+              >
+                {{ opt.label }}
+              </button>
+            }
+          </div>
+        </div>
+
+        @if (!isElectric) {
+          <div class="calc-field">
+            <label class="calc-label">Объём двигателя (см³)</label>
+            <app-input
+              type="number"
+              placeholder="Например: 1600"
+              icon="speed"
+              [(ngModel)]="engineVolume"
+              name="engineVolume"
+            />
+          </div>
+        }
+
+        <div class="calc-field">
+          <label class="calc-label">Доставка (EUR)</label>
+          <app-input
+            type="number"
+            placeholder="Например: 800"
+            icon="local_shipping"
+            [(ngModel)]="deliveryCost"
+            name="deliveryCost"
+          />
+        </div>
+
+        <div class="calc-field">
+          <label class="calc-label">Комиссия компании (EUR)</label>
+          <app-input
+            type="number"
+            placeholder="Например: 500"
+            icon="business_center"
+            [(ngModel)]="companyCost"
+            name="companyCost"
+          />
+        </div>
+      </div>
+
+      @if (error) {
+        <div class="calc-error">
+          <span class="material-symbols-rounded">error</span>
+          {{ error }}
+        </div>
+      }
+
+      <app-button
+        type="button"
+        variant="primary"
+        [fullWidth]="true"
+        [loading]="loading"
+        icon="calculate"
+        (click)="calculate()"
+      >
+        Рассчитать
+      </app-button>
+    </div>
+
+    <!-- Result -->
+    @if (result) {
+      <div class="calc-result">
+        <div class="calc-result__header">
+          <h2 class="calc-result__title">Итоговый расчёт</h2>
+          <span class="calc-result__age">
+            Возраст авто: {{ result.ageYears }} лет (коэфф. ×{{ result.ageCoefficient }})
+          </span>
+        </div>
+
+        <div class="result-rows">
+          <div class="result-row">
+            <span class="result-row__label">Стоимость авто</span>
+            <span class="result-row__value">{{ result.carPrice | number:'1.0-0' }} EUR</span>
+          </div>
+
+          <div class="result-divider">Таможенные сборы</div>
+
+          @if (result.exciseTax > 0) {
+            <div class="result-row">
+              <span class="result-row__label">Акцизный сбор</span>
+              <span class="result-row__value result-row__value--tax">{{ result.exciseTax | number:'1.0-0' }} EUR</span>
+            </div>
+          }
+
+          <div class="result-row">
+            <span class="result-row__label">Таможенная пошлина (10%)</span>
+            <span class="result-row__value result-row__value--tax">{{ result.importDuty | number:'1.0-0' }} EUR</span>
+          </div>
+
+          <div class="result-row">
+            <span class="result-row__label">НДС (20%)</span>
+            <span class="result-row__value result-row__value--tax">{{ result.vat | number:'1.0-0' }} EUR</span>
+          </div>
+
+          <div class="result-row">
+            <span class="result-row__label">Пенсионный сбор (3%)</span>
+            <span class="result-row__value result-row__value--tax">{{ result.pensionFund | number:'1.0-0' }} EUR</span>
+          </div>
+
+          <div class="result-row result-row--subtotal">
+            <span class="result-row__label">Итого таможня</span>
+            <span class="result-row__value">{{ result.totalCustoms | number:'1.0-0' }} EUR</span>
+          </div>
+
+          @if (result.deliveryCost > 0) {
+            <div class="result-divider">Дополнительные расходы</div>
+            <div class="result-row">
+              <span class="result-row__label">Доставка</span>
+              <span class="result-row__value">{{ result.deliveryCost | number:'1.0-0' }} EUR</span>
+            </div>
+          }
+
+          @if (result.companyCost > 0) {
+            <div class="result-row">
+              <span class="result-row__label">Комиссия компании</span>
+              <span class="result-row__value">{{ result.companyCost | number:'1.0-0' }} EUR</span>
+            </div>
+          }
+        </div>
+
+        <div class="calc-result__total">
+          <span class="calc-result__total-label">Итоговая стоимость</span>
+          <span class="calc-result__total-value">{{ result.totalCost | number:'1.0-0' }} EUR</span>
+        </div>
+
+        <p class="calc-result__disclaimer">
+          * Расчёт является ориентировочным. Точные суммы зависят от актуального курса EUR/UAH и
+          индивидуальных условий ввоза. Обратитесь к менеджеру для точного расчёта.
+        </p>
+      </div>
+    }
+  </div>
+</div>

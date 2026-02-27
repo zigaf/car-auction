@@ -1,0 +1,99 @@
+// ============================================
+// Car Auction — Design System Variables (Light Theme)
+// ============================================
+
+// --- Colors ---
+$bg-primary: #FFFFFF;
+$bg-secondary: #F8F9FB;
+$bg-panel: #FFFFFF;
+$bg-panel-hover: #F3F4F6;
+$bg-card: #FFFFFF;
+$bg-input: #F8F9FB;
+$bg-elevated: #F3F4F6;
+
+$accent: #4F46E5;
+$accent-hover: #4338CA;
+$accent-pressed: #3730A3;
+$accent-muted: rgba(79, 70, 229, 0.08);
+$accent-subtle: rgba(79, 70, 229, 0.04);
+$accent-light: #EEF2FF;
+
+$text-primary: #111827;
+$text-secondary: #6B7280;
+$text-tertiary: #9CA3AF;
+$text-disabled: #D1D5DB;
+
+$status-green: #22C55E;
+$status-yellow: #F59E0B;
+$status-red: #EF4444;
+$status-blue: #3B82F6;
+
+$border-color: #E5E7EB;
+$border-hover: #D1D5DB;
+$divider: #F3F4F6;
+
+// Sidebar (light)
+$sidebar-bg: #FFFFFF;
+$sidebar-border: #E5E7EB;
+
+// --- Typography ---
+$font-ui: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+$font-mono: 'Space Mono', 'JetBrains Mono', monospace;
+
+$fs-xs: 0.6875rem;   // 11px
+$fs-sm: 0.8125rem;   // 13px
+$fs-base: 0.875rem;  // 14px
+$fs-md: 1rem;        // 16px
+$fs-lg: 1.125rem;    // 18px
+$fs-xl: 1.5rem;      // 24px
+$fs-2xl: 2rem;       // 32px
+
+$fw-regular: 400;
+$fw-medium: 500;
+$fw-semibold: 600;
+$fw-bold: 700;
+$fw-extrabold: 800;
+
+// --- Spacing ---
+$space-xs: 4px;
+$space-sm: 8px;
+$space-md: 12px;
+$space-base: 16px;
+$space-lg: 24px;
+$space-xl: 32px;
+$space-2xl: 48px;
+
+// --- Border Radius ---
+$radius-sm: 4px;
+$radius-base: 8px;
+$radius-md: 12px;
+$radius-lg: 16px;
+$radius-xl: 20px;
+$radius-chip: 20px;
+$radius-round: 50%;
+
+// --- Shadows ---
+$shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+$shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.04);
+$shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.04);
+$shadow-accent: 0 4px 14px rgba(79, 70, 229, 0.25);
+
+// --- Layout ---
+$sidebar-width: 220px;
+$content-max-width: 1200px;
+$header-height: 56px;
+
+// --- Z-index ---
+$z-dropdown: 100;
+$z-modal-backdrop: 400;
+$z-modal: 500;
+
+// --- Transitions ---
+$transition-fast: 150ms ease;
+$transition-base: 250ms ease;
+$transition-slow: 400ms ease;
+
+// --- Breakpoints ---
+$bp-mobile: 768px;
+$bp-tablet: 1100px;

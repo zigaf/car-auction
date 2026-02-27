@@ -73,6 +73,10 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/cabinet/notifications/notifications').then((m) => m.NotificationsComponent),
       },
       {
+        path: 'calculator',
+        loadComponent: () => import('./pages/cabinet/calculator/calculator').then((m) => m.CalculatorComponent),
+      },
+      {
         path: 'settings',
         loadComponent: () => import('./pages/cabinet/settings/settings').then((m) => m.SettingsComponent),
       },

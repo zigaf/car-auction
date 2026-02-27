@@ -1,0 +1,87 @@
+<div class="bot-settings">
+  @if (loading) {
+    <div style="padding:12px 0;color:var(--text-secondary);font-size:var(--fs-sm)">
+      <span class="material-symbols-rounded spin" style="font-size:16px">progress_activity</span>
+      Загрузка...
+    </div>
+  }
+
+  @if (!loading) {
+    @if (botUsers.length === 0) {
+      <p class="text-muted" style="font-size:var(--fs-sm)">
+        Сначала создайте бота на странице
+        <a href="/bots" class="link">Боты</a>.
+      </p>
+    } @else {
+      <div class="form-group">
+        <label class="form-label">Бот-пользователь</label>
+        <select class="form-control" [(ngModel)]="selectedBotUserId">
+          <option value="">— Выберите бота —</option>
+          @for (b of botUsers; track b.id) {
+            <option [value]="b.id">{{ b.firstName }} {{ b.lastName }} {{ b.countryFlag }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Макс. цена (€)</label>
+          <input class="form-control" type="number" [(ngModel)]="maxPrice" min="0" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Паттерн поведения</label>
+          <select class="form-control" [(ngModel)]="pattern">
+            @for (p of patterns; track p.value) {
+              <option [value]="p.value">{{ p.label }} — {{ p.desc }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Мин. задержка (сек)</label>
+          <input class="form-control" type="number" [(ngModel)]="minDelaySec" min="1" max="600" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Макс. задержка (сек)</label>
+          <input class="form-control" type="number" [(ngModel)]="maxDelaySec" min="1" max="600" />
+        </div>
+      </div>
+
+      <div class="form-group-inline">
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="isActive" />
+          Бот активен
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <button
+          class="btn btn--secondary btn--sm"
+          [disabled]="saving || !selectedBotUserId || !maxPrice"
+          (click)="save()"
+        >
+          @if (saving) { <span class="material-symbols-rounded spin">progress_activity</span> }
+          <span class="material-symbols-rounded">smart_toy</span>
+          {{ existingConfig ? 'Обновить бота' : 'Сохранить бота' }}
+        </button>
+        @if (saved) {
+          <span class="save-success">
+            <span class="material-symbols-rounded">check_circle</span> Сохранено
+          </span>
+        }
+        @if (saveError) { <span class="save-error">{{ saveError }}</span> }
+      </div>
+
+      @if (existingConfig) {
+        <div class="config-status">
+          Конфиг ID: <code>{{ existingConfig.id.slice(0, 8) }}…</code>
+          <span class="badge" [class]="existingConfig.isActive ? 'badge--green' : 'badge--gray'">
+            {{ existingConfig.isActive ? 'Активен' : 'Отключён' }}
+          </span>
+        </div>
+      }
+    }
+  }
+</div>

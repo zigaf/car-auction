@@ -1,0 +1,109 @@
+<div class="page">
+  <div class="page-header">
+    <h1 class="page-title">Документы</h1>
+    <span class="page-count">{{ total }}</span>
+  </div>
+
+  <div class="filters">
+    <select class="form-control filters__select" [(ngModel)]="filterStatus" (change)="onFilterChange()">
+      <option value="">Все статусы</option>
+      @for (s of statuses.slice(1); track s) {
+        <option [value]="s">{{ statusLabels[s] }}</option>
+      }
+    </select>
+  </div>
+
+  @if (error) {
+    <div class="state-error">
+      <span class="material-symbols-rounded">error</span>
+      {{ error }}
+    </div>
+  }
+
+  @if (loading) {
+    <div class="state-loading">
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    </div>
+  }
+
+  @if (!loading && !error) {
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Пользователь</th>
+            <th>Тип</th>
+            <th>Файл</th>
+            <th>Статус</th>
+            <th>Загружен</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (doc of documents; track doc.id) {
+            <tr>
+              <td class="user-cell">
+                <div class="user-avatar">
+                  {{ doc.user.firstName.charAt(0) }}{{ doc.user.lastName.charAt(0) }}
+                </div>
+                <div>
+                  <div class="user-name">{{ doc.user.firstName }} {{ doc.user.lastName }}</div>
+                  <div class="text-muted" style="font-size: var(--fs-xs)">{{ doc.user.email }}</div>
+                </div>
+              </td>
+              <td>{{ typeLabels[doc.type] ?? doc.type }}</td>
+              <td>
+                <button class="btn btn--ghost btn--sm" (click)="openFile(doc.fileUrl)">
+                  <span class="material-symbols-rounded">open_in_new</span>
+                  Открыть
+                </button>
+              </td>
+              <td>
+                <span
+                  class="badge"
+                  [class]="doc.status === 'approved' ? 'badge--green' : doc.status === 'rejected' ? 'badge--red' : 'badge--amber'"
+                >
+                  {{ statusLabels[doc.status] ?? doc.status }}
+                </span>
+              </td>
+              <td class="text-muted">{{ doc.createdAt | date:'dd.MM.yy HH:mm' }}</td>
+              <td class="actions-cell">
+                @if (doc.status === 'pending') {
+                  <button class="btn btn--sm btn--primary" (click)="approve(doc)">
+                    <span class="material-symbols-rounded">check</span>
+                    Одобрить
+                  </button>
+                  <button class="btn btn--sm btn--danger" (click)="reject(doc)">
+                    <span class="material-symbols-rounded">close</span>
+                    Отклонить
+                  </button>
+                } @else {
+                  <span class="text-muted" style="font-size: var(--fs-xs)">Обработан</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (documents.length === 0) {
+      <div class="empty-state">
+        <span class="material-symbols-rounded">description</span>
+        <p>Документы не найдены</p>
+      </div>
+    }
+
+    @if (totalPages > 1) {
+      <div class="pagination">
+        <button class="btn btn--secondary btn--sm" [disabled]="page === 1" (click)="prevPage()">
+          <span class="material-symbols-rounded">chevron_left</span>
+        </button>
+        <span class="pagination__info">{{ page }} / {{ totalPages }}</span>
+        <button class="btn btn--secondary btn--sm" [disabled]="page === totalPages" (click)="nextPage()">
+          <span class="material-symbols-rounded">chevron_right</span>
+        </button>
+      </div>
+    }
+  }
+</div>

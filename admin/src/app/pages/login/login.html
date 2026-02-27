@@ -1,0 +1,53 @@
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-card__header">
+      <span class="material-symbols-rounded login-card__icon">admin_panel_settings</span>
+      <h1 class="login-card__title">AutoBid Admin</h1>
+      <p class="login-card__subtitle">Панель управления</p>
+    </div>
+
+    <form class="login-form" (ngSubmit)="submit()">
+      @if (error) {
+        <div class="login-error">
+          <span class="material-symbols-rounded">error</span>
+          {{ error }}
+        </div>
+      }
+
+      <div class="form-field">
+        <label class="form-label" for="email">Email</label>
+        <input
+          id="email"
+          class="form-control"
+          type="email"
+          placeholder="admin@example.com"
+          [(ngModel)]="email"
+          name="email"
+          autocomplete="email"
+          required
+        />
+      </div>
+
+      <div class="form-field">
+        <label class="form-label" for="password">Пароль</label>
+        <input
+          id="password"
+          class="form-control"
+          type="password"
+          placeholder="••••••••"
+          [(ngModel)]="password"
+          name="password"
+          autocomplete="current-password"
+          required
+        />
+      </div>
+
+      <button class="btn btn--primary login-submit" type="submit" [disabled]="loading">
+        @if (loading) {
+          <span class="material-symbols-rounded spin">progress_activity</span>
+        }
+        Войти
+      </button>
+    </form>
+  </div>
+</div>

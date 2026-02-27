@@ -1,0 +1,34 @@
+@use 'shared-page' as *;
+@use 'styles/variables' as *;
+
+.lot-cell {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+}
+
+.lot-cell__image {
+  width: 44px;
+  height: 34px;
+  border-radius: $radius-sm;
+  background: $bg-elevated;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  img { width: 100%; height: 100%; object-fit: cover; }
+  .material-symbols-rounded { font-size: 18px; color: $text-tertiary; }
+}
+
+.lot-cell__name {
+  font-size: $fs-sm;
+  font-weight: $fw-semibold;
+  color: $text-primary;
+}
+
+.lot-cell__id {
+  font-size: $fs-xs;
+  color: $text-tertiary;
+}

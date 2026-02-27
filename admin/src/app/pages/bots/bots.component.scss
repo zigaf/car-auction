@@ -1,0 +1,128 @@
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+
+.card-title {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  margin: 0 0 16px;
+}
+
+.create-form {
+  margin-bottom: 24px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.save-error {
+  color: var(--red);
+  font-size: var(--fs-sm);
+}
+
+.section {
+  margin-bottom: 32px;
+}
+
+.section-title {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+.bot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.bot-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.bot-card__avatar {
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bot-card__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.bot-card__name {
+  font-weight: 500;
+  font-size: var(--fs-sm);
+}
+
+.bot-card__email {
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  transition: background 0.15s, color 0.15s;
+
+  &:hover { background: var(--surface-hover); }
+  &--danger:hover {
+    background: rgba(220, 38, 38, 0.08);
+    color: var(--red);
+  }
+}
+
+.link {
+  color: var(--accent);
+  text-decoration: none;
+  &:hover { text-decoration: underline; }
+}

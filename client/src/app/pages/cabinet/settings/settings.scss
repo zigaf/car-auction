@@ -22,6 +22,30 @@
   padding: $space-lg;
 }
 
+// ── Restriction notice ────────────────────────────────────────────────────────
+.restriction-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-md;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: $radius-base;
+  padding: $space-md $space-lg;
+  margin-bottom: $space-lg;
+  color: #92400e;
+  font-size: $fs-sm;
+  line-height: 1.55;
+
+  .material-symbols-rounded {
+    font-size: 20px;
+    color: #d97706;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  strong { font-weight: $fw-semibold; }
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

@@ -1,0 +1,121 @@
+<div class="page">
+  <div class="page-header">
+    <h1 class="page-title">Лоты</h1>
+    <span class="page-count">{{ total }}</span>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <input
+      class="form-control filters__search"
+      type="text"
+      placeholder="Поиск по марке, модели..."
+      [(ngModel)]="filterSearch"
+      (input)="onFilterChange()"
+    />
+    <select class="form-control filters__select" [(ngModel)]="filterStatus" (change)="onFilterChange()">
+      <option value="">Все статусы</option>
+      @for (s of statuses.slice(1); track s) {
+        <option [value]="s">{{ statusLabels[s] }}</option>
+      }
+    </select>
+  </div>
+
+  @if (error) {
+    <div class="state-error">
+      <span class="material-symbols-rounded">error</span>
+      {{ error }}
+    </div>
+  }
+
+  @if (loading) {
+    <div class="state-loading">
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    </div>
+  }
+
+  @if (!loading && !error) {
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Лот</th>
+            <th>Год</th>
+            <th>Пробег</th>
+            <th>Ставка</th>
+            <th>Статус</th>
+            <th>Создан</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (lot of lots; track lot.id) {
+            <tr>
+              <td class="lot-cell">
+                <div class="lot-cell__image">
+                  @if (lot.images && lot.images.length > 0) {
+                    <img [src]="lot.images[0].url" [alt]="lot.title" />
+                  } @else {
+                    <span class="material-symbols-rounded">directions_car</span>
+                  }
+                </div>
+                <div>
+                  <div class="lot-cell__name">{{ lot.brand }} {{ lot.model }}</div>
+                  <div class="lot-cell__id mono">{{ lot.id.slice(0, 8) }}…</div>
+                </div>
+              </td>
+              <td>{{ lot.year }}</td>
+              <td>{{ lot.mileage | number }} км</td>
+              <td class="mono">
+                @if (lot.currentBid) {
+                  {{ lot.currentBid | number }} EUR
+                } @else if (lot.startingBid) {
+                  {{ lot.startingBid | number }} EUR
+                } @else {
+                  —
+                }
+              </td>
+              <td>
+                <select
+                  class="status-select"
+                  [value]="lot.status"
+                  (change)="updateStatus(lot, $any($event.target).value)"
+                >
+                  @for (s of statuses.slice(1); track s) {
+                    <option [value]="s" [selected]="lot.status === s">{{ statusLabels[s] }}</option>
+                  }
+                </select>
+              </td>
+              <td class="text-muted">{{ lot.createdAt | date:'dd.MM.yy' }}</td>
+              <td>
+                <button class="btn btn--icon" (click)="deleteLot(lot.id)" title="Удалить лот">
+                  <span class="material-symbols-rounded">delete</span>
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (lots.length === 0) {
+      <div class="empty-state">
+        <span class="material-symbols-rounded">inbox</span>
+        <p>Лоты не найдены</p>
+      </div>
+    }
+
+    <!-- Pagination -->
+    @if (totalPages > 1) {
+      <div class="pagination">
+        <button class="btn btn--secondary btn--sm" [disabled]="page === 1" (click)="prevPage()">
+          <span class="material-symbols-rounded">chevron_left</span>
+        </button>
+        <span class="pagination__info">{{ page }} / {{ totalPages }}</span>
+        <button class="btn btn--secondary btn--sm" [disabled]="page === totalPages" (click)="nextPage()">
+          <span class="material-symbols-rounded">chevron_right</span>
+        </button>
+      </div>
+    }
+  }
+</div>

@@ -4,12 +4,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, LessThanOrEqual } from 'typeorm';
 import { Lot } from '../../db/entities/lot.entity';
 import { Bid } from '../../db/entities/bid.entity';
+import { User } from '../../db/entities/user.entity';
 import { Order } from '../../db/entities/order.entity';
 import { OrderStatusHistory } from '../../db/entities/order-status-history.entity';
 import { BalanceTransaction } from '../../db/entities/balance-transaction.entity';
 import { LotStatus } from '../../common/enums/lot-status.enum';
 import { OrderStatus } from '../../common/enums/order-status.enum';
 import { BalanceTransactionType } from '../../common/enums/balance-transaction-type.enum';
+import { Role } from '../../common/enums/role.enum';
 import { AuctionGateway } from './auction.gateway';
 import { BalanceService } from '../balance/balance.service';
 
@@ -27,6 +29,32 @@ export class AuctionSchedulerService {
     private readonly auctionGateway: AuctionGateway,
     private readonly balanceService: BalanceService,
   ) {}
+
+  @Cron(CronExpression.EVERY_10_SECONDS)
+  async handleAuctionStart(): Promise<void> {
+    try {
+      const lotsToStart = await this.lotRepository.find({
+        where: {
+          status: LotStatus.ACTIVE,
+          auctionStartAt: LessThanOrEqual(new Date()),
+        },
+      });
+
+      for (const lot of lotsToStart) {
+        if (!lot.auctionEndAt || lot.auctionEndAt <= new Date()) continue;
+        lot.status = LotStatus.TRADING;
+        await this.lotRepository.save(lot);
+        this.auctionGateway.server?.to('feed:global').emit('auction_started', {
+          lotId: lot.id,
+          title: lot.title,
+          auctionEndAt: lot.auctionEndAt,
+        });
+        this.logger.log(`Auction auto-started: lot=${lot.id}`);
+      }
+    } catch (error) {
+      this.logger.error('Error in auction start scheduler', error);
+    }
+  }
 
   @Cron(CronExpression.EVERY_10_SECONDS)
   async handleAuctionEnd(): Promise<void> {
@@ -77,10 +105,12 @@ export class AuctionSchedulerService {
         return;
       }
 
-      // Find the highest bid
+      // Find the highest bid placed by a real (non-bot) user
       const winningBid = await manager
         .createQueryBuilder(Bid, 'bid')
+        .innerJoin(User, 'u', 'u.id = bid.user_id')
         .where('bid.lot_id = :lotId', { lotId: lot.id })
+        .andWhere('u.role != :botRole', { botRole: Role.BOT })
         .orderBy('bid.amount', 'DESC')
         .addOrderBy('bid.created_at', 'ASC')
         .getOne();

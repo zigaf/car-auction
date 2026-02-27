@@ -4,12 +4,15 @@ import { Repository } from 'typeorm';
 import { Document } from '../../db/entities/document.entity';
 import { DocumentStatus } from '../../common/enums/document-status.enum';
 import { UploadDocumentDto } from './dto/upload-document.dto';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationType } from '../../common/enums/notification-type.enum';
 
 @Injectable()
 export class DocumentsService {
   constructor(
     @InjectRepository(Document)
     private readonly documentRepository: Repository<Document>,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async getUserDocuments(
@@ -80,6 +83,23 @@ export class DocumentsService {
     }
 
     document.status = status;
-    return this.documentRepository.save(document);
+    const saved = await this.documentRepository.save(document);
+
+    if (status === DocumentStatus.APPROVED || status === DocumentStatus.REJECTED) {
+      const isApproved = status === DocumentStatus.APPROVED;
+      this.notificationService
+        .create({
+          userId: document.userId,
+          type: NotificationType.DOCUMENT,
+          title: isApproved ? 'Документ одобрен' : 'Документ отклонён',
+          message: isApproved
+            ? `Ваш документ «${document.fileName}» успешно проверен и одобрен.`
+            : `Ваш документ «${document.fileName}» был отклонён. Пожалуйста, загрузите корректный документ.`,
+          data: { documentId: id, status },
+        })
+        .catch(() => {});
+    }
+
+    return saved;
   }
 }

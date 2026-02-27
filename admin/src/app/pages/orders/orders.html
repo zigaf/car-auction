@@ -1,0 +1,91 @@
+<div class="page">
+  <div class="page-header">
+    <h1 class="page-title">Заказы</h1>
+    <span class="page-count">{{ total }}</span>
+  </div>
+
+  <div class="filters">
+    <select class="form-control filters__select" [(ngModel)]="filterStatus" (change)="onFilterChange()">
+      <option value="">Все статусы</option>
+      @for (s of statuses; track s) {
+        <option [value]="s">{{ statusLabels[s] }}</option>
+      }
+    </select>
+  </div>
+
+  @if (error) {
+    <div class="state-error">
+      <span class="material-symbols-rounded">error</span>
+      {{ error }}
+    </div>
+  }
+
+  @if (loading) {
+    <div class="state-loading">
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    </div>
+  }
+
+  @if (!loading && !error) {
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Лот</th>
+            <th>Покупатель</th>
+            <th>Сумма</th>
+            <th>Статус</th>
+            <th>Дата</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (order of orders; track order.id) {
+            <tr>
+              <td class="mono text-muted">{{ order.id.slice(0, 8) }}…</td>
+              <td>
+                <div class="order-lot">{{ order.lot.brand }} {{ order.lot.model }} {{ order.lot.year }}</div>
+              </td>
+              <td>
+                <div>{{ order.buyer.firstName }} {{ order.buyer.lastName }}</div>
+                <div class="text-muted" style="font-size: var(--fs-xs)">{{ order.buyer.email }}</div>
+              </td>
+              <td class="mono">{{ order.totalAmount | number }} {{ order.currency }}</td>
+              <td>
+                <select
+                  class="status-select"
+                  [value]="order.status"
+                  (change)="updateStatus(order, $any($event.target).value)"
+                >
+                  @for (s of statuses; track s) {
+                    <option [value]="s" [selected]="order.status === s">{{ statusLabels[s] }}</option>
+                  }
+                </select>
+              </td>
+              <td class="text-muted">{{ order.createdAt | date:'dd.MM.yy HH:mm' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (orders.length === 0) {
+      <div class="empty-state">
+        <span class="material-symbols-rounded">receipt_long</span>
+        <p>Заказы не найдены</p>
+      </div>
+    }
+
+    @if (totalPages > 1) {
+      <div class="pagination">
+        <button class="btn btn--secondary btn--sm" [disabled]="page === 1" (click)="prevPage()">
+          <span class="material-symbols-rounded">chevron_left</span>
+        </button>
+        <span class="pagination__info">{{ page }} / {{ totalPages }}</span>
+        <button class="btn btn--secondary btn--sm" [disabled]="page === totalPages" (click)="nextPage()">
+          <span class="material-symbols-rounded">chevron_right</span>
+        </button>
+      </div>
+    }
+  }
+</div>

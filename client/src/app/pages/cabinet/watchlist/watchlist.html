@@ -27,12 +27,57 @@
             </button>
           </span>
         }
-        <button class="brand-chip brand-chip--add">
+        <button class="brand-chip brand-chip--add" (click)="openBrandModal()">
           <span class="material-symbols-rounded">add</span>
           Добавить
         </button>
       </div>
     </div>
+
+    <!-- Brand selection modal -->
+    @if (showBrandModal) {
+      <div class="brand-modal-overlay" (click)="closeBrandModal()">
+        <div class="brand-modal" (click)="$event.stopPropagation()">
+          <div class="brand-modal__header">
+            <h3 class="brand-modal__title">Добавить бренд</h3>
+            <button class="brand-modal__close" (click)="closeBrandModal()">
+              <span class="material-symbols-rounded">close</span>
+            </button>
+          </div>
+          <div class="brand-modal__search">
+            <span class="material-symbols-rounded brand-modal__search-icon">search</span>
+            <input
+              class="brand-modal__input"
+              type="text"
+              placeholder="Поиск бренда..."
+              [(ngModel)]="brandSearch"
+            />
+          </div>
+          <div class="brand-modal__list">
+            @if (allBrands.length === 0) {
+              <div class="brand-modal__loading">
+                <span class="material-symbols-rounded spin">progress_activity</span>
+                Загрузка...
+              </div>
+            }
+            @for (brand of filteredBrands; track brand) {
+              <button
+                class="brand-modal__item"
+                (click)="addBrand(brand)"
+                [disabled]="addingBrand"
+              >
+                <span class="material-symbols-rounded brand-modal__item-icon">directions_car</span>
+                {{ brand }}
+                <span class="material-symbols-rounded brand-modal__item-add">add</span>
+              </button>
+            }
+            @if (allBrands.length > 0 && filteredBrands.length === 0) {
+              <div class="brand-modal__empty">Ничего не найдено</div>
+            }
+          </div>
+        </div>
+      </div>
+    }
 
     <!-- Favorite lots -->
     @if (favorites.length > 0) {

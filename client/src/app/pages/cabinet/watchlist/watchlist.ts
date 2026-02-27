@@ -1,26 +1,35 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { WatchlistService } from '../../../core/services/watchlist.service';
 import { FavoritesService } from '../../../core/services/favorites.service';
+import { LotService } from '../../../core/services/lot.service';
 import { IWatchlistItem } from '../../../models/watchlist.model';
 import { IFavorite } from '../../../models/favorite.model';
 
 @Component({
   selector: 'app-watchlist',
   standalone: true,
-  imports: [RouterLink, DecimalPipe],
+  imports: [RouterLink, DecimalPipe, FormsModule],
   templateUrl: './watchlist.html',
   styleUrl: './watchlist.scss',
 })
 export class WatchlistComponent implements OnInit {
   private readonly watchlistService = inject(WatchlistService);
   private readonly favoritesService = inject(FavoritesService);
+  private readonly lotService = inject(LotService);
 
   watchlistItems: IWatchlistItem[] = [];
   favorites: IFavorite[] = [];
   loading = true;
   error = '';
+
+  // Brand modal
+  showBrandModal = false;
+  brandSearch = '';
+  allBrands: string[] = [];
+  addingBrand = false;
 
   ngOnInit(): void {
     this.loadData();
@@ -46,7 +55,7 @@ export class WatchlistComponent implements OnInit {
         this.favorites = res.data;
       },
       error: () => {
-        // silently fail favorites load
+        // silently fail
       },
     });
   }
@@ -57,6 +66,51 @@ export class WatchlistComponent implements OnInit {
 
   get lotWatchlist(): IWatchlistItem[] {
     return this.watchlistItems.filter(item => item.lotId && item.lot);
+  }
+
+  get trackedBrandNames(): Set<string> {
+    return new Set(this.brandWatchlist.map(item => item.brand!.toLowerCase()));
+  }
+
+  get filteredBrands(): string[] {
+    const tracked = this.trackedBrandNames;
+    const search = this.brandSearch.toLowerCase().trim();
+    return this.allBrands.filter(
+      b => !tracked.has(b.toLowerCase()) && (search === '' || b.toLowerCase().includes(search))
+    );
+  }
+
+  openBrandModal(): void {
+    this.showBrandModal = true;
+    this.brandSearch = '';
+    if (this.allBrands.length === 0) {
+      this.lotService.getBrands().subscribe({
+        next: (brands) => {
+          this.allBrands = brands.map((b: any) => b.brand);
+        },
+      });
+    }
+  }
+
+  closeBrandModal(): void {
+    this.showBrandModal = false;
+    this.brandSearch = '';
+  }
+
+  addBrand(brand: string): void {
+    if (this.addingBrand) return;
+    this.addingBrand = true;
+
+    this.watchlistService.addToWatchlist({ brand }).subscribe({
+      next: (item) => {
+        this.watchlistItems = [...this.watchlistItems, item];
+        this.addingBrand = false;
+        this.closeBrandModal();
+      },
+      error: () => {
+        this.addingBrand = false;
+      },
+    });
   }
 
   removeBrand(id: string): void {

@@ -1,0 +1,104 @@
+@use 'styles/variables' as *;
+@use 'styles/mixins' as *;
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $bg-secondary;
+  padding: $space-base;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  background: $bg-card;
+  border: 1px solid $border-color;
+  border-radius: $radius-xl;
+  padding: $space-2xl $space-xl;
+  box-shadow: $shadow-lg;
+}
+
+.login-card__header {
+  text-align: center;
+  margin-bottom: $space-xl;
+}
+
+.login-card__icon {
+  font-size: 40px;
+  color: $accent;
+  display: block;
+  margin-bottom: $space-sm;
+}
+
+.login-card__title {
+  font-size: $fs-xl;
+  font-weight: $fw-bold;
+  color: $text-primary;
+  margin-bottom: $space-xs;
+}
+
+.login-card__subtitle {
+  font-size: $fs-sm;
+  color: $text-secondary;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: $space-base;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: $space-xs;
+}
+
+.form-label {
+  font-size: $fs-sm;
+  font-weight: $fw-medium;
+  color: $text-secondary;
+}
+
+.form-control {
+  @include input-base;
+}
+
+.login-error {
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+  padding: $space-sm $space-md;
+  background: rgba(239, 68, 68, .08);
+  border: 1px solid rgba(239, 68, 68, .25);
+  border-radius: $radius-base;
+  color: $status-red;
+  font-size: $fs-sm;
+
+  .material-symbols-rounded { font-size: 16px; flex-shrink: 0; }
+}
+
+.login-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-sm;
+  width: 100%;
+  padding: $space-md;
+  background: $accent;
+  color: #fff;
+  font-family: $font-ui;
+  font-size: $fs-base;
+  font-weight: $fw-semibold;
+  border: none;
+  border-radius: $radius-base;
+  cursor: pointer;
+  margin-top: $space-sm;
+  transition: background $transition-fast, box-shadow $transition-fast;
+
+  &:hover { background: $accent-hover; box-shadow: $shadow-accent; }
+  &:active { background: $accent-pressed; }
+  &:disabled { opacity: .4; cursor: not-allowed; }
+}

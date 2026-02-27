@@ -1,12 +1,13 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { DocumentsService } from '../../../core/services/documents.service';
+import { AppButtonComponent } from '../../../shared/components/button/button.component';
 import { IDocument, DocumentType, DocumentStatus } from '../../../models/document.model';
 
 @Component({
   selector: 'app-documents',
   standalone: true,
-  imports: [DatePipe],
+  imports: [DatePipe, AppButtonComponent],
   templateUrl: './documents.html',
   styleUrl: './documents.scss',
 })

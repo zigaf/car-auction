@@ -439,9 +439,9 @@
                   <span class="auction-panel__trim">{{ lot.derivative }}</span>
                 }
               </div>
-              <button class="auction-panel__fav" [class.auction-panel__fav--active]="isFavorite" (click)="toggleFavorite()">
-                <span class="material-symbols-rounded">{{ isFavorite ? 'favorite' : 'favorite_border' }}</span>
-                <span class="auction-panel__fav-count">{{ favoritesCount }}</span>
+              <button class="auction-panel__fav" [class.auction-panel__fav--active]="isFavorite" [disabled]="favoriteLoading" (click)="toggleFavorite()">
+                <span class="material-symbols-rounded">{{ favoriteLoading ? 'progress_activity' : (isFavorite ? 'favorite' : 'favorite_border') }}</span>
+                <span class="auction-panel__fav-label">{{ isFavorite ? 'В избранном' : 'В избранное' }}</span>
               </button>
             </div>
 

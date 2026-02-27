@@ -17,10 +17,18 @@
   }
 
   @if (!loading && auctionList.length > 0) {
+    <!-- WS disconnect banner -->
+    @if (!wsConnected) {
+      <div class="live__ws-banner">
+        <span class="material-symbols-rounded spin">sync</span>
+        <span>Reconnecting to live feed...</span>
+      </div>
+    }
+
     <!-- Stats bar -->
     <div class="live__stats">
       <div class="stat">
-        <span class="stat__dot"></span>
+        <span class="stat__dot" [class.stat__dot--offline]="!wsConnected"></span>
         <span class="stat__value mono">{{ stats.activeAuctions }}</span>
         <span class="stat__label">auctions</span>
       </div>
@@ -28,6 +36,10 @@
         <span class="material-symbols-rounded">gavel</span>
         <span class="stat__value mono">{{ stats.totalBids }}</span>
         <span class="stat__label">bids</span>
+      </div>
+      <div class="stat stat--ws" [class.stat--ws-on]="wsConnected" [class.stat--ws-off]="!wsConnected">
+        <span class="material-symbols-rounded">{{ wsConnected ? 'wifi' : 'wifi_off' }}</span>
+        <span>{{ wsConnected ? 'Live' : 'Offline' }}</span>
       </div>
     </div>
 
@@ -73,7 +85,10 @@
             </div>
             <div class="lot__current-bid">
               <span class="lot__bid-label">Current bid</span>
-              <span class="lot__bid-value mono">{{ getCurrentPrice(activeLot) | number }} EUR</span>
+              <span
+                class="lot__bid-value mono"
+                [class.lot__bid-value--flash]="animatingBidLotId === activeLot.id"
+              >{{ getCurrentPrice(activeLot) | number }} EUR</span>
             </div>
           </div>
 
@@ -154,7 +169,7 @@
                 >
                 <span class="lot__bid-currency mono">EUR</span>
               </div>
-              <button class="lot__bid-btn" (click)="placeBid()" [disabled]="bidding">
+              <button class="lot__bid-btn" (click)="placeBid()" [disabled]="bidding || !wsConnected">
                 <span class="material-symbols-rounded">gavel</span>
                 @if (bidding) {
                   Placing...
@@ -163,7 +178,7 @@
                 }
               </button>
               @if (activeLot.buyNowPrice) {
-                <button class="lot__buynow-btn" (click)="buyNow()">
+                <button class="lot__buynow-btn" (click)="buyNow()" [disabled]="!wsConnected">
                   <span class="material-symbols-rounded">bolt</span>
                   Buy Now {{ activeLot.buyNowPrice | number }}
                 </button>
@@ -181,7 +196,7 @@
                 >
                 <span class="lot__bid-currency mono">EUR</span>
               </div>
-              <button class="lot__prebid-btn" (click)="placePreBid()" [disabled]="bidding">
+              <button class="lot__prebid-btn" (click)="placePreBid()" [disabled]="bidding || !wsConnected">
                 <span class="material-symbols-rounded">auto_mode</span>
                 Set Max Bid
               </button>
@@ -194,10 +209,12 @@
               <div class="lot__history-empty">No bids yet. Be the first!</div>
             }
             @for (bid of bidHistory; track bid.id) {
-              <div class="lot__history-item" [class.lot__history-item--mine]="isCurrentUser(bid.userId)">
-                <span class="lot__history-flag">{{ bid.user?.countryFlag || '--' }}</span>
-                <span class="lot__history-bidder">{{ bid.user?.firstName || ('Bidder ' + bid.userId.substring(0, 4)) }}</span>
-                <span class="lot__history-amount mono">{{ bid.amount | number }}</span>
+              <div class="lot__history-item">
+                <span class="lot__history-flag">
+                  <span class="material-symbols-rounded">person</span>
+                </span>
+                <span class="lot__history-bidder">{{ bid.bidderFlag || bid.user?.firstName || 'Bidder' }}</span>
+                <span class="lot__history-amount mono">{{ bid.amount | number }} EUR</span>
                 <span class="lot__history-time">{{ getRelativeTime(bid.createdAt) }}</span>
               </div>
             }
@@ -226,7 +243,10 @@
                 <span class="auction-row__meta">{{ item.year || '' }} · {{ (item.mileage | number) || '--' }} km · {{ item.fuelType || '' }}</span>
               </div>
               <div class="auction-row__right">
-                <span class="auction-row__price mono">{{ getCurrentPrice(item) | number }}</span>
+                <span
+                  class="auction-row__price mono"
+                  [class.auction-row__price--flash]="animatingBidLotId === item.id"
+                >{{ getCurrentPrice(item) | number }}</span>
                 <span class="auction-row__timer mono" [class]="getTimerClass(item.auctionEndAt)">{{ getTimeLeft(item.auctionEndAt) }}</span>
                 <div class="auction-row__bottom">
                   @if (item.saleCountry) {
@@ -243,7 +263,7 @@
       <div class="live__feed" [class.live__feed--show]="activeTab === 'feed'">
         <div class="live__feed-header">
           <h3>Live Feed</h3>
-          <span class="live__feed-dot"></span>
+          <span class="live__feed-dot" [class.live__feed-dot--offline]="!wsConnected"></span>
         </div>
         <div class="live__feed-scroll">
           @if (liveFeed.length === 0) {
@@ -253,10 +273,10 @@
             </div>
           }
           @for (entry of liveFeed; track $index) {
-            <div class="feed-item">
-              <span class="feed-item__flag">{{ entry.bidderFlag || '--' }}</span>
-              <span class="feed-item__car">{{ entry.lotId.substring(0, 8) }}</span>
-              <span class="feed-item__increment mono accent-text">{{ entry.amount | number }} EUR</span>
+            <div class="feed-item" [class.feed-item--new]="$index === 0">
+              <span class="feed-item__bidder">{{ entry.bidderFlag }}</span>
+              <span class="feed-item__car">{{ entry.lotTitle || getLotTitle(entry.lotId) }}</span>
+              <span class="feed-item__increment mono accent-text">+{{ entry.amount | number }}</span>
               <span class="feed-item__time">{{ getRelativeTime(entry.timestamp) }}</span>
             </div>
           }

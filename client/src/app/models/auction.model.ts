@@ -3,12 +3,14 @@ import { ILot } from './lot.model';
 export interface IBid {
   id: string;
   lotId: string;
-  userId: string;
+  userId?: string;
   amount: number;
   isPreBid: boolean;
   maxAutoBid: number | null;
-  idempotencyKey: string;
+  idempotencyKey?: string;
   createdAt: string;
+  /** Present in getBidsByLot responses (anonymized: "bidder-xxxx") */
+  bidderFlag?: string;
   lot?: ILot;
   user?: { id: string; firstName: string; countryFlag: string };
 }
@@ -17,6 +19,7 @@ export interface IBidUpdate {
   lotId: string;
   amount: number;
   bidderFlag: string;
+  lotTitle?: string;
   timestamp: string;
 }
 
@@ -35,6 +38,7 @@ export interface IFeedUpdate {
   lotId: string;
   amount: number;
   bidderFlag: string;
+  lotTitle?: string;
   timestamp: string;
 }
 

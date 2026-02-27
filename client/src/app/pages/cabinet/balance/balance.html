@@ -1,6 +1,16 @@
 <div class="balance">
   <h1 class="page-title">Баланс</h1>
 
+  @if (isRestrictedCountry) {
+    <div class="restriction-banner">
+      <span class="material-symbols-rounded">warning</span>
+      <div class="restriction-banner__body">
+        <strong>Ограниченный регион</strong>
+        По требованию партнёра <strong>autobid.de</strong>, для пользователей из России и Республики Беларусь функционал платформы, включая операции с балансом, может быть ограничен.
+      </div>
+    </div>
+  }
+
   @if (error) {
     <div class="error-state">
       <span class="material-symbols-rounded">error</span>
@@ -18,19 +28,56 @@
     <div class="balance__header">
       <div class="balance__current">
         <span class="balance__label">Текущий баланс</span>
-        <span class="balance__amount mono">{{ balance | number }} EUR</span>
+        <span class="balance__amount mono">{{ balance | number: '1.2-2' }} EUR</span>
       </div>
       <div class="balance__actions">
-        <button class="balance__btn balance__btn--deposit">
-          <span class="material-symbols-rounded">add</span>
-          Пополнить
-        </button>
-        <button class="balance__btn balance__btn--withdraw">
-          <span class="material-symbols-rounded">arrow_upward</span>
-          Вывести
-        </button>
+        @if (!isVerified) {
+          <div class="verify-notice">
+            <span class="material-symbols-rounded">verified_user</span>
+            Пополнение доступно после верификации аккаунта
+          </div>
+        } @else {
+          <app-button type="button" variant="primary" (click)="toggleDepositPanel()">
+            <span class="material-symbols-rounded">{{ showDepositPanel ? 'close' : 'add' }}</span>
+            {{ showDepositPanel ? 'Закрыть' : 'Пополнить' }}
+          </app-button>
+        }
       </div>
     </div>
+
+    @if (showDepositPanel && isVerified) {
+      <div class="deposit-panel">
+        <h2 class="deposit-panel__title">
+          <span class="material-symbols-rounded">account_balance</span>
+          Пополнение баланса
+        </h2>
+        <p class="deposit-panel__desc">
+          Выполните банковский перевод по реквизитам ниже и сообщите менеджеру. Зачисление — в течение 1–2 рабочих дней.
+        </p>
+        <div class="bank-details">
+          <div class="bank-detail">
+            <span class="bank-detail__label">Получатель</span>
+            <span class="bank-detail__value">autobid.de GmbH</span>
+          </div>
+          <div class="bank-detail">
+            <span class="bank-detail__label">IBAN</span>
+            <span class="bank-detail__value mono">DE89 3704 0044 0532 0130 00</span>
+          </div>
+          <div class="bank-detail">
+            <span class="bank-detail__label">BIC / SWIFT</span>
+            <span class="bank-detail__value mono">COBADEFFXXX</span>
+          </div>
+          <div class="bank-detail">
+            <span class="bank-detail__label">Назначение платежа</span>
+            <span class="bank-detail__value mono">{{ currentUser?.id }}</span>
+          </div>
+        </div>
+        <p class="deposit-panel__note">
+          <span class="material-symbols-rounded">info</span>
+          Укажите ваш ID в назначении платежа — это необходимо для зачисления средств.
+        </p>
+      </div>
+    }
 
     <div class="balance__table-wrapper">
       <h2 class="section-title">История операций</h2>
@@ -53,7 +100,7 @@
           </div>
           @for (tx of transactions; track tx.id) {
             <div class="table-row">
-              <span class="table-row__date mono">{{ tx.createdAt | date:'yyyy-MM-dd' }}</span>
+              <span class="table-row__date mono">{{ tx.createdAt | date:'dd.MM.yyyy' }}</span>
               <span class="table-row__type">
                 <span class="type-icon" [class]="'type-icon--' + tx.type">
                   <span class="material-symbols-rounded">{{ getTypeIcon(tx.type) }}</span>
@@ -62,9 +109,9 @@
               </span>
               <span class="table-row__desc">{{ tx.description }}</span>
               <span class="table-row__amount mono text-right" [class.positive]="tx.amount > 0" [class.negative]="tx.amount < 0">
-                {{ tx.amount > 0 ? '+' : '' }}{{ tx.amount | number }} EUR
+                {{ tx.amount > 0 ? '+' : '' }}{{ tx.amount | number: '1.2-2' }} EUR
               </span>
-              <span class="table-row__balance mono text-right">{{ tx.balanceAfter | number }} EUR</span>
+              <span class="table-row__balance mono text-right">{{ tx.balanceAfter | number: '1.2-2' }} EUR</span>
             </div>
           }
         </div>

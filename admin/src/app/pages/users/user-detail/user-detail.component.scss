@@ -1,0 +1,229 @@
+// ─── Tabs ────────────────────────────────────────────────────────────────────
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0;
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.15s, border-color 0.15s;
+
+  &:hover { color: var(--text-primary); }
+  &--active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+}
+
+// ─── Restriction banner ───────────────────────────────────────────────────────
+.restriction-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: var(--radius-lg);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  color: #92400e;
+
+  .material-symbols-rounded {
+    font-size: 22px;
+    color: #d97706;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  &__text {
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+
+    strong { display: block; margin-bottom: 2px; }
+  }
+}
+
+// ─── Card ────────────────────────────────────────────────────────────────────
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.card-title {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  margin: 0 0 20px;
+}
+
+// ─── Form helpers ─────────────────────────────────────────────────────────────
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 160px;
+
+  &--wide { flex: 2; }
+
+  &--checkbox {
+    justify-content: flex-end;
+    padding-bottom: 4px;
+    flex: none;
+    min-width: auto;
+  }
+}
+
+.form-label {
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+// ─── Feedback messages ────────────────────────────────────────────────────────
+.save-success {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--green);
+  font-size: var(--fs-sm);
+}
+
+.save-error {
+  color: var(--red);
+  font-size: var(--fs-sm);
+}
+
+// ─── Balance summary ──────────────────────────────────────────────────────────
+.balance-summary {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 24px;
+
+  &__label {
+    font-size: var(--fs-sm);
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  &__amount {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    flex: 1;
+  }
+}
+
+// ─── Deposit card ─────────────────────────────────────────────────────────────
+.deposit-card {
+  padding: 20px 24px;
+}
+
+.verify-gate {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  color: var(--text-secondary);
+
+  .material-symbols-rounded {
+    font-size: 28px;
+    color: var(--text-secondary);
+    opacity: 0.5;
+    flex-shrink: 0;
+  }
+
+  strong {
+    display: block;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    font-size: var(--fs-sm);
+  }
+
+  p {
+    font-size: var(--fs-sm);
+    margin: 0;
+    line-height: 1.5;
+  }
+}
+
+// ─── Transactions table ───────────────────────────────────────────────────────
+.tx-date {
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+}
+
+.tx-desc {
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--fs-xs);
+}
+
+.tx-amount {
+  font-weight: 600;
+  font-size: var(--fs-sm);
+
+  &--positive { color: var(--green); }
+  &--negative { color: var(--red); }
+}
+
+// ─── Pagination ───────────────────────────────────────────────────────────────
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+
+  &__info {
+    font-size: var(--fs-sm);
+    color: var(--text-secondary);
+    min-width: 60px;
+    text-align: center;
+  }
+}

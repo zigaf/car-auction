@@ -9,6 +9,19 @@ import { DataSource, Repository } from 'typeorm';
 import { Order } from '../../db/entities/order.entity';
 import { OrderStatusHistory } from '../../db/entities/order-status-history.entity';
 import { OrderStatus } from '../../common/enums/order-status.enum';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationType } from '../../common/enums/notification-type.enum';
+
+const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
+  [OrderStatus.PENDING]: 'Заказ ожидает подтверждения',
+  [OrderStatus.APPROVED]: 'Заказ подтверждён',
+  [OrderStatus.PAID]: 'Оплата получена',
+  [OrderStatus.DELIVERED_SVH]: 'Автомобиль доставлен на СВХ',
+  [OrderStatus.CUSTOMS]: 'Автомобиль на таможне',
+  [OrderStatus.CLEARED]: 'Таможня пройдена',
+  [OrderStatus.DELIVERING]: 'Автомобиль в пути к вам',
+  [OrderStatus.COMPLETED]: 'Заказ завершён',
+};
 
 /** Defines the valid order status transitions */
 const ALLOWED_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
@@ -30,6 +43,7 @@ export class OrderService {
     @InjectRepository(OrderStatusHistory)
     private readonly historyRepository: Repository<OrderStatusHistory>,
     private readonly dataSource: DataSource,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async getMyOrders(
@@ -189,10 +203,26 @@ export class OrderService {
 
       await queryRunner.commitTransaction();
 
-      return this.orderRepository.findOne({
+      const updatedOrder = await this.orderRepository.findOne({
         where: { id: orderId },
         relations: ['lot', 'user', 'statusHistory'],
-      }) as Promise<Order>;
+      });
+
+      if (updatedOrder) {
+        const label = ORDER_STATUS_LABELS[status];
+        const lotTitle = updatedOrder.lot?.title || `Заказ #${orderId.slice(0, 8)}`;
+        this.notificationService
+          .create({
+            userId: updatedOrder.userId,
+            type: NotificationType.ORDER_STATUS,
+            title: 'Статус заказа обновлён',
+            message: `«${lotTitle}»: ${label}`,
+            data: { orderId, status },
+          })
+          .catch(() => {});
+      }
+
+      return updatedOrder as Order;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;

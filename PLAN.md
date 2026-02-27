@@ -2,17 +2,17 @@
 
 ## Progress Tracking
 
-> Последнее обновление: 2026-02-19
+> Последнее обновление: 2026-02-21 (Фаза 6 — Уведомления + Калькулятор растаможки)
 
 | Фаза | Статус | API | Client | Прогресс |
 |------|--------|-----|--------|----------|
 | **Фаза 1** — Фундамент | В работе | ~90% | ~85% | █████████░ |
 | **Фаза 2** — Каталог и лоты | В работе | ~75% | ~85% | ████████░░ |
-| **Фаза 3** — Аукцион (ядро) | В работе | ~75% | ~80% | ████████░░ |
-| **Фаза 3.5** — Инфраструктура и UI Kit | Не начата | 0% | 0% | ░░░░░░░░░░ |
-| **Фаза 4** — Личный кабинет | В работе | ~85% | ~85% | █████████░ |
-| **Фаза 5** — Админ-панель (MVP) | Не начата | 0% | 0% | ░░░░░░░░░░ |
-| **Фаза 6** — Уведомления и калькулятор | Не начата | 0% | UI scaffolded | ░░░░░░░░░░ |
+| **Фаза 3** — Аукцион (ядро) | В работе | ~75% | ~95% | █████████░ |
+| **Фаза 3.5** — Инфраструктура и UI Kit | В работе | 0% | ~90% | █████████░ |
+| **Фаза 4** — Личный кабинет | В работе | ~90% | ~95% | █████████░ |
+| **Фаза 5** — Админ-панель (MVP) | В работе | — | ~85% | ████████░░ |
+| **Фаза 6** — Уведомления и калькулятор | В работе | ~85% | ~85% | █████████░ |
 | **Фаза 7** — Финализация | Не начата | 0% | 0% | ░░░░░░░░░░ |
 
 ### Реализованные модули (Backend)
@@ -21,7 +21,7 @@
 |--------|--------|-----------|------------|
 | `auth` | DONE | signup, login, refresh, logout, OAuth (Google/Yandex/VK/Telegram) | JWT access+refresh, guards, roles |
 | `user` | DONE | me, update, list, activate, block | CRUD + менеджерские операции |
-| `lot` | DONE (read-only) | list+filters, detail, brands, stats | Нет CRUD для manager, нет CSV import |
+| `lot` | DONE | list+filters, detail, brands, stats, create, update, delete, import, status | CRUD + manager guard ✅ |
 | `scraper` | DONE | run, status, runs | BCA Playwright scraper, не в плане |
 | `balance` | DONE | balance, transactions, adjust | Transaction lock + SELECT FOR UPDATE |
 | `favorites` | DONE | list, add, remove | Composite PK (userId+lotId) |
@@ -29,10 +29,10 @@
 | `documents` | DONE | list, upload, detail, status | Manager одобрение |
 | `auction` | DONE | placeBid, buyNow, getBids, myBids, activeLots + WebSocket Gateway | Anti-sniping, row-level lock, JWT WS auth, self-bid prevention, balance lock in transaction |
 | `order` | DONE | getMyOrders, getAllOrders, getById, updateStatus, tracking | + OrderStatusHistory, status transitions validation, transactional create |
-| `notification` | NOT STARTED | — | Email, push, Telegram, in-app |
+| `notification` | IN PROGRESS | GET /notifications, GET /notifications/unread-count, PATCH /notifications/:id/read, PATCH /notifications/read-all, DELETE /notifications/:id | In-app DONE; Email/Push/Telegram TODO |
 | `content` | NOT STARTED | — | CMS: отзывы, FAQ, преимущества |
-| `calculator` | NOT STARTED | — | Растаможка + полная стоимость |
-| `admin` | NOT STARTED | — | Админ-панель |
+| `calculator` | DONE | POST /calculator/customs | Растаможка: акциз + пошлина + НДС + ПФ |
+| `admin` | IN PROGRESS | — | Отдельный Angular app /admin/ — login, lots, orders, users, documents |
 | `stats` | NOT STARTED | — | Отчёты, экспорт |
 | `file` | NOT STARTED | — | S3 upload |
 
@@ -52,7 +52,7 @@
 | `bids` | DONE | UUID, amount, idempotency_key, is_pre_bid, max_auto_bid, lot/user relations |
 | `orders` | DONE | carPrice, commission, delivery, customs, total, managerComment |
 | `order_status_history` | DONE | status, comment, changedBy, estimatedDate |
-| `notifications` | NOT CREATED | |
+| `notifications` | DONE | UUID PK, userId FK, type enum, title, message, data JSONB, isRead, createdAt |
 | `notification_settings` | NOT CREATED | |
 | `saved_searches` | NOT CREATED | |
 | `reviews` | NOT CREATED | CMS |
@@ -79,7 +79,8 @@
 | Live Trading | REAL API + WebSocket | AuctionService + WebsocketService, live feed, bid panel, anti-sniping, OnPush |
 | My Bids | REAL API | Tabs: All/Active/Won/Lost, пагинация, статус бейджи |
 | Orders | REAL API | OrderService, timeline, статус бейджи, cost breakdown, OnDestroy cleanup |
-| Notifications | EMPTY STATE | Ожидает реализации Фазы 5 |
+| Notifications | REAL API | NotificationService: список, mark as read, mark all, delete, пагинация, unread badge |
+| Calculator | REAL API | CalculatorService: POST /calculator/customs, форма + разбивка по статьям |
 | About | STATIC | Контент |
 | FAQ | STATIC | Контент |
 | Contacts | STATIC | Форма без submit |
@@ -110,9 +111,13 @@
 - [x] ~~LiveTrading disconnect() убивал singleton WS~~ — FIXED: только leave room
 - [x] ~~OrdersComponent без OnDestroy~~ — FIXED: takeUntil(destroy$)
 - [x] markForCheck без OnPush~~ — FIXED: ChangeDetectionStrategy.OnPush
-- [ ] **BUG:** Кнопка "Войти" в Header не меняется на Профиль после авторизации (нужна реактивность через StateService).
-- [ ] **BUG:** OAuth (Google/Yandex/VK) не работает из-за хардкода ссылок на фронтенде и отсутствия ключей в `.env`.
-- [ ] **BUG:** Десинхронизация состояния при 401 ошибке (Interceptor удаляет токены, но не очищает StateService).
+- [x] ~~Live Feed показывал UUID вместо названия лота~~ — FIXED: lotTitleMap + backend lotTitle в feed_update/bid_update
+- [x] ~~Bid history использовал несуществующий user.countryFlag~~ — FIXED: bidderFlag из API
+- [x] ~~Нет индикатора WS соединения~~ — FIXED: stats bar + disconnect banner + кнопки disabled offline
+- [x] ~~Нет анимаций ставок~~ — FIXED: price-flash, row-flash, slide-in для Live Feed
+- [x] ~~**BUG:** Кнопка "Войти" в Header не меняется на Профиль после авторизации~~ — FIXED: APP_INITIALIZER восстанавливает сессию из localStorage при загрузке приложения
+- [x] ~~**BUG:** OAuth (Google/Yandex/VK) не работает из-за хардкода ссылок на фронтенде~~ — FIXED: login + register используют динамический `apiUrl.replace('/api', '') + '/api/auth/...'`
+- [x] ~~**BUG:** Десинхронизация состояния при 401 ошибке~~ — FIXED: AuthInterceptor вызывает `stateService.clearUser()` при 401
 - [ ] Lot entity: часть полей из плана отсутствуют (auction_type, bid_step, reserve_price добавлены; нет VIN decode, inspection_report, etc.)
 - [ ] Нет Redis — нужен для WebSocket pub/sub и очередей
 - [ ] Тема: план — тёмная, реализация — светлая
@@ -522,14 +527,19 @@ referrals
 - [x] Модуль `balance`: просмотр баланса, история транзакций — **DONE** (+ race condition fix с transaction lock)
 
 **Client:**
-- [ ] Страница Live-торгов: трёхколоночный layout (UI scaffolded, mock data)
-- [ ] WebSocket-сервис (подключение, реконнект, подписки на каналы)
-- [ ] Bid Panel: quick-bid кнопки (+100, +250, +500, +1000), произвольная ставка, Buy Now
-- [ ] Optimistic UI: мгновенное обновление → подтверждение/откат
-- [ ] Таймер с цветовой индикацией (зелёный → жёлтый → красный + пульсация)
-- [ ] Анимации ставок (каскад по ТЗ: scale, bounce, flash, float)
-- [ ] Адаптивность: desktop (3 колонки) → tablet (2) → mobile (1 + табы)
-- [ ] Статистическая панель (активные аукционы, онлайн, объём, ставки)
+- [x] Страница Live-торгов: трёхколоночный layout — подключена к реальному API
+- [x] WebSocket-сервис (подключение, реконнект, подписки на каналы) — DONE
+- [x] Bid Panel: quick-bid кнопки (+100, +250, +500, +1000), произвольная ставка, Buy Now — DONE
+- [x] Pre-bidding (auto-bid) UI — DONE
+- [ ] Optimistic UI: мгновенное обновление → подтверждение/откат (цена обновляется через WS, не оптимистично)
+- [x] Таймер с цветовой индикацией (зелёный → жёлтый → красный + пульсация) — DONE
+- [x] Анимации ставок: price-flash (scale+color) на текущей ставке и в списке, slide-in для Live Feed — DONE
+- [x] WS connection status indicator (stats bar + disconnect banner + кнопки заблокированы offline) — DONE
+- [x] Live Feed показывает название лота вместо UUID (lotTitleMap + backend lotTitle в событиях) — DONE
+- [x] Bid history исправлен (bidderFlag из API вместо несуществующего user.countryFlag) — DONE
+- [x] Адаптивность: desktop (3 колонки) → tablet (2) → mobile (1 + табы) — DONE
+- [x] Статистическая панель (активные аукционы, кол-во ставок) — DONE
+- [ ] stats:live WS событие (users_online, daily_volume) — бэкенд не эмитит, нужен отдельный модуль
 
 ---
 
@@ -541,16 +551,21 @@ referrals
 - [ ] Интеграционные тесты для `AuctionService.placeBid` (симуляция race conditions под нагрузкой)
 
 **Client (Компоненты и UX):**
-- [ ] Создание UI Kit в `shared/components/` (`app-button`, `app-input`, `app-lot-card`, `app-status-badge`, `app-timer`)
-- [ ] Global Error Handler & HTTP Interceptor (перехват 401, 500)
-- [ ] Централизованный Toast-сервис для уведомлений (вместо `setTimeout` для ошибок)
-- [ ] Отрефакторить существующие страницы для использования UI Kit.
+- [x] Создание UI Kit в `shared/components/` (`app-button`, `app-input`, `app-status-badge`, `app-brand-icon`, `app-toast` + container)
+- [x] Global Error Handler & HTTP Interceptor (перехват 401, очистка StateService + redirect на /login)
+- [x] Централизованный Toast-сервис (signal-based, `success/error/warning/info`, 5с авто-скрытие)
+- [x] APP_INITIALIZER: восстановление сессии из localStorage при старте + refresh token flow
+- [x] Register страница: AppInputComponent + AppButtonComponent + ToastService (убраны сырые input-ы, errorMessage → toast)
+- [x] Settings страница: AppInputComponent (firstName, lastName, phone, scraperPages) + AppButtonComponent (save, scraper start/status) + ToastService (profileSaveMessage → toast)
+- [x] Balance страница: AppButtonComponent (кнопки Пополнить/Вывести)
+- [x] Documents страница: AppButtonComponent (кнопка загрузки)
+- [ ] my-bids / watchlist — специализированные chip/icon кнопки, замена AppButton не целесообразна
 
 ---
 ### Фаза 4 — Личный кабинет (~55%)
 
 **API:**
-- [ ] Модуль `order`: создание заказа после победы, статусы, история, чекпойнты доставки
+- [x] Модуль `order`: getMyOrders, getAllOrders, getById, updateStatus, tracking — **DONE**
 - [x] Модуль `document`: CRUD, статусы (pending/approved/rejected), привязка к заказу — **DONE**
 - [x] Расширение `user`: профиль (PATCH /users/me) — **DONE**
 - [ ] Расширение `user`: дашборд-данные, настройки уведомлений
@@ -560,16 +575,16 @@ referrals
 
 **Client:**
 - [x] Дашборд: баланс, избранное, данные пользователя (подключен к API)
-- [ ] Дашборд: активные ставки, статус заказов, уведомления (ожидает Фазу 3)
-- [ ] Мои ставки: вкладки (ожидает Фазу 3, empty state)
-- [ ] Заказы: прогресс-бар/таймлайн (empty state)
+- [x] Дашборд: активные ставки (bids.total) + текущие заказы (orders.total) — forkJoin, OnDestroy
+- [x] Мои ставки: вкладки All/Active/Won/Lost, пагинация, статус бейджи — DONE
+- [x] Заказы: прогресс-бар, timeline, cost breakdown, расширяемые карточки — DONE
 - [x] Документы: список, статусы (подключены к API)
 - [ ] Документы: загрузка файлов (нужен модуль file)
 - [x] Баланс: текущий + история транзакций (подключен к API)
 - [ ] Баланс: выгрузка инвойсов PDF
 - [x] Отслеживаемые лоты / favorites (подключены к API)
 - [x] Watchlist: список (подключен к API)
-- [ ] Watchlist: chip-бар + модалка выбора марок/моделей
+- [x] Watchlist: chip-бар + модалка выбора брендов (getBrands() → filteredBrands, addToWatchlist())
 - [x] Настройки: профиль (подключен к UserService)
 - [ ] Настройки: флаг, язык, валюта, каналы уведомлений
 
@@ -587,19 +602,23 @@ referrals
 
 ---
 
-### Фаза 6 — Уведомления и калькулятор (ИЗМЕНЕН ПРИОРИТЕТ)
+### Фаза 6 — Уведомления и калькулятор (В РАБОТЕ)
 
 **API:**
-- [ ] Модуль `notification` (Email, Push, Telegram, In-app)
-- [ ] Очередь через Redis (BullMQ) для асинхронной рассылки
-- [ ] Настройки каналов по типам уведомлений
-- [ ] Модуль `calculator`: растаможка + полная стоимость
+- [x] Модуль `notification`: In-app (CRUD + unread count) — **DONE**
+- [x] Notification entity + NotificationType enum — **DONE**
+- [ ] Очередь через Redis (BullMQ) для асинхронной рассылки Email/Push/Telegram
+- [ ] Настройки каналов по типам уведомлений (notification_settings entity)
+- [x] Интеграция с AuctionModule (outbid), OrderModule (status change), DocumentsModule (status change) — **DONE**
+- [x] Модуль `calculator`: растаможка (акциз + пошлина + НДС + ПФ) — **DONE**
 
 **Client:**
-- [ ] Центр уведомлений (колокольчик в хедере, список, mark as read)
+- [x] Центр уведомлений: список, mark as read, mark all read, delete, пагинация — **DONE**
+- [x] Бейдж непрочитанных в хедере (реальный счётчик из API) — **DONE**
+- [x] Калькулятор растаможки: форма + детальная разбивка по статьям — **DONE**
+- [x] Маршрут /cabinet/calculator + пункт меню в кабинете — **DONE**
 - [ ] Push-уведомления (Service Worker)
 - [ ] Настройки уведомлений (матрица: тип × канал)
-- [ ] Калькуляторы в интерфейсе
 
 ---
 
@@ -675,10 +694,10 @@ GET    /api/auction/active     ✅ DONE (активные аукционы, не
 
 ### Orders
 ```
-GET    /api/orders              ❌ TODO
-GET    /api/orders/:id          ❌ TODO
-PATCH  /api/orders/:id/status   ❌ TODO (manager+)
-GET    /api/orders/:id/tracking ❌ TODO
+GET    /api/orders              ✅ DONE (user: свои; manager+: все)
+GET    /api/orders/:id          ✅ DONE (ownership check)
+PATCH  /api/orders/:id/status   ✅ DONE (manager+, state machine transitions)
+GET    /api/orders/:id/tracking ✅ DONE (history + ownership check)
 ```
 
 ### Balance
@@ -699,11 +718,13 @@ PATCH  /api/documents/:id/status     ✅ DONE (manager+)
 
 ### Notifications
 ```
-GET    /api/notifications            ❌ TODO
-PATCH  /api/notifications/:id/read   ❌ TODO
-PATCH  /api/notifications/read-all   ❌ TODO
-GET    /api/notifications/settings   ❌ TODO
-PATCH  /api/notifications/settings   ❌ TODO
+GET    /api/notifications                  ✅ DONE (paginated, unreadOnly filter)
+GET    /api/notifications/unread-count     ✅ DONE
+PATCH  /api/notifications/:id/read         ✅ DONE
+PATCH  /api/notifications/read-all         ✅ DONE
+DELETE /api/notifications/:id              ✅ DONE
+GET    /api/notifications/settings         ❌ TODO
+PATCH  /api/notifications/settings         ❌ TODO
 ```
 
 ### Watchlist
@@ -738,8 +759,8 @@ GET    /api/content/pages/:slug      ❌ TODO
 
 ### Calculator
 ```
-POST   /api/calculator/customs       ❌ TODO
-POST   /api/calculator/total-cost    ❌ TODO
+POST   /api/calculator/customs       ✅ DONE (акциз + пошлина + НДС + ПФ, public)
+POST   /api/calculator/total-cost    ❌ TODO (alias for customs with delivery+commission)
 ```
 
 ### Admin

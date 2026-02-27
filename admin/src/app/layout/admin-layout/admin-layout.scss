@@ -1,0 +1,160 @@
+@use 'styles/variables' as *;
+
+.admin-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+// ── Sidebar ──────────────────────────────────────────────────────────────────
+.sidebar {
+  width: $sidebar-width;
+  flex-shrink: 0;
+  background: $bg-panel;
+  border-right: 1px solid $border-color;
+  display: flex;
+  flex-direction: column;
+  padding: $space-base 0;
+  box-shadow: $shadow-xs;
+}
+
+.sidebar__logo {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: 0 $space-base $space-lg;
+  border-bottom: 1px solid $border-color;
+  margin-bottom: $space-md;
+
+  .material-symbols-rounded {
+    font-size: 22px;
+    color: $accent;
+  }
+}
+
+.sidebar__logo-text {
+  font-size: $fs-md;
+  font-weight: $fw-bold;
+  color: $text-primary;
+  white-space: nowrap;
+}
+
+// ── Nav ───────────────────────────────────────────────────────────────────────
+.sidebar__nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 $space-sm;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-sm $space-md;
+  border-radius: $radius-base;
+  color: $text-secondary;
+  font-size: $fs-sm;
+  font-weight: $fw-medium;
+  transition: all $transition-fast;
+  text-decoration: none;
+
+  .material-symbols-rounded { font-size: 18px; }
+
+  &:hover {
+    color: $text-primary;
+    background: $bg-elevated;
+  }
+
+  &--active {
+    color: $accent;
+    background: $accent-muted;
+    font-weight: $fw-semibold;
+
+    .material-symbols-rounded { color: $accent; }
+  }
+}
+
+.nav-item__label {
+  flex: 1;
+}
+
+// ── Footer ───────────────────────────────────────────────────────────────────
+.sidebar__footer {
+  padding: $space-md $space-sm 0;
+  border-top: 1px solid $border-color;
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+}
+
+.sidebar__user {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  min-width: 0;
+}
+
+.sidebar__user-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: $radius-round;
+  background: $accent-muted;
+  color: $accent;
+  font-size: $fs-xs;
+  font-weight: $fw-bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.sidebar__user-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sidebar__user-name {
+  font-size: $fs-xs;
+  font-weight: $fw-semibold;
+  color: $text-primary;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar__user-role {
+  font-size: $fs-xs;
+  color: $text-tertiary;
+  text-transform: capitalize;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  padding: $space-xs;
+  background: none;
+  border: none;
+  color: $text-secondary;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    color: $status-red;
+    background: rgba(239, 68, 68, .08);
+  }
+
+  .material-symbols-rounded { font-size: 18px; }
+}
+
+// ── Main ─────────────────────────────────────────────────────────────────────
+.admin-main {
+  flex: 1;
+  overflow-y: auto;
+  background: $bg-secondary;
+}

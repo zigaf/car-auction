@@ -17,10 +17,14 @@
     </div>
 
     <div class="header__actions">
-      <button class="header__icon-btn" aria-label="Уведомления">
-        <span class="material-symbols-rounded">notifications</span>
-        <span class="header__icon-badge">3</span>
-      </button>
+      @if (appState$ | async; as state) {
+        <a routerLink="/cabinet/notifications" class="header__icon-btn" aria-label="Уведомления">
+          <span class="material-symbols-rounded">notifications</span>
+          @if (state.notifications > 0) {
+            <span class="header__icon-badge">{{ state.notifications > 99 ? '99+' : state.notifications }}</span>
+          }
+        </a>
+      }
 
       <button class="header__icon-btn" aria-label="Избранное">
         <span class="material-symbols-rounded">favorite</span>

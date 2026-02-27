@@ -1,8 +1,12 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
+import { Subject, forkJoin } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { BalanceService } from '../../../core/services/balance.service';
 import { FavoritesService } from '../../../core/services/favorites.service';
+import { AuctionService } from '../../../core/services/auction.service';
+import { OrderService } from '../../../core/services/order.service';
 import { StateService } from '../../../core/services/state.service';
 
 @Component({
@@ -12,16 +16,18 @@ import { StateService } from '../../../core/services/state.service';
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   private readonly balanceService = inject(BalanceService);
   private readonly favoritesService = inject(FavoritesService);
+  private readonly auctionService = inject(AuctionService);
+  private readonly orderService = inject(OrderService);
   private readonly stateService = inject(StateService);
+  private readonly destroy$ = new Subject<void>();
 
   balance = 0;
   activeBids = 0;
   favoritesCount = 0;
   pendingOrders = 0;
-  notifications = 0;
 
   loading = true;
   error = '';
@@ -34,29 +40,31 @@ export class DashboardComponent implements OnInit {
     this.loading = true;
     this.error = '';
 
-    // Load balance
-    this.balanceService.getBalance().subscribe({
-      next: (res) => {
-        this.balance = res.balance;
-        this.stateService.updateBalance(res.balance);
-      },
-      error: () => {
-        this.error = 'Не удалось загрузить данные';
-      },
-    });
+    forkJoin({
+      balance: this.balanceService.getBalance(),
+      favorites: this.favoritesService.getFavorites(1, 1),
+      bids: this.auctionService.getMyBids(1, 1),
+      orders: this.orderService.getMyOrders(1, 1),
+    })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: ({ balance, favorites, bids, orders }) => {
+          this.balance = balance.balance;
+          this.stateService.updateBalance(balance.balance);
+          this.favoritesCount = favorites.total;
+          this.activeBids = bids.total;
+          this.pendingOrders = orders.total;
+          this.loading = false;
+        },
+        error: () => {
+          this.error = 'Не удалось загрузить данные';
+          this.loading = false;
+        },
+      });
+  }
 
-    // Load favorites count
-    this.favoritesService.getFavorites(1, 1).subscribe({
-      next: (res) => {
-        this.favoritesCount = res.total;
-        this.loading = false;
-      },
-      error: () => {
-        this.loading = false;
-      },
-    });
-
-    // Notifications from state
-    this.notifications = this.stateService.snapshot.notifications;
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

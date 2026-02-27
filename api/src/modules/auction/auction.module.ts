@@ -12,6 +12,7 @@ import { AuctionGateway } from './auction.gateway';
 import { AuctionSchedulerService } from './auction-scheduler.service';
 import { BalanceModule } from '../balance/balance.module';
 import { AuthModule } from '../auth/auth.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { AuthModule } from '../auth/auth.module';
     ]),
     BalanceModule,
     AuthModule,
+    NotificationModule,
   ],
   controllers: [AuctionController],
   providers: [AuctionService, AuctionGateway, AuctionSchedulerService],

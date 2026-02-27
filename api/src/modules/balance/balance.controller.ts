@@ -38,6 +38,25 @@ export class BalanceController {
     return this.balanceService.getTransactions(user.id, { page, limit });
   }
 
+  @Get('user/:userId')
+  @UseGuards(RolesGuard)
+  @Roles(Role.MANAGER, Role.ADMIN)
+  getUserBalance(@Param('userId', ParseUUIDPipe) userId: string) {
+    return this.balanceService.getBalance(userId);
+  }
+
+  @Get('user/:userId/transactions')
+  @UseGuards(RolesGuard)
+  @Roles(Role.MANAGER, Role.ADMIN)
+  getUserTransactions(
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Query() query: GetTransactionsDto,
+  ) {
+    const page = parseInt(query.page || '1', 10);
+    const limit = parseInt(query.limit || '20', 10);
+    return this.balanceService.getTransactions(userId, { page, limit });
+  }
+
   @Post(':userId/adjust')
   @UseGuards(RolesGuard)
   @Roles(Role.MANAGER, Role.ADMIN)

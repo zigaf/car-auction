@@ -8,13 +8,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, MoreThan } from 'typeorm';
 import { Bid } from '../../db/entities/bid.entity';
 import { Lot } from '../../db/entities/lot.entity';
+import { User } from '../../db/entities/user.entity';
 import { BalanceTransaction } from '../../db/entities/balance-transaction.entity';
 import { LotStatus } from '../../common/enums/lot-status.enum';
+import { Role } from '../../common/enums/role.enum';
 import { BalanceTransactionType } from '../../common/enums/balance-transaction-type.enum';
 import { OrderStatus } from '../../common/enums/order-status.enum';
 import { Order } from '../../db/entities/order.entity';
 import { OrderStatusHistory } from '../../db/entities/order-status-history.entity';
 import { BalanceService } from '../balance/balance.service';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationType } from '../../common/enums/notification-type.enum';
 
 /** Anti-sniping: if a bid arrives in the last N milliseconds, extend the auction */
 const ANTI_SNIPE_WINDOW_MS = 30 * 1000; // 30 seconds
@@ -35,6 +39,7 @@ export class AuctionService {
     private readonly lotRepository: Repository<Lot>,
     private readonly dataSource: DataSource,
     private readonly balanceService: BalanceService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   /**
@@ -56,7 +61,9 @@ export class AuctionService {
       return { bid: existingBid, auctionExtended: false, newEndAt: null };
     }
 
-    return this.dataSource.transaction(async (manager) => {
+    let outbidUserId: string | undefined;
+
+    const result = await this.dataSource.transaction(async (manager) => {
       // Lock the lot row to prevent concurrent bid race conditions
       const lot = await manager
         .createQueryBuilder(Lot, 'lot')
@@ -71,6 +78,10 @@ export class AuctionService {
       if (lot.status !== LotStatus.TRADING) {
         throw new BadRequestException('Lot is not currently in trading');
       }
+
+      // Load bidder to determine if it is a bot
+      const bidder = await manager.findOne(User, { where: { id: userId } });
+      const isBotUser = bidder?.role === Role.BOT;
 
       // Prevent self-bidding
       if (userId === lot.createdBy) {
@@ -98,46 +109,49 @@ export class AuctionService {
       }
 
       // Check user balance INSIDE the transaction with row-level locking
-      const balanceResult = await manager
-        .createQueryBuilder(BalanceTransaction, 'tx')
-        .setLock('pessimistic_write')
-        .select('COALESCE(SUM(tx.amount), 0)', 'balance')
-        .where('tx.user_id = :userId', { userId })
-        .getRawOne();
+      // Bots bypass all balance checks — they have no real balance
+      if (!isBotUser) {
+        const balanceResult = await manager
+          .createQueryBuilder(BalanceTransaction, 'tx')
+          .setLock('pessimistic_write')
+          .select('COALESCE(SUM(tx.amount), 0)', 'balance')
+          .where('tx.user_id = :userId', { userId })
+          .getRawOne();
 
-      let availableBalance = parseFloat(balanceResult?.balance || '0');
+        let availableBalance = parseFloat(balanceResult?.balance || '0');
 
-      // If user already has a BID_LOCK on this lot (raising own bid), that lock
-      // will be released, so add it back to the available balance for the check
-      const existingLock = await manager
-        .createQueryBuilder(BalanceTransaction, 'tx')
-        .where('tx.user_id = :userId', { userId })
-        .andWhere('tx.lot_id = :lotId', { lotId })
-        .andWhere('tx.type = :lockType', {
-          lockType: BalanceTransactionType.BID_LOCK,
-        })
-        .orderBy('tx.created_at', 'DESC')
-        .getOne();
-
-      if (existingLock) {
-        // Check this lock hasn't already been unlocked
-        const alreadyUnlocked = await manager
+        // If user already has a BID_LOCK on this lot (raising own bid), that lock
+        // will be released, so add it back to the available balance for the check
+        const existingLock = await manager
           .createQueryBuilder(BalanceTransaction, 'tx')
           .where('tx.user_id = :userId', { userId })
           .andWhere('tx.lot_id = :lotId', { lotId })
-          .andWhere('tx.type = :unlockType', {
-            unlockType: BalanceTransactionType.BID_UNLOCK,
+          .andWhere('tx.type = :lockType', {
+            lockType: BalanceTransactionType.BID_LOCK,
           })
-          .andWhere('tx.bid_id = :bidId', { bidId: existingLock.bidId })
+          .orderBy('tx.created_at', 'DESC')
           .getOne();
 
-        if (!alreadyUnlocked) {
-          availableBalance += Math.abs(existingLock.amount);
-        }
-      }
+        if (existingLock) {
+          // Check this lock hasn't already been unlocked
+          const alreadyUnlocked = await manager
+            .createQueryBuilder(BalanceTransaction, 'tx')
+            .where('tx.user_id = :userId', { userId })
+            .andWhere('tx.lot_id = :lotId', { lotId })
+            .andWhere('tx.type = :unlockType', {
+              unlockType: BalanceTransactionType.BID_UNLOCK,
+            })
+            .andWhere('tx.bid_id = :bidId', { bidId: existingLock.bidId })
+            .getOne();
 
-      if (availableBalance < amount) {
-        throw new BadRequestException('Insufficient balance');
+          if (!alreadyUnlocked) {
+            availableBalance += Math.abs(existingLock.amount);
+          }
+        }
+
+        if (availableBalance < amount) {
+          throw new BadRequestException('Insufficient balance');
+        }
       }
 
       // Double-check idempotency inside transaction
@@ -169,6 +183,9 @@ export class AuctionService {
         .getOne();
 
       if (previousHighBid) {
+        if (previousHighBid.userId !== userId) {
+          outbidUserId = previousHighBid.userId;
+        }
         // Unlock the previous leader's balance (could be same user raising bid)
         await this.balanceService.unlockBalanceForBid(
           manager,
@@ -177,14 +194,16 @@ export class AuctionService {
         );
       }
 
-      // Lock the new bidder's balance
-      await this.balanceService.lockBalanceForBid(
-        manager,
-        userId,
-        lotId,
-        savedBid.id,
-        amount,
-      );
+      // Lock the new bidder's balance (skipped for bots — no real balance)
+      if (!isBotUser) {
+        await this.balanceService.lockBalanceForBid(
+          manager,
+          userId,
+          lotId,
+          savedBid.id,
+          amount,
+        );
+      }
 
       // Update lot current price
       lot.currentPrice = amount;
@@ -217,6 +236,21 @@ export class AuctionService {
         newEndAt,
       };
     });
+
+    if (outbidUserId) {
+      const lotTitle = (result.bid as any).lot?.title || `Лот ${lotId.slice(0, 8)}`;
+      this.notificationService
+        .create({
+          userId: outbidUserId,
+          type: NotificationType.OUTBID,
+          title: 'Вас перебили',
+          message: `Ваша ставка на «${lotTitle}» перебита. Новая ставка: €${amount.toLocaleString()}`,
+          data: { lotId, amount },
+        })
+        .catch(() => {});
+    }
+
+    return result;
   }
 
   /**
@@ -503,7 +537,9 @@ export class AuctionService {
       return { bid: existingBid, auctionExtended: false, newEndAt: null };
     }
 
-    return this.dataSource.transaction(async (manager) => {
+    let preOutbidUserId: string | undefined;
+
+    const preBidResult = await this.dataSource.transaction(async (manager) => {
       const lot = await manager
         .createQueryBuilder(Lot, 'lot')
         .setLock('pessimistic_write')
@@ -604,6 +640,9 @@ export class AuctionService {
         .getOne();
 
       if (previousHighBid) {
+        if (previousHighBid.userId !== userId) {
+          preOutbidUserId = previousHighBid.userId;
+        }
         await this.balanceService.unlockBalanceForBid(
           manager,
           previousHighBid.userId,
@@ -653,6 +692,21 @@ export class AuctionService {
         newEndAt,
       };
     });
+
+    if (preOutbidUserId) {
+      const lotTitle = (preBidResult.bid as any).lot?.title || `Лот ${lotId.slice(0, 8)}`;
+      this.notificationService
+        .create({
+          userId: preOutbidUserId,
+          type: NotificationType.OUTBID,
+          title: 'Вас перебили',
+          message: `Ваша ставка на «${lotTitle}» перебита. Новая максимальная ставка: €${maxAutoBid.toLocaleString()}`,
+          data: { lotId, maxAutoBid },
+        })
+        .catch(() => {});
+    }
+
+    return preBidResult;
   }
 
   /**

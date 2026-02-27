@@ -1,0 +1,79 @@
+<div class="user-tasks">
+  <div class="user-tasks__header">
+    <h2 class="user-tasks__title">Задачи</h2>
+    <button class="btn btn--primary btn--sm" (click)="showForm = !showForm">
+      <span class="material-symbols-rounded">{{ showForm ? 'close' : 'add' }}</span>
+      {{ showForm ? 'Отмена' : 'Добавить задачу' }}
+    </button>
+  </div>
+
+  @if (showForm) {
+    <div class="task-form card">
+      <div class="form-group">
+        <label class="form-label">Заголовок *</label>
+        <input class="form-control" [(ngModel)]="newTitle" placeholder="Название задачи" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Описание</label>
+        <textarea class="form-control" [(ngModel)]="newDescription" rows="3" placeholder="Подробности..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Срок выполнения</label>
+        <input class="form-control" type="date" [(ngModel)]="newDueDate" />
+      </div>
+      <div class="form-actions">
+        <button class="btn btn--primary btn--sm" [disabled]="!newTitle || creating" (click)="createTask()">
+          @if (creating) { <span class="material-symbols-rounded spin">progress_activity</span> }
+          Создать
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (loading) {
+    <div class="state-loading">
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    </div>
+  }
+
+  @if (!loading && tasks.length === 0) {
+    <div class="empty-state">
+      <span class="material-symbols-rounded">checklist</span>
+      <p>Нет задач</p>
+    </div>
+  }
+
+  @if (!loading && tasks.length > 0) {
+    <div class="task-list">
+      @for (task of tasks; track task.id) {
+        <div class="task-item card">
+          <div class="task-item__main">
+            <div class="task-item__title">{{ task.title }}</div>
+            @if (task.description) {
+              <div class="task-item__desc text-muted">{{ task.description }}</div>
+            }
+            @if (task.dueDate) {
+              <div class="task-item__due text-muted">
+                <span class="material-symbols-rounded" style="font-size:14px">calendar_today</span>
+                {{ task.dueDate | date:'dd.MM.yy' }}
+              </div>
+            }
+          </div>
+          <div class="task-item__actions">
+            <button
+              class="badge badge--clickable"
+              [class]="statusClass(task.status)"
+              (click)="cycleStatus(task)"
+              title="Нажмите, чтобы изменить статус"
+            >
+              {{ statusLabels[task.status] }}
+            </button>
+            <button class="icon-btn icon-btn--danger" (click)="deleteTask(task.id)" title="Удалить">
+              <span class="material-symbols-rounded">delete</span>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

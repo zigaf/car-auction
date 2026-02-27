@@ -1,0 +1,294 @@
+<div class="page">
+  <div class="page-header">
+    <h1 class="page-title">Профиль клиента</h1>
+    @if (user) {
+      <span class="text-muted">{{ user.email }}</span>
+    }
+  </div>
+
+  @if (loading) {
+    <div class="state-loading">
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    </div>
+  }
+
+  @if (error && !loading) {
+    <div class="state-error">
+      <span class="material-symbols-rounded">error</span>
+      {{ error }}
+    </div>
+  }
+
+  @if (!loading && user) {
+
+    @if (isRestrictedCountry) {
+      <div class="restriction-banner">
+        <span class="material-symbols-rounded">warning</span>
+        <div class="restriction-banner__text">
+          <strong>Ограниченный регион</strong>
+          По требованию нашего партнёра <strong>autobid.de</strong>, для пользователей из России и Республики Беларусь функционал платформы может быть ограничен.
+        </div>
+      </div>
+    }
+
+    <div class="tabs">
+      <button class="tab-btn" [class.tab-btn--active]="activeTab === 'info'" (click)="activeTab = 'info'">
+        <span class="material-symbols-rounded">person</span> Инфо
+      </button>
+      <button class="tab-btn" [class.tab-btn--active]="activeTab === 'balance'" (click)="openBalanceTab()">
+        <span class="material-symbols-rounded">account_balance_wallet</span> Баланс
+      </button>
+      <button class="tab-btn" [class.tab-btn--active]="activeTab === 'actions'" (click)="activeTab = 'actions'">
+        <span class="material-symbols-rounded">mail</span> Действия
+      </button>
+      <button class="tab-btn" [class.tab-btn--active]="activeTab === 'tasks'" (click)="activeTab = 'tasks'">
+        <span class="material-symbols-rounded">checklist</span> Задачи
+      </button>
+    </div>
+
+    <!-- INFO TAB -->
+    @if (activeTab === 'info') {
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Имя</label>
+            <input class="form-control" [(ngModel)]="formFirstName" placeholder="Имя" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Фамилия</label>
+            <input class="form-control" [(ngModel)]="formLastName" placeholder="Фамилия" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Телефон</label>
+            <input class="form-control" [(ngModel)]="formPhone" placeholder="+7 999 000 00 00" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Флаг страны (emoji)</label>
+            <input class="form-control" [(ngModel)]="formCountryFlag" placeholder="🇩🇪" maxlength="10" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Статус</label>
+            <select class="form-control" [(ngModel)]="formStatus">
+              @for (s of statuses; track s) {
+                <option [value]="s">{{ s }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Роль</label>
+            <select class="form-control" [(ngModel)]="formRole">
+              @for (r of roles; track r) {
+                <option [value]="r">{{ r }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group form-group--checkbox">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="formIsVerified" />
+              Верификация подтверждена
+            </label>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn--primary" [disabled]="saving" (click)="saveInfo()">
+            @if (saving) {
+              <span class="material-symbols-rounded spin">progress_activity</span>
+            }
+            Сохранить
+          </button>
+          @if (saveSuccess) {
+            <span class="save-success">
+              <span class="material-symbols-rounded">check_circle</span> Сохранено
+            </span>
+          }
+          @if (error && !loading) {
+            <span class="save-error">{{ error }}</span>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- BALANCE TAB -->
+    @if (activeTab === 'balance') {
+      @if (balanceLoading) {
+        <div class="state-loading">
+          <span class="material-symbols-rounded spin">progress_activity</span>
+        </div>
+      }
+
+      @if (!balanceLoading) {
+        <!-- Balance summary -->
+        <div class="balance-summary card">
+          <div class="balance-summary__label">Текущий баланс</div>
+          <div class="balance-summary__amount">€{{ balance ?? 0 | number: '1.2-2' }}</div>
+          <button class="btn btn--secondary btn--sm" (click)="loadBalance()">
+            <span class="material-symbols-rounded">refresh</span> Обновить
+          </button>
+        </div>
+
+        <!-- Deposit form -->
+        <div class="card deposit-card">
+          @if (!user.isVerified) {
+            <div class="verify-gate">
+              <span class="material-symbols-rounded">lock</span>
+              <div>
+                <strong>Пополнение недоступно</strong>
+                <p>Депозит возможен только после верификации пользователя. Включите «Верификация подтверждена» на вкладке Инфо.</p>
+              </div>
+            </div>
+          } @else {
+            <h2 class="card-title">Пополнить баланс</h2>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Сумма (€) *</label>
+                <input
+                  class="form-control"
+                  type="number"
+                  min="1"
+                  [(ngModel)]="depositAmount"
+                  placeholder="500"
+                />
+              </div>
+              <div class="form-group form-group--wide">
+                <label class="form-label">Комментарий</label>
+                <input
+                  class="form-control"
+                  [(ngModel)]="depositDescription"
+                  placeholder="Пополнение счёта"
+                />
+              </div>
+            </div>
+            <div class="form-actions">
+              <button
+                class="btn btn--primary btn--sm"
+                [disabled]="depositSaving || !depositAmount || depositAmount <= 0"
+                (click)="deposit()"
+              >
+                @if (depositSaving) {
+                  <span class="material-symbols-rounded spin">progress_activity</span>
+                } @else {
+                  <span class="material-symbols-rounded">add_card</span>
+                }
+                Пополнить
+              </button>
+              @if (depositSuccess) {
+                <span class="save-success">
+                  <span class="material-symbols-rounded">check_circle</span> Баланс пополнен
+                </span>
+              }
+              @if (depositError) {
+                <span class="save-error">{{ depositError }}</span>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Transactions -->
+        <div class="card">
+          <h2 class="card-title">История транзакций</h2>
+
+          @if (txLoading) {
+            <div class="state-loading">
+              <span class="material-symbols-rounded spin">progress_activity</span>
+            </div>
+          }
+
+          @if (!txLoading && transactions.length === 0) {
+            <div class="empty-state">
+              <span class="material-symbols-rounded">receipt_long</span>
+              <p>Транзакций нет</p>
+            </div>
+          }
+
+          @if (!txLoading && transactions.length > 0) {
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Дата</th>
+                    <th>Тип</th>
+                    <th>Сумма</th>
+                    <th>Баланс после</th>
+                    <th>Описание</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (tx of transactions; track tx.id) {
+                    <tr>
+                      <td class="text-muted tx-date">{{ tx.createdAt | date: 'dd.MM.yy HH:mm' }}</td>
+                      <td>
+                        <span class="badge" [class]="tx.amount >= 0 ? 'badge--green' : 'badge--red'">
+                          {{ txTypeLabel(tx.type) }}
+                        </span>
+                      </td>
+                      <td class="tx-amount" [class.tx-amount--positive]="tx.amount >= 0" [class.tx-amount--negative]="tx.amount < 0">
+                        {{ tx.amount >= 0 ? '+' : '' }}€{{ tx.amount | number: '1.2-2' }}
+                      </td>
+                      <td class="text-muted">€{{ tx.balanceAfter | number: '1.2-2' }}</td>
+                      <td class="text-muted tx-desc">{{ tx.description }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            @if (txPages() > 1) {
+              <div class="pagination">
+                <button class="btn btn--secondary btn--sm" [disabled]="txPage <= 1" (click)="goToPage(txPage - 1)">
+                  <span class="material-symbols-rounded">chevron_left</span>
+                </button>
+                <span class="pagination__info">{{ txPage }} / {{ txPages() }}</span>
+                <button class="btn btn--secondary btn--sm" [disabled]="txPage >= txPages()" (click)="goToPage(txPage + 1)">
+                  <span class="material-symbols-rounded">chevron_right</span>
+                </button>
+              </div>
+            }
+          }
+        </div>
+      }
+    }
+
+    <!-- ACTIONS TAB -->
+    @if (activeTab === 'actions') {
+      <div class="card">
+        <h2 class="card-title">Отправить письмо</h2>
+        <div class="form-group">
+          <label class="form-label">Тема</label>
+          <input class="form-control" [(ngModel)]="emailSubject" placeholder="Тема письма" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Сообщение</label>
+          <textarea class="form-control" [(ngModel)]="emailMessage" rows="6" placeholder="Текст письма..."></textarea>
+        </div>
+        <div class="form-actions">
+          <button
+            class="btn btn--primary"
+            [disabled]="emailSending || !emailSubject || !emailMessage"
+            (click)="sendEmail()"
+          >
+            @if (emailSending) {
+              <span class="material-symbols-rounded spin">progress_activity</span>
+            } @else {
+              <span class="material-symbols-rounded">send</span>
+            }
+            Отправить
+          </button>
+          @if (emailSent) {
+            <span class="save-success">
+              <span class="material-symbols-rounded">check_circle</span> Письмо отправлено
+            </span>
+          }
+          @if (emailError) {
+            <span class="save-error">{{ emailError }}</span>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- TASKS TAB -->
+    @if (activeTab === 'tasks') {
+      <app-user-tasks [userId]="userId" />
+    }
+  }
+</div>

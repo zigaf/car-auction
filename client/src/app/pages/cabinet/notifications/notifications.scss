@@ -141,6 +141,79 @@
   padding: $space-3xl;
   color: $text-tertiary;
 
-  .material-symbols-rounded { font-size: 48px; margin-bottom: $space-md; }
+  .material-symbols-rounded { font-size: 48px; margin-bottom: $space-md; display: block; }
   p { margin: 0; font-size: $fs-base; }
 }
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  padding: $space-2xl;
+  color: $text-tertiary;
+  .material-symbols-rounded { font-size: 32px; }
+}
+
+.error-state {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-md $space-base;
+  background: rgba($status-red, .06);
+  border: 1px solid rgba($status-red, .2);
+  border-radius: $radius-base;
+  color: $status-red;
+  font-size: $fs-sm;
+  .material-symbols-rounded { font-size: 18px; flex-shrink: 0; }
+}
+
+.notif-item__delete {
+  padding: $space-xs;
+  background: none;
+  border: none;
+  color: $text-tertiary;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  transition: opacity $transition-fast, color $transition-fast, background $transition-fast;
+  .material-symbols-rounded { font-size: 16px; }
+
+  &:hover { color: $status-red; background: rgba($status-red, .08); }
+}
+
+.notif-item:hover .notif-item__delete { opacity: 1; }
+
+.notifications__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-md;
+  margin-top: $space-lg;
+}
+
+.pagination-btn {
+  display: flex;
+  align-items: center;
+  padding: $space-sm;
+  background: $bg-card;
+  border: 1px solid $border-color;
+  border-radius: $radius-base;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover:not(:disabled) { border-color: $accent; color: $accent; }
+  &:disabled { opacity: .4; cursor: not-allowed; }
+  .material-symbols-rounded { font-size: 18px; }
+}
+
+.pagination-info {
+  font-size: $fs-sm;
+  color: $text-secondary;
+  min-width: 50px;
+  text-align: center;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin .8s linear infinite; }

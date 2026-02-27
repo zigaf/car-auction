@@ -1,0 +1,36 @@
+.task-title {
+  font-weight: 500;
+  font-size: var(--fs-sm);
+}
+
+.link {
+  color: var(--accent);
+  text-decoration: none;
+  &:hover { text-decoration: underline; }
+}
+
+.badge--clickable {
+  cursor: pointer;
+  border: none;
+  &:hover { opacity: 0.8; }
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  transition: background 0.15s, color 0.15s;
+
+  &:hover { background: var(--surface-hover); }
+  &--danger:hover {
+    background: rgba(220, 38, 38, 0.08);
+    color: var(--red);
+  }
+}

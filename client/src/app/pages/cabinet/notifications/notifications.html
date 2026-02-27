@@ -1,10 +1,84 @@
 <div class="notifications">
   <div class="notifications__header">
-    <h1 class="page-title">Уведомления</h1>
+    <h1 class="page-title">
+      Уведомления
+      @if (unreadCount > 0) {
+        <span class="unread-badge">{{ unreadCount }}</span>
+      }
+    </h1>
+    @if (unreadCount > 0) {
+      <button class="mark-all-btn" (click)="markAllRead()" [disabled]="markingAll">
+        <span class="material-symbols-rounded">done_all</span>
+        Прочитать все
+      </button>
+    }
   </div>
 
-  <div class="empty-state">
-    <span class="material-symbols-rounded">notifications_none</span>
-    <p>Уведомления пока недоступны</p>
-  </div>
+  @if (loading) {
+    <div class="loading-state">
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    </div>
+  }
+
+  @if (error) {
+    <div class="error-state">
+      <span class="material-symbols-rounded">error</span>
+      {{ error }}
+    </div>
+  }
+
+  @if (!loading && !error) {
+    @if (notifications.length === 0) {
+      <div class="empty-state">
+        <span class="material-symbols-rounded">notifications_none</span>
+        <p>Уведомлений нет</p>
+      </div>
+    } @else {
+      <div class="notifications__list">
+        @for (notif of notifications; track notif.id) {
+          <div
+            class="notif-item"
+            [class.notif-item--unread]="!notif.isRead"
+            (click)="markRead(notif)"
+          >
+            <div class="notif-item__icon" [class]="typeIconClass[notif.type]">
+              <span class="material-symbols-rounded">{{ typeIcons[notif.type] }}</span>
+            </div>
+
+            <div class="notif-item__body">
+              <div class="notif-item__top">
+                <span class="notif-item__title">{{ notif.title }}</span>
+                <span class="notif-item__time">{{ notif.createdAt | date:'dd.MM.yy HH:mm' }}</span>
+              </div>
+              <p class="notif-item__message">{{ notif.message }}</p>
+            </div>
+
+            @if (!notif.isRead) {
+              <div class="notif-item__dot"></div>
+            }
+
+            <button
+              class="notif-item__delete"
+              (click)="deleteNotification(notif.id, $event)"
+              title="Удалить"
+            >
+              <span class="material-symbols-rounded">close</span>
+            </button>
+          </div>
+        }
+      </div>
+
+      @if (totalPages > 1) {
+        <div class="notifications__pagination">
+          <button class="pagination-btn" [disabled]="page === 1" (click)="prevPage()">
+            <span class="material-symbols-rounded">chevron_left</span>
+          </button>
+          <span class="pagination-info">{{ page }} / {{ totalPages }}</span>
+          <button class="pagination-btn" [disabled]="page === totalPages" (click)="nextPage()">
+            <span class="material-symbols-rounded">chevron_right</span>
+          </button>
+        </div>
+      }
+    }
+  }
 </div>

@@ -2,23 +2,28 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
 import { UserService } from '../../../core/services/user.service';
+import { ToastService } from '../../../core/services/toast.service';
+import { AppButtonComponent } from '../../../shared/components/button/button.component';
+import { AppInputComponent } from '../../../shared/components/input/input.component';
 import { IUser, IUpdateProfile, Language, Currency } from '../../../models/user.model';
+
+const RESTRICTED_FLAGS = ['🇷🇺', '🇧🇾'];
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, AppButtonComponent, AppInputComponent],
   templateUrl: './settings.html',
   styleUrl: './settings.scss',
 })
 export class SettingsComponent implements OnInit {
   private readonly userService = inject(UserService);
+  private readonly toastService = inject(ToastService);
   private readonly cdr = inject(ChangeDetectorRef);
 
   profileLoading = true;
   profileSaving = false;
-  profileSaveMessage = '';
-  profileSaveStatus: 'idle' | 'success' | 'error' = 'idle';
+  regionalSaving = false;
 
   profile = {
     firstName: '',
@@ -27,11 +32,34 @@ export class SettingsComponent implements OnInit {
     phone: '',
   };
 
+  // Option values are emoji flags (matching countryFlag field stored in DB)
   countries = [
-    { code: 'UA', name: 'Україна', flag: '\u{1F1FA}\u{1F1E6}' },
-    { code: 'DE', name: 'Deutschland', flag: '\u{1F1E9}\u{1F1EA}' },
-    { code: 'PL', name: 'Polska', flag: '\u{1F1F5}\u{1F1F1}' },
-    { code: 'LT', name: 'Lietuva', flag: '\u{1F1F1}\u{1F1F9}' },
+    { flag: '🇺🇦', name: 'Україна' },
+    { flag: '🇩🇪', name: 'Deutschland' },
+    { flag: '🇵🇱', name: 'Polska' },
+    { flag: '🇱🇹', name: 'Lietuva' },
+    { flag: '🇱🇻', name: 'Latvija' },
+    { flag: '🇪🇪', name: 'Eesti' },
+    { flag: '🇫🇮', name: 'Suomi' },
+    { flag: '🇸🇪', name: 'Sverige' },
+    { flag: '🇳🇴', name: 'Norge' },
+    { flag: '🇳🇱', name: 'Nederland' },
+    { flag: '🇦🇹', name: 'Österreich' },
+    { flag: '🇨🇭', name: 'Schweiz' },
+    { flag: '🇫🇷', name: 'France' },
+    { flag: '🇮🇹', name: 'Italia' },
+    { flag: '🇨🇿', name: 'Česká republika' },
+    { flag: '🇸🇰', name: 'Slovensko' },
+    { flag: '🇷🇴', name: 'România' },
+    { flag: '🇭🇺', name: 'Magyarország' },
+    { flag: '🇧🇬', name: 'България' },
+    { flag: '🇷🇺', name: 'Россия' },
+    { flag: '🇧🇾', name: 'Беларусь' },
+    { flag: '🇰🇿', name: 'Казахстан' },
+    { flag: '🇦🇿', name: 'Azərbaycan' },
+    { flag: '🇬🇧', name: 'United Kingdom' },
+    { flag: '🇦🇪', name: 'UAE' },
+    { flag: '🌍', name: 'Другая страна' },
   ];
 
   languages = [
@@ -41,12 +69,12 @@ export class SettingsComponent implements OnInit {
   ];
 
   currencies = [
-    { code: 'EUR', symbol: '\u{20AC}' },
+    { code: 'EUR', symbol: '€' },
     { code: 'USD', symbol: '$' },
-    { code: 'UAH', symbol: '\u{20B4}' },
+    { code: 'UAH', symbol: '₴' },
   ];
 
-  selectedCountry = 'UA';
+  selectedCountry = '🇺🇦';
   selectedLanguage = 'ru';
   selectedCurrency = 'EUR';
 
@@ -65,6 +93,10 @@ export class SettingsComponent implements OnInit {
   scraperRun: any = null;
   scraperMaxPages = 1;
 
+  get isRestrictedCountry(): boolean {
+    return RESTRICTED_FLAGS.some((f) => this.selectedCountry.includes(f));
+  }
+
   ngOnInit(): void {
     this.loadProfile();
   }
@@ -79,7 +111,8 @@ export class SettingsComponent implements OnInit {
           email: user.email,
           phone: user.phone || '',
         };
-        this.selectedCountry = user.countryFlag || 'UA';
+        // countryFlag is stored as emoji — use directly as option value
+        this.selectedCountry = user.countryFlag || '🇺🇦';
         this.selectedLanguage = user.preferredLanguage || 'ru';
         this.selectedCurrency = user.preferredCurrency || 'EUR';
         this.profileLoading = false;
@@ -92,8 +125,6 @@ export class SettingsComponent implements OnInit {
 
   saveProfile(): void {
     this.profileSaving = true;
-    this.profileSaveMessage = '';
-    this.profileSaveStatus = 'idle';
 
     const data: IUpdateProfile = {
       firstName: this.profile.firstName,
@@ -107,13 +138,32 @@ export class SettingsComponent implements OnInit {
     this.userService.updateProfile(data).subscribe({
       next: () => {
         this.profileSaving = false;
-        this.profileSaveStatus = 'success';
-        this.profileSaveMessage = 'Профиль сохранён';
+        this.toastService.success('Профиль сохранён');
       },
       error: () => {
         this.profileSaving = false;
-        this.profileSaveStatus = 'error';
-        this.profileSaveMessage = 'Ошибка сохранения профиля';
+        this.toastService.error('Ошибка сохранения профиля');
+      },
+    });
+  }
+
+  saveRegional(): void {
+    this.regionalSaving = true;
+
+    const data: IUpdateProfile = {
+      countryFlag: this.selectedCountry,
+      preferredLanguage: this.selectedLanguage as Language,
+      preferredCurrency: this.selectedCurrency as Currency,
+    };
+
+    this.userService.updateProfile(data).subscribe({
+      next: () => {
+        this.regionalSaving = false;
+        this.toastService.success('Региональные настройки сохранены');
+      },
+      error: () => {
+        this.regionalSaving = false;
+        this.toastService.error('Ошибка сохранения');
       },
     });
   }

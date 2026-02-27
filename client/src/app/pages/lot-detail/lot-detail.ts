@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { environment } from '../../../environments/environment';
 import { LotService } from '../../core/services/lot.service';
+import { FavoritesService } from '../../core/services/favorites.service';
+import { StateService } from '../../core/services/state.service';
 import { ILot, ILotImage, ImageCategory } from '../../models/lot.model';
 
 interface ConditionItem {
@@ -29,6 +31,8 @@ export type GalleryTab = 'all' | 'exterior' | 'interior' | 'damage';
 export class LotDetailComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly lotService = inject(LotService);
+  private readonly favoritesService = inject(FavoritesService);
+  private readonly stateService = inject(StateService);
 
   loading = true;
   lot: ILot | null = null;
@@ -37,9 +41,8 @@ export class LotDetailComponent implements OnInit, OnDestroy {
   activeGalleryTab: GalleryTab = 'all';
   fullscreenOpen = false;
 
-  // Favorites (fake — random 1-30, +1 on click)
   isFavorite = false;
-  favoritesCount = Math.floor(Math.random() * 30) + 1;
+  favoriteLoading = false;
 
   // Reserve bid from "other platforms" (fake — 70-90% of starting bid)
   reserveMultiplier = 0.7 + Math.random() * 0.2;
@@ -63,6 +66,12 @@ export class LotDetailComponent implements OnInit, OnDestroy {
       next: (lot) => {
         this.lot = lot;
         this.loading = false;
+        if (this.stateService.snapshot.isAuthenticated) {
+          this.favoritesService.checkFavorite(id).subscribe({
+            next: (res) => (this.isFavorite = res.isFavorite),
+            error: () => {},
+          });
+        }
       },
       error: () => {
         this.lot = null;
@@ -222,8 +231,18 @@ export class LotDetailComponent implements OnInit, OnDestroy {
   }
 
   toggleFavorite(): void {
-    this.isFavorite = !this.isFavorite;
-    this.favoritesCount += this.isFavorite ? 1 : -1;
+    if (!this.stateService.snapshot.isAuthenticated || !this.lot || this.favoriteLoading) return;
+    this.favoriteLoading = true;
+    const action = this.isFavorite
+      ? this.favoritesService.removeFavorite(this.lot.id)
+      : this.favoritesService.addFavorite(this.lot.id);
+    action.subscribe({
+      next: () => {
+        this.isFavorite = !this.isFavorite;
+        this.favoriteLoading = false;
+      },
+      error: () => (this.favoriteLoading = false),
+    });
   }
 
   get minPayment(): number | null {
