@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DatePipe } from '@angular/common';
+import { DatePipe, SlicePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TaskService, ITask, TaskStatus } from '../../core/services/task.service';
 
@@ -25,7 +25,7 @@ const NEXT_STATUS: Record<TaskStatus, TaskStatus> = {
 @Component({
   selector: 'app-tasks',
   standalone: true,
-  imports: [FormsModule, DatePipe, RouterLink],
+  imports: [FormsModule, DatePipe, SlicePipe, RouterLink],
   templateUrl: './tasks.component.html',
   styleUrl: './tasks.component.scss',
 })
