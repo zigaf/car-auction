@@ -3,13 +3,13 @@ import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { DocumentsService, IDocument } from '../../core/services/documents.service';
 
-const STATUS_LABELS: Record<string, string> = {
+const STATUS_LABELS: Record<string, string | undefined> = {
   pending: 'На проверке',
   approved: 'Одобрен',
   rejected: 'Отклонён',
 };
 
-const TYPE_LABELS: Record<string, string> = {
+const TYPE_LABELS: Record<string, string | undefined> = {
   passport: 'Паспорт',
   driver_license: 'Вод. удостоверение',
   proof_of_address: 'Подтверждение адреса',

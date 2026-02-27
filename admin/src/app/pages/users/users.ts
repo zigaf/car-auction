@@ -4,7 +4,7 @@ import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { UserService, IUser } from '../../core/services/user.service';
 
-const STATUS_LABELS: Record<string, string> = {
+const STATUS_LABELS: Record<string, string | undefined> = {
   active: 'Активен',
   blocked: 'Заблокирован',
   pending: 'Ожидает',
