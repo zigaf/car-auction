@@ -51,7 +51,7 @@
                   <div class="text-muted" style="font-size: var(--fs-xs)">{{ doc.user.email }}</div>
                 </div>
               </td>
-              <td>{{ typeLabels[doc.type] ?? doc.type }}</td>
+              <td>{{ getTypeLabel(doc.type) }}</td>
               <td>
                 <button class="btn btn--ghost btn--sm" (click)="openFile(doc.fileUrl)">
                   <span class="material-symbols-rounded">open_in_new</span>
@@ -63,7 +63,7 @@
                   class="badge"
                   [class]="doc.status === 'approved' ? 'badge--green' : doc.status === 'rejected' ? 'badge--red' : 'badge--amber'"
                 >
-                  {{ statusLabels[doc.status] ?? doc.status }}
+                  {{ getStatusLabel(doc.status) }}
                 </span>
               </td>
               <td class="text-muted">{{ doc.createdAt | date:'dd.MM.yy HH:mm' }}</td>

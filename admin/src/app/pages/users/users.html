@@ -77,7 +77,7 @@
               </td>
               <td>
                 <span class="badge" [class]="user.status === 'blocked' ? 'badge--red' : user.status === 'active' ? 'badge--green' : 'badge--amber'">
-                  {{ statusLabels[user.status] ?? user.status }}
+                  {{ getStatusLabel(user.status) }}
                 </span>
               </td>
               <td>

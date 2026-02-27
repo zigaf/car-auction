@@ -37,6 +37,8 @@ export class DocumentsPage implements OnInit {
 
   readonly statusLabels = STATUS_LABELS;
   readonly typeLabels = TYPE_LABELS;
+  getStatusLabel(status: string): string { return STATUS_LABELS[status] ?? status; }
+  getTypeLabel(type: string): string { return TYPE_LABELS[type] ?? type; }
   readonly statuses = ['', 'pending', 'approved', 'rejected'];
 
   ngOnInit(): void {

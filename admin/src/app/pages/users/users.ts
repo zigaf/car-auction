@@ -39,6 +39,7 @@ export class UsersPage implements OnInit {
 
   readonly roleLabels = ROLE_LABELS;
   readonly statusLabels = STATUS_LABELS;
+  getStatusLabel(status: string): string { return STATUS_LABELS[status] ?? status; }
   readonly roles = ['client', 'manager', 'admin'];
   readonly statuses = ['active', 'blocked', 'pending'];
 
