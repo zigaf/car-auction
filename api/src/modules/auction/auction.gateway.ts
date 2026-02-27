@@ -72,29 +72,52 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
     }
   }
 
-  handleDisconnect(client: Socket) {
+  async handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`);
+    // Update watcher count for the room this client was watching
+    if (client.data.joinedLotId) {
+      const room = `auction:${client.data.joinedLotId}`;
+      const sockets = await this.server.in(room).fetchSockets();
+      this.server.to(room).emit('watcher_count', {
+        lotId: client.data.joinedLotId,
+        count: sockets.length,
+      });
+    }
   }
 
   @SubscribeMessage('join_auction')
-  handleJoinAuction(
+  async handleJoinAuction(
     @ConnectedSocket() client: Socket,
     @MessageBody() lotId: string,
   ) {
     const room = `auction:${lotId}`;
-    client.join(room);
+    await client.join(room);
+    client.data.joinedLotId = lotId;
     this.logger.log(`Client ${client.id} joined room ${room}`);
+
+    // Broadcast updated watcher count to all in the room
+    const sockets = await this.server.in(room).fetchSockets();
+    this.server.to(room).emit('watcher_count', { lotId, count: sockets.length });
+
     return { event: 'joined', data: { lotId, room } };
   }
 
   @SubscribeMessage('leave_auction')
-  handleLeaveAuction(
+  async handleLeaveAuction(
     @ConnectedSocket() client: Socket,
     @MessageBody() lotId: string,
   ) {
     const room = `auction:${lotId}`;
-    client.leave(room);
+    await client.leave(room);
+    if (client.data.joinedLotId === lotId) {
+      client.data.joinedLotId = null;
+    }
     this.logger.log(`Client ${client.id} left room ${room}`);
+
+    // Broadcast updated watcher count
+    const sockets = await this.server.in(room).fetchSockets();
+    this.server.to(room).emit('watcher_count', { lotId, count: sockets.length });
+
     return { event: 'left', data: { lotId, room } };
   }
 
@@ -140,16 +163,16 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
       );
 
       const room = `auction:${payload.lotId}`;
-
-      // Emit bid update to everyone in the auction room
-      // Use anonymized bidder identifier instead of raw userId
       const anonymizedBidder = `bidder-${userId.slice(-4)}`;
       const lotTitle = (result.bid as any).lot?.title || `Lot ${payload.lotId.slice(0, 8)}`;
 
+      // Emit initial manual bid to auction room
       this.server.to(room).emit('bid_update', {
         lotId: payload.lotId,
         amount: result.bid.amount,
         bidderFlag: anonymizedBidder,
+        userId,
+        isAutoBid: false,
         lotTitle,
         timestamp: result.bid.createdAt,
       });
@@ -162,11 +185,36 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
         });
       }
 
-      // Emit to global feed
+      // Emit bid_update for each auto-bid so all clients see the full price chain
+      for (const autoBid of result.autoBids) {
+        const autoBidderFlag = `bidder-${autoBid.userId.slice(-4)}`;
+        this.server.to(room).emit('bid_update', {
+          lotId: payload.lotId,
+          amount: autoBid.amount,
+          bidderFlag: autoBidderFlag,
+          userId: autoBid.userId,
+          isAutoBid: true,
+          lotTitle,
+          timestamp: autoBid.createdAt,
+        });
+        this.server.to('feed:global').emit('feed_update', {
+          lotId: payload.lotId,
+          amount: autoBid.amount,
+          bidderFlag: autoBidderFlag,
+          userId: autoBid.userId,
+          isAutoBid: true,
+          lotTitle,
+          timestamp: autoBid.createdAt,
+        });
+      }
+
+      // Emit initial bid to global feed
       this.server.to('feed:global').emit('feed_update', {
         lotId: payload.lotId,
         amount: result.bid.amount,
         bidderFlag: anonymizedBidder,
+        userId,
+        isAutoBid: false,
         lotTitle,
         timestamp: result.bid.createdAt,
       });
@@ -206,6 +254,8 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
         lotId: payload.lotId,
         amount: result.bid.amount,
         bidderFlag: anonymizedBidder,
+        userId,
+        isAutoBid: true,
         lotTitle,
         timestamp: result.bid.createdAt,
       });
@@ -217,10 +267,35 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
         });
       }
 
+      // Emit bid_update for each auto-bid in the chain
+      for (const autoBid of result.autoBids) {
+        const autoBidderFlag = `bidder-${autoBid.userId.slice(-4)}`;
+        this.server.to(room).emit('bid_update', {
+          lotId: payload.lotId,
+          amount: autoBid.amount,
+          bidderFlag: autoBidderFlag,
+          userId: autoBid.userId,
+          isAutoBid: true,
+          lotTitle,
+          timestamp: autoBid.createdAt,
+        });
+        this.server.to('feed:global').emit('feed_update', {
+          lotId: payload.lotId,
+          amount: autoBid.amount,
+          bidderFlag: autoBidderFlag,
+          userId: autoBid.userId,
+          isAutoBid: true,
+          lotTitle,
+          timestamp: autoBid.createdAt,
+        });
+      }
+
       this.server.to('feed:global').emit('feed_update', {
         lotId: payload.lotId,
         amount: result.bid.amount,
         bidderFlag: anonymizedBidder,
+        userId,
+        isAutoBid: true,
         lotTitle,
         timestamp: result.bid.createdAt,
       });
@@ -238,16 +313,15 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
    */
   emitAuctionEnded(lotId: string, winnerId: string | null, finalPrice: number) {
     const room = `auction:${lotId}`;
-    const anonymizedWinner = winnerId ? `bidder-${winnerId.slice(-4)}` : null;
     this.server.to(room).emit('auction_ended', {
       lotId,
-      winnerId: anonymizedWinner,
+      winnerId,
       finalPrice,
     });
 
     this.server.to('feed:global').emit('auction_ended', {
       lotId,
-      winnerId: anonymizedWinner,
+      winnerId,
       finalPrice,
     });
   }

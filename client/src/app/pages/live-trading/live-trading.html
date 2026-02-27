@@ -37,6 +37,20 @@
         <span class="stat__value mono">{{ stats.totalBids }}</span>
         <span class="stat__label">bids</span>
       </div>
+      @if (uniqueBidders > 0) {
+        <div class="stat">
+          <span class="material-symbols-rounded">group</span>
+          <span class="stat__value mono">{{ uniqueBidders }}</span>
+          <span class="stat__label">bidders</span>
+        </div>
+      }
+      @if (watcherCount > 0) {
+        <div class="stat">
+          <span class="material-symbols-rounded">visibility</span>
+          <span class="stat__value mono">{{ watcherCount }}</span>
+          <span class="stat__label">watching</span>
+        </div>
+      }
       <div class="stat stat--ws" [class.stat--ws-on]="wsConnected" [class.stat--ws-off]="!wsConnected">
         <span class="material-symbols-rounded">{{ wsConnected ? 'wifi' : 'wifi_off' }}</span>
         <span>{{ wsConnected ? 'Live' : 'Offline' }}</span>
@@ -72,7 +86,7 @@
               <span class="material-symbols-rounded">flag</span>
               <span>Auction ended</span>
               @if (activeLot.winnerId && isCurrentUser(activeLot.winnerId)) {
-                <span class="lot__ended-won">You won!</span>
+                <span class="lot__ended-won">🏆 You won!</span>
               }
             </div>
           }
@@ -88,7 +102,7 @@
               <span
                 class="lot__bid-value mono"
                 [class.lot__bid-value--flash]="animatingBidLotId === activeLot.id"
-              >{{ getCurrentPrice(activeLot) | number }} EUR</span>
+              >€{{ getCurrentPrice(activeLot) | number }}</span>
             </div>
           </div>
 
@@ -149,13 +163,32 @@
             </div>
           }
 
-          <!-- Quick bid buttons -->
+          <!-- Winning / Outbid status banner -->
+          @if (!auctionEnded && (isWinning || isOutbid)) {
+            <div class="lot__status-banner"
+              [class.lot__status-banner--winning]="isWinning"
+              [class.lot__status-banner--outbid]="isOutbid">
+              @if (isWinning) {
+                <span class="material-symbols-rounded">emoji_events</span>
+                <span>You're winning!</span>
+                @if (activeAutoBidMax && activeAutoBidLotId === activeLot.id) {
+                  <span class="lot__status-banner__sub">Auto-bid protecting up to €{{ activeAutoBidMax | number }}</span>
+                }
+              }
+              @if (isOutbid) {
+                <span class="material-symbols-rounded">notification_important</span>
+                <span>You've been outbid</span>
+                <span class="lot__status-banner__cta">Bid again ↑</span>
+              }
+            </div>
+          }
+
           @if (!auctionEnded) {
+            <!-- Quick bid buttons (dynamic increments) -->
             <div class="lot__quick-bids">
-              <button class="qbid" (click)="quickBid(100)">+100</button>
-              <button class="qbid" (click)="quickBid(250)">+250</button>
-              <button class="qbid" (click)="quickBid(500)">+500</button>
-              <button class="qbid" (click)="quickBid(1000)">+1 000</button>
+              @for (inc of getQuickBidIncrements(); track inc) {
+                <button class="qbid" (click)="quickBid(inc)">+{{ inc | number }}</button>
+              }
             </div>
 
             <!-- Bid input -->
@@ -164,57 +197,85 @@
                 <input
                   type="number"
                   [(ngModel)]="customBidAmount"
-                  [placeholder]="'Min. ' + getMinBid(activeLot)"
+                  [placeholder]="'Min. €' + getMinBid(activeLot)"
                   class="lot__bid-input mono"
                 >
                 <span class="lot__bid-currency mono">EUR</span>
               </div>
               <button class="lot__bid-btn" (click)="placeBid()" [disabled]="bidding || !wsConnected">
                 <span class="material-symbols-rounded">gavel</span>
-                @if (bidding) {
-                  Placing...
-                } @else {
-                  Bid
-                }
+                {{ bidding ? 'Placing...' : 'Bid' }}
               </button>
               @if (activeLot.buyNowPrice) {
                 <button class="lot__buynow-btn" (click)="buyNow()" [disabled]="!wsConnected">
                   <span class="material-symbols-rounded">bolt</span>
-                  Buy Now {{ activeLot.buyNowPrice | number }}
+                  Buy Now €{{ activeLot.buyNowPrice | number }}
                 </button>
               }
             </div>
 
             <!-- Auto-bid (pre-bid) -->
-            <div class="lot__prebid-form">
-              <div class="lot__bid-input-wrap">
-                <input
-                  type="number"
-                  [(ngModel)]="maxAutoBidAmount"
-                  [placeholder]="'Max auto-bid from ' + getMinBid(activeLot)"
-                  class="lot__bid-input mono"
-                >
-                <span class="lot__bid-currency mono">EUR</span>
+            @if (activeAutoBidMax && activeAutoBidLotId === activeLot.id) {
+              <!-- Active auto-bid indicator -->
+              <div class="lot__prebid-active">
+                <span class="material-symbols-rounded">shield</span>
+                <span>Auto-bid active · max <strong>€{{ activeAutoBidMax | number }}</strong></span>
+                <button class="lot__prebid-cancel" (click)="clearAutoBid()" title="Remove auto-bid">
+                  <span class="material-symbols-rounded">close</span>
+                </button>
               </div>
-              <button class="lot__prebid-btn" (click)="placePreBid()" [disabled]="bidding || !wsConnected">
-                <span class="material-symbols-rounded">auto_mode</span>
-                Set Max Bid
-              </button>
-            </div>
+            } @else {
+              <div class="lot__prebid-form">
+                <div class="lot__bid-input-wrap">
+                  <input
+                    type="number"
+                    [(ngModel)]="maxAutoBidAmount"
+                    [placeholder]="'Max auto-bid from €' + getMinBid(activeLot)"
+                    class="lot__bid-input mono"
+                  >
+                  <span class="lot__bid-currency mono">EUR</span>
+                </div>
+                <button class="lot__prebid-btn" (click)="placePreBid()" [disabled]="bidding || !wsConnected">
+                  <span class="material-symbols-rounded">auto_mode</span>
+                  Set Max Bid
+                </button>
+              </div>
+            }
           }
 
           <!-- Bid history -->
           <div class="lot__history">
+            <div class="lot__history-header">
+              <span class="lot__history-title">Bid History</span>
+              @if (uniqueBidders > 0) {
+                <span class="lot__history-meta">{{ stats.totalBids }} bids · {{ uniqueBidders }} bidders</span>
+              }
+            </div>
             @if (bidHistory.length === 0) {
               <div class="lot__history-empty">No bids yet. Be the first!</div>
             }
-            @for (bid of bidHistory; track bid.id) {
-              <div class="lot__history-item">
-                <span class="lot__history-flag">
-                  <span class="material-symbols-rounded">person</span>
+            @for (bid of bidHistory; track bid.id; let i = $index) {
+              <div class="lot__history-item"
+                [class.lot__history-item--mine]="isMyBid(bid)"
+                [class.lot__history-item--top]="i === 0">
+                <span class="lot__history-icon">
+                  @if (bid.isPreBid) {
+                    <span class="material-symbols-rounded lot__history-auto">bolt</span>
+                  } @else {
+                    <span class="material-symbols-rounded">person</span>
+                  }
                 </span>
-                <span class="lot__history-bidder">{{ bid.bidderFlag || bid.user?.firstName || 'Bidder' }}</span>
-                <span class="lot__history-amount mono">{{ bid.amount | number }} EUR</span>
+                <span class="lot__history-bidder">
+                  @if (isMyBid(bid)) {
+                    <strong class="lot__history-you">You</strong>
+                  } @else {
+                    {{ bid.bidderFlag || 'Bidder' }}
+                  }
+                  @if (bid.isPreBid) {
+                    <span class="lot__history-auto-label">auto</span>
+                  }
+                </span>
+                <span class="lot__history-amount mono">€{{ bid.amount | number }}</span>
                 <span class="lot__history-time">{{ getRelativeTime(bid.createdAt) }}</span>
               </div>
             }
@@ -230,7 +291,10 @@
         </div>
         <div class="live__list-scroll">
           @for (item of auctionList; track item.id) {
-            <div class="auction-row" [class.auction-row--active]="activeLot?.id === item.id" (click)="selectLot(item)">
+            <div class="auction-row"
+              [class.auction-row--active]="activeLot?.id === item.id"
+              [class.auction-row--leading]="isLeadingOnLot(item)"
+              (click)="selectLot(item)">
               <div class="auction-row__thumb">
                 @if (getLotImage(item)) {
                   <img [src]="getLotImage(item)" [alt]="item.title" class="auction-row__thumb-img">
@@ -241,12 +305,15 @@
               <div class="auction-row__info">
                 <span class="auction-row__name">{{ item.title }}</span>
                 <span class="auction-row__meta">{{ item.year || '' }} · {{ (item.mileage | number) || '--' }} km · {{ item.fuelType || '' }}</span>
+                @if (isLeadingOnLot(item)) {
+                  <span class="auction-row__leading-badge">Leading</span>
+                }
               </div>
               <div class="auction-row__right">
                 <span
                   class="auction-row__price mono"
                   [class.auction-row__price--flash]="animatingBidLotId === item.id"
-                >{{ getCurrentPrice(item) | number }}</span>
+                >€{{ getCurrentPrice(item) | number }}</span>
                 <span class="auction-row__timer mono" [class]="getTimerClass(item.auctionEndAt)">{{ getTimeLeft(item.auctionEndAt) }}</span>
                 <div class="auction-row__bottom">
                   @if (item.saleCountry) {
@@ -274,9 +341,14 @@
           }
           @for (entry of liveFeed; track $index) {
             <div class="feed-item" [class.feed-item--new]="$index === 0">
-              <span class="feed-item__bidder">{{ entry.bidderFlag }}</span>
+              <div class="feed-item__left">
+                <span class="feed-item__bidder">{{ entry.bidderFlag }}</span>
+                @if (entry.isAutoBid) {
+                  <span class="feed-item__auto material-symbols-rounded" title="Auto-bid">bolt</span>
+                }
+              </div>
               <span class="feed-item__car">{{ entry.lotTitle || getLotTitle(entry.lotId) }}</span>
-              <span class="feed-item__increment mono accent-text">+{{ entry.amount | number }}</span>
+              <span class="feed-item__amount mono">€{{ entry.amount | number }}</span>
               <span class="feed-item__time">{{ getRelativeTime(entry.timestamp) }}</span>
             </div>
           }

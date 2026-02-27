@@ -7,7 +7,7 @@ import { AuctionService } from '../../core/services/auction.service';
 import { WebsocketService } from '../../core/services/websocket.service';
 import { StateService } from '../../core/services/state.service';
 import { ILot } from '../../models/lot.model';
-import { IBid, IBidUpdate, IFeedUpdate } from '../../models/auction.model';
+import { IBid, IBidUpdate, IFeedUpdate, IWatcherCount } from '../../models/auction.model';
 
 @Component({
   selector: 'app-live-trading',
@@ -21,6 +21,9 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
   private readonly lotTitleMap = new Map<string, string>();
   private bidFlashTimer: ReturnType<typeof setTimeout> | null = null;
+  private bidTimeoutTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Tracks whether the last bid attempt was a pre-bid (for error cleanup) */
+  private lastBidWasPreBid = false;
 
   customBidAmount: number | null = null;
   maxAutoBidAmount: number | null = null;
@@ -41,14 +44,30 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
   wsConnected = false;
   animatingBidLotId: string | null = null;
 
+  // Bidding status
+  /** Current authenticated user's ID (extracted from state) */
+  currentUserId: string | null = null;
+  /** True when the last bid_update on the active lot was placed by this user */
+  isWinning = false;
+  /** True when another user outbid the current user on the active lot */
+  isOutbid = false;
+  /** Max amount of the user's active auto-bid on the active lot */
+  activeAutoBidMax: number | null = null;
+  /** LotId for which the active auto-bid was set */
+  activeAutoBidLotId: string | null = null;
+
+  // Social stats
+  watcherCount = 0;
+  uniqueBidders = 0;
+
+  // Timer tick
+  now = Date.now();
+
   // Stats
   stats = {
     activeAuctions: 0,
     totalBids: 0,
   };
-
-  // Timer tick
-  now = Date.now();
 
   constructor(
     private readonly auctionService: AuctionService,
@@ -58,6 +77,7 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.currentUserId = this.stateService.snapshot.user?.id ?? null;
     this.loadActiveLots();
     this.connectWebSocket();
     this.startTimerTick();
@@ -68,9 +88,8 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
       this.wsService.leaveAuction(this.activeLot.id);
     }
     this.wsService.leaveGlobalFeed();
-    if (this.bidFlashTimer) {
-      clearTimeout(this.bidFlashTimer);
-    }
+    if (this.bidFlashTimer) clearTimeout(this.bidFlashTimer);
+    if (this.bidTimeoutTimer) clearTimeout(this.bidTimeoutTimer);
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -84,11 +103,7 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
           this.auctionList = lots;
           this.stats.activeAuctions = lots.length;
           this.loading = false;
-
-          // Build lot title map for Live Feed labels
           lots.forEach(lot => this.lotTitleMap.set(lot.id, lot.title));
-
-          // Auto-select first lot
           if (lots.length > 0 && !this.activeLot) {
             this.selectLot(lots[0]);
           }
@@ -104,7 +119,6 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
   private connectWebSocket(): void {
     this.wsService.connect();
 
-    // Track WS connection status
     this.wsService.connected$
       .pipe(takeUntil(this.destroy$))
       .subscribe((connected) => {
@@ -113,6 +127,16 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
           this.wsService.joinAuction(this.activeLot.id);
           this.wsService.joinGlobalFeed();
         }
+        // Reset stuck bidding flag on reconnect (ACK was lost)
+        if (connected && this.bidding) {
+          this.bidding = false;
+          if (this.bidTimeoutTimer) {
+            clearTimeout(this.bidTimeoutTimer);
+            this.bidTimeoutTimer = null;
+          }
+          this.bidError = 'Connection interrupted. Please try again.';
+          setTimeout(() => { this.bidError = null; this.cdr.markForCheck(); }, 4000);
+        }
         this.cdr.markForCheck();
       });
 
@@ -120,7 +144,6 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
     this.wsService.bidUpdate$
       .pipe(takeUntil(this.destroy$))
       .subscribe((update: IBidUpdate) => {
-        // Cache lot title from WS event if available
         if (update.lotTitle) {
           this.lotTitleMap.set(update.lotId, update.lotTitle);
         }
@@ -133,9 +156,7 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((ext) => {
         const lot = this.auctionList.find(l => l.id === ext.lotId);
-        if (lot) {
-          lot.auctionEndAt = ext.newEndAt;
-        }
+        if (lot) lot.auctionEndAt = ext.newEndAt;
         if (this.activeLot?.id === ext.lotId) {
           this.activeLot = { ...this.activeLot, auctionEndAt: ext.newEndAt };
         }
@@ -148,9 +169,17 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
       .subscribe((ended) => {
         if (this.activeLot?.id === ended.lotId) {
           this.auctionEnded = true;
-          this.activeLot = { ...this.activeLot, currentPrice: ended.finalPrice, winnerId: ended.winnerId };
+          this.activeLot = {
+            ...this.activeLot,
+            currentPrice: ended.finalPrice,
+            winnerId: ended.winnerId,
+          };
+          // Clear auto-bid state when auction ends
+          if (this.activeAutoBidLotId === ended.lotId) {
+            this.activeAutoBidMax = null;
+            this.activeAutoBidLotId = null;
+          }
         }
-        // Remove from active list
         this.auctionList = this.auctionList.filter(l => l.id !== ended.lotId);
         this.stats.activeAuctions = this.auctionList.length;
         this.cdr.markForCheck();
@@ -160,7 +189,6 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
     this.wsService.feedUpdate$
       .pipe(takeUntil(this.destroy$))
       .subscribe((feed: IFeedUpdate) => {
-        // Cache lot title from feed event if available
         if (feed.lotTitle) {
           this.lotTitleMap.set(feed.lotId, feed.lotTitle);
         }
@@ -172,6 +200,11 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
     this.wsService.bidPlaced$
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
+        if (this.bidTimeoutTimer) {
+          clearTimeout(this.bidTimeoutTimer);
+          this.bidTimeoutTimer = null;
+        }
+        this.lastBidWasPreBid = false;
         this.bidding = false;
         this.bidSuccess = true;
         this.bidError = null;
@@ -187,6 +220,16 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
     this.wsService.bidError$
       .pipe(takeUntil(this.destroy$))
       .subscribe((err) => {
+        if (this.bidTimeoutTimer) {
+          clearTimeout(this.bidTimeoutTimer);
+          this.bidTimeoutTimer = null;
+        }
+        // If a pre-bid failed, clear the optimistically-set auto-bid indicator
+        if (this.lastBidWasPreBid) {
+          this.activeAutoBidMax = null;
+          this.activeAutoBidLotId = null;
+        }
+        this.lastBidWasPreBid = false;
         this.bidding = false;
         this.bidError = err.message;
         setTimeout(() => {
@@ -195,10 +238,20 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
         }, 5000);
         this.cdr.markForCheck();
       });
+
+    // Watcher count updates
+    this.wsService.watcherCount$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data: IWatcherCount) => {
+        if (data.lotId === this.activeLot?.id) {
+          this.watcherCount = data.count;
+          this.cdr.markForCheck();
+        }
+      });
   }
 
   private handleBidUpdate(update: IBidUpdate): void {
-    // Update the lot in the list
+    // Update price in the auction list
     const lot = this.auctionList.find(l => l.id === update.lotId);
     if (lot) {
       lot.currentPrice = update.amount;
@@ -207,6 +260,21 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
     // Update active lot
     if (this.activeLot?.id === update.lotId) {
       this.activeLot = { ...this.activeLot, currentPrice: update.amount };
+
+      // Determine winning/outbid status
+      if (this.currentUserId) {
+        const isMyBid = update.userId === this.currentUserId;
+        this.isWinning = isMyBid;
+        this.isOutbid = !isMyBid;
+
+        // If someone outbid beyond our auto-bid max, the auto-bid is exhausted
+        if (!isMyBid && this.activeAutoBidLotId === update.lotId && this.activeAutoBidMax !== null) {
+          if (update.amount > this.activeAutoBidMax) {
+            this.activeAutoBidMax = null;
+            this.activeAutoBidLotId = null;
+          }
+        }
+      }
 
       // Trigger price flash animation
       this.animatingBidLotId = update.lotId;
@@ -228,6 +296,7 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
         next: (response) => {
           this.bidHistory = response.data;
           this.stats.totalBids = response.total;
+          this.uniqueBidders = response.uniqueBidders ?? 0;
           this.cdr.markForCheck();
         },
       });
@@ -243,7 +312,6 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
   }
 
   selectLot(lot: ILot): void {
-    // Leave previous auction room
     if (this.activeLot && this.activeLot.id !== lot.id) {
       this.wsService.leaveAuction(this.activeLot.id);
     }
@@ -253,15 +321,32 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
     this.bidError = null;
     this.bidSuccess = false;
     this.customBidAmount = null;
+    this.watcherCount = 0;
 
-    // Cache lot title
+    // Reset winning/outbid status for the new lot
+    this.isWinning = false;
+    this.isOutbid = false;
+
+    // Keep auto-bid indicator only if it's for this lot
+    if (this.activeAutoBidLotId !== lot.id) {
+      this.activeAutoBidMax = null;
+      this.activeAutoBidLotId = null;
+    }
+
     this.lotTitleMap.set(lot.id, lot.title);
-
-    // Join new auction room
     this.wsService.joinAuction(lot.id);
-
-    // Load bid history for selected lot
     this.loadBidHistory(lot.id);
+  }
+
+  /** Returns dynamic quick-bid increments based on current lot price */
+  getQuickBidIncrements(): number[] {
+    if (!this.activeLot) return [100, 250, 500, 1000];
+    const price = this.getCurrentPrice(this.activeLot);
+    if (price < 1000)  return [50, 100, 200, 500];
+    if (price < 5000)  return [100, 250, 500, 1000];
+    if (price < 20000) return [250, 500, 1000, 2500];
+    if (price < 50000) return [500, 1000, 2500, 5000];
+    return [1000, 2500, 5000, 10000];
   }
 
   quickBid(increment: number): void {
@@ -275,14 +360,24 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
 
     const minBid = this.getMinBid(this.activeLot);
     if (this.customBidAmount < minBid) {
-      this.bidError = `Minimum bid is ${minBid} EUR`;
+      this.bidError = `Minimum bid is €${minBid.toLocaleString()}`;
       return;
     }
 
+    this.lastBidWasPreBid = false;
     this.bidding = true;
     this.bidError = null;
 
-    // Use WebSocket for real-time bid placement
+    if (this.bidTimeoutTimer) clearTimeout(this.bidTimeoutTimer);
+    this.bidTimeoutTimer = setTimeout(() => {
+      if (this.bidding) {
+        this.bidding = false;
+        this.bidError = 'No response from server. Please try again.';
+        setTimeout(() => { this.bidError = null; this.cdr.markForCheck(); }, 4000);
+        this.cdr.markForCheck();
+      }
+    }, 15000);
+
     this.wsService.placeBid(this.activeLot.id, this.customBidAmount);
   }
 
@@ -291,21 +386,42 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
 
     const minBid = this.getMinBid(this.activeLot);
     if (this.maxAutoBidAmount < minBid) {
-      this.bidError = `Max auto-bid must be at least ${minBid} EUR`;
+      this.bidError = `Max auto-bid must be at least €${minBid.toLocaleString()}`;
       return;
     }
 
+    this.lastBidWasPreBid = true;
     this.bidding = true;
     this.bidError = null;
+
+    // Store optimistically; cleared on error via lastBidWasPreBid flag
+    this.activeAutoBidMax = this.maxAutoBidAmount;
+    this.activeAutoBidLotId = this.activeLot.id;
+
+    if (this.bidTimeoutTimer) clearTimeout(this.bidTimeoutTimer);
+    this.bidTimeoutTimer = setTimeout(() => {
+      if (this.bidding) {
+        this.bidding = false;
+        this.activeAutoBidMax = null;
+        this.activeAutoBidLotId = null;
+        this.bidError = 'No response from server. Please try again.';
+        setTimeout(() => { this.bidError = null; this.cdr.markForCheck(); }, 4000);
+        this.cdr.markForCheck();
+      }
+    }, 15000);
 
     this.wsService.placePreBid(this.activeLot.id, this.maxAutoBidAmount);
     this.maxAutoBidAmount = null;
   }
 
+  clearAutoBid(): void {
+    this.activeAutoBidMax = null;
+    this.activeAutoBidLotId = null;
+  }
+
   buyNow(): void {
     if (!this.activeLot || !this.activeLot.buyNowPrice) return;
-
-    if (!confirm(`Buy now for ${this.activeLot.buyNowPrice} EUR?`)) return;
+    if (!confirm(`Buy now for €${Number(this.activeLot.buyNowPrice).toLocaleString()}?`)) return;
 
     this.auctionService.buyNow(this.activeLot.id)
       .pipe(takeUntil(this.destroy$))
@@ -321,7 +437,18 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
       });
   }
 
-  // Helper methods
+  // ─── Template helpers ────────────────────────────────────────────────────
+
+  /** Returns true when this bid was placed by the currently logged-in user */
+  isMyBid(bid: IBid): boolean {
+    return !!this.currentUserId && bid.userId === this.currentUserId;
+  }
+
+  /** Returns true when the current user is the top bidder on the given lot */
+  isLeadingOnLot(lot: ILot): boolean {
+    return lot.id === this.activeLot?.id && this.isWinning;
+  }
+
   getCurrentPrice(lot: ILot): number {
     return lot.currentPrice
       ? parseFloat(String(lot.currentPrice))
@@ -358,9 +485,7 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
   }
 
   getLotImage(lot: ILot): string | null {
-    if (lot.images && lot.images.length > 0) {
-      return lot.images[0].url;
-    }
+    if (lot.images && lot.images.length > 0) return lot.images[0].url;
     return lot.sourceImageUrl || null;
   }
 
@@ -376,7 +501,6 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
   }
 
   isCurrentUser(userId: string): boolean {
-    const user = this.stateService.snapshot.user;
-    return user?.id === userId;
+    return this.currentUserId === userId;
   }
 }

@@ -27,6 +27,7 @@ const ANTI_SNIPE_EXTENSION_MS = 2 * 60 * 1000; // 2 minutes
 
 export interface PlaceBidResult {
   bid: Bid;
+  autoBids: Bid[];
   auctionExtended: boolean;
   newEndAt: Date | null;
 }
@@ -61,7 +62,7 @@ export class AuctionService {
       where: { idempotencyKey },
     });
     if (existingBid) {
-      return { bid: existingBid, auctionExtended: false, newEndAt: null };
+      return { bid: existingBid, autoBids: [], auctionExtended: false, newEndAt: null };
     }
 
     let outbidUserId: string | undefined;
@@ -161,7 +162,7 @@ export class AuctionService {
         where: { idempotencyKey },
       });
       if (duplicateBid) {
-        return { bid: duplicateBid, auctionExtended: false, newEndAt: null };
+        return { bid: duplicateBid, autoBids: [], auctionExtended: false, newEndAt: null };
       }
 
       // Create bid record
@@ -226,6 +227,9 @@ export class AuctionService {
 
       await manager.save(Lot, lot);
 
+      // Trigger auto-bids from any existing pre-bids that can counter this bid
+      const autoBids = await this.resolveAutoBids(manager, lot, savedBid.id, userId);
+
       // Reload bid with lot relation only (no user relation to avoid data exposure)
       const fullBid = await manager.findOne(Bid, {
         where: { id: savedBid.id },
@@ -234,6 +238,7 @@ export class AuctionService {
 
       return {
         bid: fullBid || savedBid,
+        autoBids,
         auctionExtended,
         newEndAt,
       };
@@ -448,12 +453,14 @@ export class AuctionService {
     data: Array<{
       id: string;
       lotId: string;
+      userId: string;
       amount: number;
       isPreBid: boolean;
       createdAt: Date;
       bidderFlag: string;
     }>;
     total: number;
+    uniqueBidders: number;
     page: number;
     limit: number;
   }> {
@@ -465,22 +472,31 @@ export class AuctionService {
 
     const [bids, total] = await this.bidRepository.findAndCount({
       where: { lotId },
-      order: { amount: 'DESC' },
+      order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
     });
 
-    // Map bids to safe output without user relations
+    // Count unique bidders for this lot
+    const uniqueBiddersResult = await this.bidRepository
+      .createQueryBuilder('bid')
+      .select('COUNT(DISTINCT bid.user_id)', 'count')
+      .where('bid.lot_id = :lotId', { lotId })
+      .getRawOne();
+    const uniqueBidders = parseInt(uniqueBiddersResult?.count || '0', 10);
+
+    // Map bids — include userId so the client can identify its own bids
     const data = bids.map((bid) => ({
       id: bid.id,
       lotId: bid.lotId,
+      userId: bid.userId,
       amount: bid.amount,
       isPreBid: bid.isPreBid,
       createdAt: bid.createdAt,
       bidderFlag: `bidder-${bid.userId.slice(-4)}`,
     }));
 
-    return { data, total, page, limit };
+    return { data, total, uniqueBidders, page, limit };
   }
 
   /**
@@ -535,7 +551,7 @@ export class AuctionService {
       where: { idempotencyKey },
     });
     if (existingBid) {
-      return { bid: existingBid, auctionExtended: false, newEndAt: null };
+      return { bid: existingBid, autoBids: [], auctionExtended: false, newEndAt: null };
     }
 
     let preOutbidUserId: string | undefined;
@@ -615,7 +631,7 @@ export class AuctionService {
         where: { idempotencyKey },
       });
       if (duplicateBid) {
-        return { bid: duplicateBid, auctionExtended: false, newEndAt: null };
+        return { bid: duplicateBid, autoBids: [], auctionExtended: false, newEndAt: null };
       }
 
       // Initial bid is at the minimum amount
@@ -679,7 +695,7 @@ export class AuctionService {
       await manager.save(Lot, lot);
 
       // Resolve auto-bids (in case another pre-bid exists)
-      await this.resolveAutoBids(manager, lot, savedBid.id, userId);
+      const autoBids = await this.resolveAutoBids(manager, lot, savedBid.id, userId);
 
       const fullBid = await manager.findOne(Bid, {
         where: { id: savedBid.id },
@@ -688,6 +704,7 @@ export class AuctionService {
 
       return {
         bid: fullBid || savedBid,
+        autoBids,
         auctionExtended,
         newEndAt,
       };
@@ -719,8 +736,8 @@ export class AuctionService {
     excludeBidId: string,
     currentBidderId: string,
     depth: number = 0,
-  ): Promise<void> {
-    if (depth >= 50) return; // Safety limit
+  ): Promise<Bid[]> {
+    if (depth >= 50) return [];
 
     const currentPrice = parseFloat(String(lot.currentPrice)) || 0;
     const bidStep = parseFloat(String(lot.bidStep)) || 100;
@@ -739,7 +756,7 @@ export class AuctionService {
       .addOrderBy('bid.created_at', 'ASC')
       .getMany();
 
-    if (preBids.length === 0) return;
+    if (preBids.length === 0) return [];
 
     const topPreBid = preBids[0];
     const topMaxBid = parseFloat(String(topPreBid.maxAutoBid));
@@ -802,12 +819,13 @@ export class AuctionService {
     await manager.save(Lot, lot);
 
     // Recurse in case the outbid user also has a pre-bid
-    await this.resolveAutoBids(
+    const nestedAutoBids = await this.resolveAutoBids(
       manager,
       lot,
       savedAutoBid.id,
       topPreBid.userId,
       depth + 1,
     );
+    return [savedAutoBid, ...nestedAutoBids];
   }
 }

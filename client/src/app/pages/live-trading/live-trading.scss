@@ -814,7 +814,190 @@
 .feed-item__increment { font-size: $fs-xs; font-weight: $fw-semibold; white-space: nowrap; }
 .feed-item__time { font-size: $fs-xs; color: $text-tertiary; white-space: nowrap; }
 
-// --- Mobile tabs ---
+// ─── Winning / Outbid status banner ────────────────────────────────────────
+.lot__status-banner {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-md $space-base;
+  border-radius: $radius-base;
+  font-weight: $fw-semibold;
+  font-size: $fs-sm;
+  margin-bottom: $space-base;
+  animation: slide-in 0.3s ease-out;
+
+  .material-symbols-rounded { font-size: 20px; flex-shrink: 0; }
+
+  &--winning {
+    background: linear-gradient(135deg, rgba($status-green, 0.15), rgba($status-green, 0.08));
+    border: 1px solid rgba($status-green, 0.35);
+    color: $status-green;
+  }
+
+  &--outbid {
+    background: linear-gradient(135deg, rgba($status-red, 0.15), rgba($status-red, 0.08));
+    border: 1px solid rgba($status-red, 0.35);
+    color: $status-red;
+  }
+}
+
+.lot__status-banner__sub {
+  margin-left: auto;
+  font-size: $fs-xs;
+  font-weight: $fw-regular;
+  opacity: 0.85;
+}
+
+.lot__status-banner__cta {
+  margin-left: auto;
+  font-size: $fs-xs;
+  opacity: 0.8;
+  font-weight: $fw-regular;
+}
+
+// ─── Active auto-bid indicator ──────────────────────────────────────────────
+.lot__prebid-active {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-sm $space-md;
+  background: rgba($accent, 0.08);
+  border: 1px solid rgba($accent, 0.25);
+  border-radius: $radius-base;
+  margin-bottom: $space-base;
+  font-size: $fs-sm;
+  color: $accent;
+
+  .material-symbols-rounded { font-size: 18px; flex-shrink: 0; }
+
+  strong { font-weight: $fw-bold; }
+}
+
+.lot__prebid-cancel {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: $text-tertiary;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: $radius-sm;
+  transition: color $transition-fast;
+
+  .material-symbols-rounded { font-size: 16px; }
+
+  &:hover { color: $status-red; }
+}
+
+// ─── Bid history additions ───────────────────────────────────────────────────
+.lot__history-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: $space-sm 0;
+  margin-bottom: $space-xs;
+}
+
+.lot__history-title {
+  font-size: $fs-sm;
+  font-weight: $fw-semibold;
+  color: $text-primary;
+}
+
+.lot__history-meta {
+  font-size: $fs-xs;
+  color: $text-tertiary;
+}
+
+.lot__history-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .material-symbols-rounded {
+    font-size: 16px;
+    color: $text-tertiary;
+  }
+}
+
+.lot__history-auto {
+  color: $accent !important;
+}
+
+.lot__history-auto-label {
+  display: inline-block;
+  font-size: 10px;
+  background: rgba($accent, 0.12);
+  color: $accent;
+  padding: 1px 4px;
+  border-radius: $radius-chip;
+  margin-left: 4px;
+  vertical-align: middle;
+  font-weight: $fw-semibold;
+  line-height: 1.4;
+}
+
+.lot__history-you {
+  color: $accent;
+  font-weight: $fw-bold;
+}
+
+// Own bid row highlight
+.lot__history-item--mine {
+  background: rgba($accent, 0.06);
+  border-radius: $radius-sm;
+  padding-left: $space-xs;
+  padding-right: $space-xs;
+  margin-left: -$space-xs;
+  margin-right: -$space-xs;
+
+  .lot__history-amount { color: $accent; font-weight: $fw-bold; }
+}
+
+// Current top bid
+.lot__history-item--top {
+  .lot__history-amount { color: $status-green; }
+}
+
+// ─── Auction list leading badge ───────────────────────────────────────────────
+.auction-row--leading {
+  border-left-color: $status-green !important;
+}
+
+.auction-row__leading-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: $fw-bold;
+  color: $status-green;
+  background: rgba($status-green, 0.12);
+  padding: 1px $space-xs;
+  border-radius: $radius-chip;
+  margin-top: 2px;
+  letter-spacing: 0.02em;
+}
+
+// ─── Live feed additions ─────────────────────────────────────────────────────
+.feed-item__left {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+}
+
+.feed-item__auto {
+  font-size: 13px !important;
+  color: $accent;
+}
+
+.feed-item__amount {
+  font-size: $fs-xs;
+  font-weight: $fw-semibold;
+  color: $status-green;
+  white-space: nowrap;
+}
+
+// ─── Mobile tabs ---
 .live__mobile-tabs {
   display: none;
   border-top: 1px solid $border-color;

@@ -8,6 +8,7 @@ import {
   IAuctionEnded,
   IFeedUpdate,
   IPlaceBidResult,
+  IWatcherCount,
 } from '../../models/auction.model';
 
 @Injectable({ providedIn: 'root' })
@@ -21,6 +22,7 @@ export class WebsocketService implements OnDestroy {
   private readonly _feedUpdate$ = new Subject<IFeedUpdate>();
   private readonly _bidPlaced$ = new Subject<IPlaceBidResult>();
   private readonly _bidError$ = new Subject<{ message: string }>();
+  private readonly _watcherCount$ = new Subject<IWatcherCount>();
 
   readonly connected$: Observable<boolean> = this._connected$.asObservable();
   readonly bidUpdate$: Observable<IBidUpdate> = this._bidUpdate$.asObservable();
@@ -29,6 +31,7 @@ export class WebsocketService implements OnDestroy {
   readonly feedUpdate$: Observable<IFeedUpdate> = this._feedUpdate$.asObservable();
   readonly bidPlaced$: Observable<IPlaceBidResult> = this._bidPlaced$.asObservable();
   readonly bidError$: Observable<{ message: string }> = this._bidError$.asObservable();
+  readonly watcherCount$: Observable<IWatcherCount> = this._watcherCount$.asObservable();
 
   connect(): void {
     if (typeof window === 'undefined') return;
@@ -72,6 +75,10 @@ export class WebsocketService implements OnDestroy {
 
       this.socket.on('feed_update', (data: IFeedUpdate) => {
         this._feedUpdate$.next(data);
+      });
+
+      this.socket.on('watcher_count', (data: IWatcherCount) => {
+        this._watcherCount$.next(data);
       });
 
       this.socket.on('connect_error', (err: Error) => {
@@ -165,5 +172,6 @@ export class WebsocketService implements OnDestroy {
     this._bidPlaced$.complete();
     this._bidError$.complete();
     this._connected$.complete();
+    this._watcherCount$.complete();
   }
 }

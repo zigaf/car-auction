@@ -116,6 +116,8 @@ export interface IPaginatedResponse<T> {
   total: number;
   page: number;
   limit: number;
+  /** Present in bid-related responses: number of distinct bidders */
+  uniqueBidders?: number;
 }
 
 export interface ILotStats {
