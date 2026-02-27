@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { DecimalPipe, DatePipe } from '@angular/common';
 import { UserService, IUser } from '../../../core/services/user.service';
 import { BalanceService, IBalanceTransaction, ITransactionsResponse } from '../../../core/services/balance.service';
 import { UserTasksComponent } from '../../../components/user-tasks/user-tasks.component';
@@ -11,7 +11,7 @@ const RESTRICTED_COUNTRY_FLAGS = ['🇷🇺', '🇧🇾'];
 @Component({
   selector: 'app-user-detail',
   standalone: true,
-  imports: [FormsModule, DatePipe, CurrencyPipe, UserTasksComponent],
+  imports: [FormsModule, DatePipe, DecimalPipe, UserTasksComponent],
   templateUrl: './user-detail.component.html',
   styleUrl: './user-detail.component.scss',
 })

@@ -1,12 +1,13 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DecimalPipe } from '@angular/common';
 import { LotService, ILot } from '../../core/services/lot.service';
 import { BotSettingsComponent } from '../../components/bot-settings/bot-settings.component';
 
 @Component({
   selector: 'app-schedule',
   standalone: true,
-  imports: [FormsModule, BotSettingsComponent],
+  imports: [FormsModule, DecimalPipe, BotSettingsComponent],
   templateUrl: './schedule.component.html',
   styleUrl: './schedule.component.scss',
 })
