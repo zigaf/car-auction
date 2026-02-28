@@ -169,3 +169,117 @@
   color: var(--red);
   font-size: var(--fs-sm);
 }
+
+// ─── Calendar ──────────────────────────────────────────────────────────────
+
+.calendar-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  &__title {
+    font-size: var(--fs-base);
+    font-weight: 600;
+    min-width: 180px;
+    text-align: center;
+  }
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.calendar-header-cell {
+  padding: 8px 4px;
+  text-align: center;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--surface-hover);
+  border-bottom: 1px solid var(--border);
+}
+
+.calendar-cell {
+  min-height: 90px;
+  padding: 6px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: var(--surface);
+
+  &:nth-child(7n) { border-right: none; }
+
+  &--empty { background: var(--surface-hover); }
+
+  &--today &__day {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__day {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.cal-lot {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 5px;
+  border-radius: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: default;
+
+  &--upcoming {
+    background: rgba(99, 102, 241, 0.12);
+    color: var(--accent);
+  }
+
+  &--current {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--green);
+  }
+
+  &--past {
+    background: var(--surface-hover);
+    color: var(--text-secondary);
+  }
+}
+
+.calendar-legend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  .cal-lot {
+    cursor: default;
+    font-size: var(--fs-xs);
+  }
+}

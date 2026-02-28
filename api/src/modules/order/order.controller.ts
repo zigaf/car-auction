@@ -32,7 +32,7 @@ export class OrderController {
     const limit = Math.min(Math.max(parseInt(query.limit || '20', 10), 1), 100);
 
     if (user.role === Role.MANAGER || user.role === Role.ADMIN) {
-      return this.orderService.getAllOrders({ page, limit });
+      return this.orderService.getAllOrders({ page, limit, status: query.status });
     }
 
     return this.orderService.getMyOrders(user.id, { page, limit });

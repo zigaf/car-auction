@@ -19,6 +19,10 @@
       <span class="material-symbols-rounded">history</span>
       Прошедшие
     </button>
+    <button class="tab-btn" [class.tab-btn--active]="activeTab === 'calendar'" (click)="setTab('calendar')">
+      <span class="material-symbols-rounded">calendar_month</span>
+      Календарь
+    </button>
     <button class="tab-btn" [class.tab-btn--active]="activeTab === 'plan'" (click)="setTab('plan')">
       <span class="material-symbols-rounded">add_circle</span>
       Запланировать
@@ -26,7 +30,7 @@
   </div>
 
   <!-- Loading -->
-  @if (listsLoading && activeTab !== 'plan') {
+  @if (listsLoading && activeTab !== 'plan' && activeTab !== 'calendar') {
     <div class="state-loading">
       <span class="material-symbols-rounded spin">progress_activity</span>
     </div>
@@ -144,6 +148,53 @@
         </table>
       </div>
     }
+  }
+
+  <!-- ── Calendar ── -->
+  @if (activeTab === 'calendar') {
+    <div class="calendar-wrap">
+      <div class="calendar-nav">
+        <button class="btn btn--secondary btn--sm" (click)="prevMonth()">
+          <span class="material-symbols-rounded">chevron_left</span>
+        </button>
+        <span class="calendar-nav__title">{{ monthNames[calendarMonth] }} {{ calendarYear }}</span>
+        <button class="btn btn--secondary btn--sm" (click)="nextMonth()">
+          <span class="material-symbols-rounded">chevron_right</span>
+        </button>
+      </div>
+
+      @if (listsLoading) {
+        <div class="state-loading">
+          <span class="material-symbols-rounded spin">progress_activity</span>
+        </div>
+      } @else {
+        <div class="calendar-grid">
+          @for (day of weekDays; track day) {
+            <div class="calendar-header-cell">{{ day }}</div>
+          }
+          @for (row of calendarCells; track $index) {
+            @for (cell of row; track $index) {
+              <div class="calendar-cell" [class.calendar-cell--today]="cell.isToday" [class.calendar-cell--empty]="!cell.date">
+                @if (cell.date) {
+                  <span class="calendar-cell__day">{{ cell.date.getDate() }}</span>
+                  @for (lot of cell.lots; track lot.id) {
+                    <div [class]="'cal-lot ' + lotStatusClass(lot)" [title]="lot.brand + ' ' + lot.model + ' ' + lot.year">
+                      {{ lot.brand }} {{ lot.model }}
+                    </div>
+                  }
+                }
+              </div>
+            }
+          }
+        </div>
+
+        <div class="calendar-legend">
+          <span class="cal-lot cal-lot--upcoming">Предстоящие</span>
+          <span class="cal-lot cal-lot--current">Текущие торги</span>
+          <span class="cal-lot cal-lot--past">Завершённые</span>
+        </div>
+      }
+    </div>
   }
 
   <!-- ── Plan ── -->

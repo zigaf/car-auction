@@ -94,7 +94,9 @@ export class OrdersComponent implements OnInit, OnDestroy {
 
   getLotTitle(order: IOrder): string {
     if (order.lot) {
-      return `${order.lot.brand} ${order.lot.model} ${order.lot.year}`;
+      return [order.lot.brand, order.lot.model, order.lot.year]
+        .filter(v => v != null && v !== '')
+        .join(' ');
     }
     return 'Лот не найден';
   }

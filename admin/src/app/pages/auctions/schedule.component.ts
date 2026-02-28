@@ -4,7 +4,13 @@ import { DecimalPipe, DatePipe } from '@angular/common';
 import { LotService, ILot } from '../../core/services/lot.service';
 import { BotSettingsComponent } from '../../components/bot-settings/bot-settings.component';
 
-type Tab = 'upcoming' | 'current' | 'past' | 'plan';
+type Tab = 'upcoming' | 'current' | 'past' | 'plan' | 'calendar';
+
+interface CalendarCell {
+  date: Date | null;
+  lots: ILot[];
+  isToday: boolean;
+}
 
 @Component({
   selector: 'app-schedule',
@@ -45,6 +51,16 @@ export class SchedulePage implements OnInit {
     { value: 'both', label: 'Тендер + Купить сейчас' },
   ];
 
+  // ─── Calendar ───────────────────────────────────────────────────────────────
+  readonly weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+  readonly monthNames = [
+    'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+    'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь',
+  ];
+  calendarYear = new Date().getFullYear();
+  calendarMonth = new Date().getMonth();
+  calendarCells: CalendarCell[][] = [];
+
   ngOnInit(): void {
     this.loadAuctionLists();
     this.loadPlanLots();
@@ -52,7 +68,13 @@ export class SchedulePage implements OnInit {
 
   setTab(tab: Tab): void {
     this.activeTab = tab;
-    if (tab !== 'plan' && !this.listsLoading) {
+    if (tab === 'calendar') {
+      if (!this.listsLoading && this.upcomingLots.length === 0 && this.currentLots.length === 0 && this.pastLots.length === 0) {
+        this.loadAuctionLists();
+      } else {
+        this.buildCalendar();
+      }
+    } else if (tab !== 'plan' && !this.listsLoading) {
       this.loadAuctionLists();
     }
   }
@@ -60,7 +82,14 @@ export class SchedulePage implements OnInit {
   loadAuctionLists(): void {
     this.listsLoading = true;
     let loaded = 0;
-    const done = () => { if (++loaded === 3) this.listsLoading = false; };
+    const done = () => {
+      if (++loaded === 3) {
+        this.listsLoading = false;
+        if (this.activeTab === 'calendar') {
+          this.buildCalendar();
+        }
+      }
+    };
 
     this.lotService.getLots({ limit: 50, status: 'active' }).subscribe({
       next: (res) => {
@@ -83,6 +112,80 @@ export class SchedulePage implements OnInit {
       next: (res) => { this.pastLots = res.data; done(); },
       error: done,
     });
+  }
+
+  buildCalendar(): void {
+    const year = this.calendarYear;
+    const month = this.calendarMonth;
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const today = new Date();
+
+    const allLots = [...this.upcomingLots, ...this.currentLots, ...this.pastLots];
+
+    // Start week on Monday (0=Mon … 6=Sun)
+    let startDow = firstDay.getDay();
+    startDow = (startDow + 6) % 7;
+
+    const cells: CalendarCell[] = [];
+
+    // Leading empty cells
+    for (let i = 0; i < startDow; i++) {
+      cells.push({ date: null, lots: [], isToday: false });
+    }
+
+    for (let d = 1; d <= lastDay.getDate(); d++) {
+      const date = new Date(year, month, d);
+      const lots = allLots.filter(l => {
+        const start = l.auctionStartAt || l.auctionStart;
+        if (!start) return false;
+        const s = new Date(start);
+        return s.getFullYear() === year && s.getMonth() === month && s.getDate() === d;
+      });
+      const isToday =
+        today.getFullYear() === year &&
+        today.getMonth() === month &&
+        today.getDate() === d;
+      cells.push({ date, lots, isToday });
+    }
+
+    // Trailing empty cells
+    while (cells.length % 7 !== 0) {
+      cells.push({ date: null, lots: [], isToday: false });
+    }
+
+    // Group into rows of 7
+    const rows: CalendarCell[][] = [];
+    for (let i = 0; i < cells.length; i += 7) {
+      rows.push(cells.slice(i, i + 7));
+    }
+    this.calendarCells = rows;
+  }
+
+  prevMonth(): void {
+    if (this.calendarMonth === 0) {
+      this.calendarMonth = 11;
+      this.calendarYear--;
+    } else {
+      this.calendarMonth--;
+    }
+    this.buildCalendar();
+  }
+
+  nextMonth(): void {
+    if (this.calendarMonth === 11) {
+      this.calendarMonth = 0;
+      this.calendarYear++;
+    } else {
+      this.calendarMonth++;
+    }
+    this.buildCalendar();
+  }
+
+  lotStatusClass(lot: ILot): string {
+    if (lot.status === 'trading') return 'cal-lot--current';
+    if (lot.status === 'sold') return 'cal-lot--past';
+    return 'cal-lot--upcoming';
   }
 
   loadPlanLots(): void {

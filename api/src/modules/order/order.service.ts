@@ -69,16 +69,17 @@ export class OrderService {
   }
 
   async getAllOrders(
-    pagination: { page: number; limit: number },
+    pagination: { page: number; limit: number; status?: string },
   ): Promise<{
     data: Order[];
     total: number;
     page: number;
     limit: number;
   }> {
-    const { page, limit } = pagination;
+    const { page, limit, status } = pagination;
 
     const [data, total] = await this.orderRepository.findAndCount({
+      where: status ? { status: status as OrderStatus } : {},
       relations: ['lot', 'user'],
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
