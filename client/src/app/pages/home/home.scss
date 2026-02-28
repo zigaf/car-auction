@@ -361,6 +361,8 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  max-height: 520px;
+  overflow-y: auto;
 }
 
 .auctions__brand {
@@ -407,6 +409,7 @@
 .auctions__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  align-content: start;
   gap: $space-lg;
 
   @include tablet {
