@@ -14,6 +14,35 @@ html {
   ));
 }
 
+// --- CSS Custom Properties (bridge for components using var(--*)) ---
+:root {
+  --surface:        #{$bg-card};
+  --surface-hover:  #{$bg-elevated};
+  --surface-subtle: #{$bg-secondary};
+  --border:         #{$border-color};
+  --radius:         #{$radius-base};
+  --radius-sm:      #{$radius-sm};
+  --radius-lg:      #{$radius-md};
+  --accent:         #{$accent};
+  --accent-hover:   #{$accent-hover};
+  --accent-muted:   #{$accent-muted};
+  --accent-rgb:     79, 70, 229;
+  --text-primary:   #{$text-primary};
+  --text-secondary: #{$text-secondary};
+  --text-tertiary:  #{$text-tertiary};
+  --fs-xs:          #{$fs-xs};
+  --fs-sm:          #{$fs-sm};
+  --fs-base:        #{$fs-base};
+  --fs-md:          #{$fs-md};
+  --fs-lg:          #{$fs-lg};
+  --green:          #{$status-green};
+  --red:            #{$status-red};
+  --yellow:         #{$status-yellow};
+  --blue:           #{$status-blue};
+  --shadow-sm:      #{$shadow-sm};
+  --shadow-md:      #{$shadow-md};
+}
+
 // --- Global Reset & Base ---
 *, *::before, *::after {
   box-sizing: border-box;

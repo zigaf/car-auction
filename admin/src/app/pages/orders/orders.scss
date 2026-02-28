@@ -1,8 +1,43 @@
 @use 'shared-page' as *;
 @use 'styles/variables' as *;
 
+// ── Lot cell ──────────────────────────────────────────────────────
 .order-lot {
+  font-size: $fs-sm;
+  font-weight: $fw-semibold;
+  color: $text-primary;
+  white-space: nowrap;
+}
+
+// ── Buyer cell ────────────────────────────────────────────────────
+.buyer-name {
   font-size: $fs-sm;
   font-weight: $fw-medium;
   color: $text-primary;
+  white-space: nowrap;
+}
+
+.buyer-email {
+  font-size: $fs-xs;
+  color: $text-tertiary;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+// ── Amount ────────────────────────────────────────────────────────
+.order-amount {
+  font-family: $font-mono;
+  font-size: $fs-sm;
+  font-weight: $fw-semibold;
+  color: $text-primary;
+  white-space: nowrap;
+}
+
+// ── Order ID ──────────────────────────────────────────────────────
+.order-id {
+  font-family: $font-mono;
+  font-size: $fs-xs;
+  color: $text-tertiary;
 }

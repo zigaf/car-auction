@@ -44,7 +44,7 @@ export class AuctionService {
     private readonly dataSource: DataSource,
     private readonly balanceService: BalanceService,
     private readonly notificationService: NotificationService,
-  ) {}
+  ) { }
 
   /**
    * Place a bid on a lot.
@@ -521,6 +521,35 @@ export class AuctionService {
     });
 
     return { data, total, page, limit };
+  }
+
+  /**
+   * Get the most recent bids across all lots for the global feed.
+   */
+  async getRecentGlobalBids(limit: number = 50): Promise<Array<{
+    lotId: string;
+    amount: number;
+    bidderFlag: string;
+    userId: string;
+    isAutoBid: boolean;
+    lotTitle: string;
+    timestamp: Date;
+  }>> {
+    const bids = await this.bidRepository.find({
+      order: { createdAt: 'DESC' },
+      take: limit,
+      relations: ['lot'],
+    });
+
+    return bids.map((bid) => ({
+      lotId: bid.lotId,
+      amount: bid.amount,
+      bidderFlag: `bidder-${bid.userId.slice(-4)}`,
+      userId: bid.userId,
+      isAutoBid: bid.isPreBid,
+      lotTitle: bid.lot?.title || `Lot ${bid.lotId.slice(0, 8)}`,
+      timestamp: bid.createdAt,
+    }));
   }
 
   /**

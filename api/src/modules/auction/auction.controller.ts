@@ -27,7 +27,7 @@ export class AuctionController {
   constructor(
     private readonly auctionService: AuctionService,
     private readonly auctionGateway: AuctionGateway,
-  ) {}
+  ) { }
 
   @Post('bids')
   @UseGuards(JwtAuthGuard)
@@ -55,6 +55,12 @@ export class AuctionController {
   @UseGuards(JwtAuthGuard)
   buyNow(@CurrentUser() user: User, @Body() dto: BuyNowDto) {
     return this.auctionService.buyNow(user.id, dto.lotId);
+  }
+
+  @Get('bids/recent')
+  getRecentGlobalBids(@Query('limit') limit?: string) {
+    const parsedLimit = Math.min(Math.max(parseInt(limit || '50', 10), 1), 100);
+    return this.auctionService.getRecentGlobalBids(parsedLimit);
   }
 
   @Get('bids/lot/:lotId')

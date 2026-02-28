@@ -28,8 +28,11 @@
   color: $text-primary;
 }
 
-.actions-cell {
-  display: flex;
-  gap: $space-xs;
-  align-items: center;
+.user-email {
+  font-size: $fs-xs;
+  color: $text-tertiary;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
 }

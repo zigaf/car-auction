@@ -76,11 +76,12 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
     private readonly stateService: StateService,
     private readonly timeService: TimeService,
     private readonly cdr: ChangeDetectorRef,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.now = this.timeService.now();
     this.currentUserId = this.stateService.snapshot.user?.id ?? null;
+    this.loadGlobalFeedHistory();
     this.loadActiveLots();
     this.connectWebSocket();
     this.startTimerTick();
@@ -116,6 +117,22 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
           this.loading = false;
           this.cdr.markForCheck();
         },
+      });
+  }
+
+  private loadGlobalFeedHistory(): void {
+    this.auctionService.getRecentGlobalBids()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (feedItems: IFeedUpdate[]) => {
+          this.liveFeed = feedItems;
+          feedItems.forEach(item => {
+            if (item.lotTitle) {
+              this.lotTitleMap.set(item.lotId, item.lotTitle);
+            }
+          });
+          this.cdr.markForCheck();
+        }
       });
   }
 
@@ -357,8 +374,8 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
   getQuickBidIncrements(): number[] {
     if (!this.activeLot) return [100, 250, 500, 1000];
     const price = this.getCurrentPrice(this.activeLot);
-    if (price < 1000)  return [50, 100, 200, 500];
-    if (price < 5000)  return [100, 250, 500, 1000];
+    if (price < 1000) return [50, 100, 200, 500];
+    if (price < 5000) return [100, 250, 500, 1000];
     if (price < 20000) return [250, 500, 1000, 2500];
     if (price < 50000) return [500, 1000, 2500, 5000];
     return [1000, 2500, 5000, 10000];

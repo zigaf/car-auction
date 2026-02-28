@@ -6,7 +6,7 @@ import { IBid, IPlaceBidResult } from '../../models/auction.model';
 
 @Injectable({ providedIn: 'root' })
 export class AuctionService {
-  constructor(private readonly api: ApiService) {}
+  constructor(private readonly api: ApiService) { }
 
   placeBid(lotId: string, amount: number, idempotencyKey: string): Observable<IPlaceBidResult> {
     return this.api.post<IPlaceBidResult>('/bids', { lotId, amount, idempotencyKey });
@@ -26,6 +26,10 @@ export class AuctionService {
 
   placePreBid(lotId: string, maxAutoBid: number, idempotencyKey: string): Observable<IPlaceBidResult> {
     return this.api.post<IPlaceBidResult>('/bids/pre-bid', { lotId, maxAutoBid, idempotencyKey });
+  }
+
+  getRecentGlobalBids(limit: number = 50): Observable<any[]> {
+    return this.api.get<any[]>('/bids/recent', { limit });
   }
 
   getActiveLots(): Observable<ILot[]> {

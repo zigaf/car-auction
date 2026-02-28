@@ -216,6 +216,171 @@
   text-align: center;
 }
 
+// ── Tabs ───────────────────────────────────────────────────────────────────────
+.tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: $space-lg;
+  background: $bg-elevated;
+  padding: 3px;
+  border-radius: $radius-base;
+  width: fit-content;
+}
+
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-xs;
+  padding: 6px $space-md;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: $text-secondary;
+  font-family: $font-ui;
+  font-size: $fs-sm;
+  font-weight: $fw-medium;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  .material-symbols-rounded { font-size: 16px; }
+
+  &:hover { background: $bg-primary; color: $text-primary; }
+  &--active {
+    background: $bg-primary;
+    color: $accent;
+    font-weight: $fw-semibold;
+    box-shadow: $shadow-xs;
+  }
+}
+
+// ── Card ───────────────────────────────────────────────────────────────────────
+.card {
+  background: $bg-card;
+  border: 1px solid $border-color;
+  border-radius: $radius-md;
+  padding: $space-lg;
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+  margin-bottom: $space-lg;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+  font-size: $fs-base;
+  font-weight: $fw-semibold;
+  color: $text-primary;
+  margin: 0;
+
+  .material-symbols-rounded { font-size: 18px; color: $text-secondary; }
+}
+
+// ── Form patterns ──────────────────────────────────────────────────────────────
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: $space-md;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-label {
+  font-size: $fs-sm;
+  font-weight: $fw-medium;
+  color: $text-secondary;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $space-md;
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding-top: $space-xs;
+}
+
+// ── Feedback messages ──────────────────────────────────────────────────────────
+.save-success {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: $status-green;
+  font-size: $fs-sm;
+  font-weight: $fw-medium;
+
+  .material-symbols-rounded { font-size: 16px; }
+}
+
+.save-error {
+  color: $status-red;
+  font-size: $fs-sm;
+}
+
+// ── Icon button ────────────────────────────────────────────────────────────────
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: $radius-sm;
+  color: $text-secondary;
+  transition: background $transition-fast, color $transition-fast;
+  flex-shrink: 0;
+
+  .material-symbols-rounded { font-size: 18px; }
+
+  &:hover { background: $bg-elevated; color: $text-primary; }
+  &--danger:hover {
+    background: rgba(239, 68, 68, 0.08);
+    color: $status-red;
+  }
+}
+
+// ── Actions cell ───────────────────────────────────────────────────────────────
+.actions-cell {
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+  white-space: nowrap;
+}
+
+// ── Link ───────────────────────────────────────────────────────────────────────
+.link {
+  color: $accent;
+  text-decoration: none;
+  font-weight: $fw-medium;
+  &:hover { color: $accent-hover; text-decoration: underline; }
+}
+
+// ── Section heading ───────────────────────────────────────────────────────────
+.section {
+  margin-bottom: $space-xl;
+}
+
+.section-title {
+  font-size: $fs-base;
+  font-weight: $fw-semibold;
+  color: $text-primary;
+  margin: 0 0 $space-md;
+}
+
+// ── fw utility ─────────────────────────────────────────────────────────────────
+.fw-semibold { font-weight: $fw-semibold; }
+
 // ── Status select (inline table control) ──────────────────────────────────────
 .status-select {
   background: $bg-input;

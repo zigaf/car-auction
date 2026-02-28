@@ -47,10 +47,10 @@
                 <div class="order-lot">{{ order.lot.brand }} {{ order.lot.model }} {{ order.lot.year }}</div>
               </td>
               <td>
-                <div>{{ order.buyer.firstName }} {{ order.buyer.lastName }}</div>
-                <div class="text-muted" style="font-size: var(--fs-xs)">{{ order.buyer.email }}</div>
+                <div class="buyer-name">{{ order.buyer.firstName }} {{ order.buyer.lastName }}</div>
+                <div class="buyer-email">{{ order.buyer.email }}</div>
               </td>
-              <td class="mono">{{ order.totalAmount | number }} {{ order.currency }}</td>
+              <td class="order-amount">{{ order.totalAmount | number }} {{ order.currency }}</td>
               <td>
                 <select
                   class="status-select"
