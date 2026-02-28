@@ -5,8 +5,9 @@ import { ApiService } from './api.service';
 export interface IOrder {
   id: string;
   status: string;
-  totalAmount: number;
-  currency: string;
+  total: number;
+  carPrice: number;
+  commission: number;
   createdAt: string;
   updatedAt: string;
   lot: {
@@ -15,13 +16,13 @@ export interface IOrder {
     brand: string;
     model: string;
     year: number;
-  };
+  } | null;
   user: {
     id: string;
     email: string;
     firstName: string;
     lastName: string;
-  };
+  } | null;
 }
 
 export interface IOrdersResponse {

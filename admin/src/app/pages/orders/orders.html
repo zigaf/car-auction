@@ -44,13 +44,13 @@
             <tr>
               <td class="mono text-muted">{{ order.id.slice(0, 8) }}…</td>
               <td>
-                <div class="order-lot">{{ order.lot.brand }} {{ order.lot.model }} {{ order.lot.year }}</div>
+                <div class="order-lot">{{ order.lot?.brand }} {{ order.lot?.model }} {{ order.lot?.year }}</div>
               </td>
               <td>
                 <div class="buyer-name">{{ order.user?.firstName }} {{ order.user?.lastName }}</div>
                 <div class="buyer-email">{{ order.user?.email }}</div>
               </td>
-              <td class="order-amount">{{ order.totalAmount | number }} {{ order.currency }}</td>
+              <td class="order-amount">{{ order.total | number }} EUR</td>
               <td>
                 <select
                   class="status-select"
