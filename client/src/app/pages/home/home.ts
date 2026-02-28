@@ -82,4 +82,12 @@ export class HomeComponent implements OnInit {
     if (path.startsWith('http')) return path;
     return `${environment.apiUrl.replace('/api', '')}${path}`;
   }
+
+  getFuelLabel(fuelType: string): string {
+    const labels: Record<string, string> = {
+      petrol: 'Бензин', diesel: 'Дизель', hybrid: 'Гибрид',
+      electric: 'Электро', lpg: 'Газ', other: 'Другое',
+    };
+    return labels[fuelType] || fuelType || '-';
+  }
 }
