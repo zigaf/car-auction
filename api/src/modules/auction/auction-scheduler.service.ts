@@ -74,6 +74,7 @@ export class AuctionSchedulerService {
       });
 
       for (const lot of expiredLots) {
+        if (lot.isPaused) continue; // timer is frozen — skip until resumed
         try {
           await this.processAuctionEnd(lot);
         } catch (error) {

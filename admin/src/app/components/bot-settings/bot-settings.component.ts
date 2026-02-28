@@ -27,13 +27,19 @@ export class BotSettingsComponent implements OnInit {
   isActive = true;
   minDelaySec = 2;
   maxDelaySec = 10;
+  intensity = 1.0;
+  startMinutesBeforeEnd: number | null = null;
 
   readonly patterns: { value: BotPattern; label: string; desc: string }[] = [
     { value: 'AGGRESSIVE', label: 'Агрессивный', desc: 'Перебивает через 2–5 сек' },
     { value: 'STEADY', label: 'Регулярный', desc: 'Ставит каждые N секунд' },
-    { value: 'SNIPER', label: 'Снайпер', desc: 'Только последние 30 сек' },
-    { value: 'RANDOM', label: 'Случайный', desc: 'Случайная задержка' },
+    { value: 'SNIPER', label: 'Снайпер', desc: 'Активируется за N мин до конца' },
+    { value: 'RANDOM', label: 'Случайный', desc: 'Случайная задержка, активируется за N мин до конца' },
   ];
+
+  get isTimedPattern(): boolean {
+    return this.pattern === 'SNIPER' || this.pattern === 'RANDOM';
+  }
 
   ngOnInit(): void {
     this.load();
@@ -64,6 +70,8 @@ export class BotSettingsComponent implements OnInit {
     this.isActive = cfg.isActive;
     this.minDelaySec = cfg.minDelaySec;
     this.maxDelaySec = cfg.maxDelaySec;
+    this.intensity = cfg.intensity ?? 1.0;
+    this.startMinutesBeforeEnd = cfg.startMinutesBeforeEnd ?? null;
   }
 
   save(): void {
@@ -80,6 +88,8 @@ export class BotSettingsComponent implements OnInit {
       isActive: this.isActive,
       minDelaySec: this.minDelaySec,
       maxDelaySec: this.maxDelaySec,
+      intensity: this.intensity,
+      startMinutesBeforeEnd: this.startMinutesBeforeEnd,
     };
 
     const obs$ = this.existingConfig

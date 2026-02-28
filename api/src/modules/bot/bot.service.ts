@@ -79,6 +79,8 @@ export class BotService {
       isActive: dto.isActive ?? true,
       minDelaySec: dto.minDelaySec ?? 2,
       maxDelaySec: dto.maxDelaySec ?? 10,
+      intensity: dto.intensity ?? 1.0,
+      startMinutesBeforeEnd: dto.startMinutesBeforeEnd ?? null,
     });
 
     return this.configRepository.save(config);
@@ -102,6 +104,8 @@ export class BotService {
     if (dto.isActive !== undefined) config.isActive = dto.isActive;
     if (dto.minDelaySec !== undefined) config.minDelaySec = dto.minDelaySec;
     if (dto.maxDelaySec !== undefined) config.maxDelaySec = dto.maxDelaySec;
+    if (dto.intensity !== undefined) config.intensity = dto.intensity;
+    if ('startMinutesBeforeEnd' in dto) config.startMinutesBeforeEnd = dto.startMinutesBeforeEnd ?? null;
 
     return this.configRepository.save(config);
   }

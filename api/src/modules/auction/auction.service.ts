@@ -727,6 +727,64 @@ export class AuctionService {
   }
 
   /**
+   * Rollback the highest bid on a lot (admin action).
+   * Restores the lot price to the next highest bid and refunds balance locks.
+   */
+  async rollbackBid(bidId: string): Promise<{ lotId: string; newCurrentPrice: number }> {
+    return this.dataSource.transaction(async (manager) => {
+      const bid = await manager.findOne(Bid, { where: { id: bidId } });
+      if (!bid) throw new NotFoundException('Bid not found');
+
+      const lot = await manager
+        .createQueryBuilder(Lot, 'lot')
+        .setLock('pessimistic_write')
+        .where('lot.id = :lotId', { lotId: bid.lotId })
+        .getOne();
+
+      if (!lot) throw new NotFoundException('Lot not found');
+      if (lot.status !== LotStatus.TRADING) {
+        throw new BadRequestException('Can only rollback bids on active trading lots');
+      }
+
+      // Verify this is the highest bid
+      const highestBid = await manager
+        .createQueryBuilder(Bid, 'bid')
+        .where('bid.lot_id = :lotId', { lotId: lot.id })
+        .orderBy('bid.amount', 'DESC')
+        .addOrderBy('bid.created_at', 'ASC')
+        .getOne();
+
+      if (!highestBid || highestBid.id !== bidId) {
+        throw new BadRequestException('Only the current highest bid can be rolled back');
+      }
+
+      // Unlock the current highest bidder's lock
+      await this.balanceService.unlockBalanceForBid(manager, bid.userId, lot.id);
+
+      // Remove the bid
+      await manager.delete(Bid, { id: bidId });
+
+      // Find new highest bid
+      const newHighestBid = await manager
+        .createQueryBuilder(Bid, 'bid')
+        .where('bid.lot_id = :lotId', { lotId: lot.id })
+        .orderBy('bid.amount', 'DESC')
+        .addOrderBy('bid.created_at', 'ASC')
+        .getOne();
+
+      const startingBid = lot.startingBid ? parseFloat(String(lot.startingBid)) : 0;
+      const newCurrentPrice = newHighestBid
+        ? parseFloat(String(newHighestBid.amount))
+        : startingBid;
+
+      lot.currentPrice = newCurrentPrice;
+      await manager.save(Lot, lot);
+
+      return { lotId: lot.id, newCurrentPrice };
+    });
+  }
+
+  /**
    * Resolve auto-bids after a new bid is placed.
    * Checks if any pre-bidders can counter-bid, and processes them.
    */

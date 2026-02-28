@@ -138,10 +138,10 @@ export class WebsocketService implements OnDestroy {
       : `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
 
     this.socket.emit('place_bid', { lotId, amount, idempotencyKey }, (response: any) => {
-      if (response?.event === 'bid_placed') {
+      if (response?.status === 'success') {
         this._bidPlaced$.next(response.data);
-      } else if (response?.event === 'bid_error') {
-        this._bidError$.next(response.data);
+      } else if (response?.status === 'error') {
+        this._bidError$.next({ message: response.message });
       }
     });
   }
@@ -150,10 +150,10 @@ export class WebsocketService implements OnDestroy {
     if (!this.socket?.connected) return;
 
     this.socket.emit('place_pre_bid', { lotId, maxAutoBid }, (response: any) => {
-      if (response?.event === 'bid_placed') {
+      if (response?.status === 'success') {
         this._bidPlaced$.next(response.data);
-      } else if (response?.event === 'bid_error') {
-        this._bidError$.next(response.data);
+      } else if (response?.status === 'error') {
+        this._bidError$.next({ message: response.message });
       }
     });
   }

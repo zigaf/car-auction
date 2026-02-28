@@ -20,6 +20,11 @@
   justify-content: center;
   flex-shrink: 0;
   text-transform: uppercase;
+
+  &--team {
+    background: color-mix(in srgb, $color-success 15%, transparent);
+    color: $color-success;
+  }
 }
 
 .user-name {

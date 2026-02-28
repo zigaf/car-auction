@@ -4,6 +4,19 @@
     <span class="page-count">{{ total }}</span>
   </div>
 
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn" [class.tab-btn--active]="activeTab === 'clients'" (click)="switchTab('clients')">
+      <span class="material-symbols-rounded">person</span>
+      Клиенты
+    </button>
+    <button class="tab-btn" [class.tab-btn--active]="activeTab === 'team'" (click)="switchTab('team')">
+      <span class="material-symbols-rounded">manage_accounts</span>
+      Команда
+    </button>
+  </div>
+
+  <!-- Filters -->
   <div class="filters">
     <input
       class="form-control filters__search"
@@ -12,12 +25,16 @@
       [(ngModel)]="filterSearch"
       (input)="onFilterChange()"
     />
-    <select class="form-control filters__select" [(ngModel)]="filterRole" (change)="onFilterChange()">
-      <option value="">Все роли</option>
-      @for (r of roles; track r) {
-        <option [value]="r">{{ roleLabels[r] }}</option>
-      }
-    </select>
+
+    @if (activeTab === 'team') {
+      <select class="form-control filters__select" [(ngModel)]="teamRoleFilter" (change)="onFilterChange()">
+        <option value="">Все роли команды</option>
+        @for (r of teamRoles; track r) {
+          <option [value]="r">{{ roleLabels[r] }}</option>
+        }
+      </select>
+    }
+
     <select class="form-control filters__select" [(ngModel)]="filterStatus" (change)="onFilterChange()">
       <option value="">Все статусы</option>
       @for (s of statuses; track s) {
@@ -41,78 +58,136 @@
 
   @if (!loading && !error) {
     <div class="table-wrap">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Пользователь</th>
-            <th>Роль</th>
-            <th>Статус</th>
-            <th>Верификация</th>
-            <th>Регистрация</th>
-            <th>Действия</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (user of users; track user.id) {
+
+      <!-- ── CLIENTS TABLE ──────────────────────────────────────── -->
+      @if (activeTab === 'clients') {
+        <table class="data-table">
+          <thead>
             <tr>
-              <td class="user-cell">
-                <div class="user-avatar">
-                  {{ user.firstName.charAt(0) }}{{ user.lastName.charAt(0) }}
-                </div>
-                <div>
-                  <a class="user-name" [routerLink]="['/users', user.id]">{{ user.firstName }} {{ user.lastName }}</a>
-                  <div class="text-muted" style="font-size: var(--fs-xs)">{{ user.email }}</div>
-                </div>
-              </td>
-              <td>
-                <select
-                  class="status-select"
-                  [value]="user.role"
-                  (change)="updateRole(user, $any($event.target).value)"
-                >
-                  @for (r of roles; track r) {
-                    <option [value]="r" [selected]="user.role === r">{{ roleLabels[r] }}</option>
-                  }
-                </select>
-              </td>
-              <td>
-                <span class="badge" [class]="user.status === 'blocked' ? 'badge--red' : user.status === 'active' ? 'badge--green' : 'badge--amber'">
-                  {{ getStatusLabel(user.status) }}
-                </span>
-              </td>
-              <td>
-                @if (user.documentsVerified) {
-                  <span class="badge badge--green">Верифицирован</span>
-                } @else {
-                  <span class="badge badge--gray">Нет</span>
-                }
-              </td>
-              <td class="text-muted">{{ user.createdAt | date:'dd.MM.yy' }}</td>
-              <td>
-                <button
-                  class="btn btn--sm"
-                  [class]="user.status === 'blocked' ? 'btn--secondary' : 'btn--danger'"
-                  (click)="toggleBlock(user)"
-                >
-                  @if (user.status === 'blocked') {
-                    <span class="material-symbols-rounded">lock_open</span>
-                    Разблокировать
-                  } @else {
-                    <span class="material-symbols-rounded">block</span>
-                    Заблокировать
-                  }
-                </button>
-              </td>
+              <th>Пользователь</th>
+              <th>Статус</th>
+              <th>Верификация</th>
+              <th>Регистрация</th>
+              <th>Действия</th>
             </tr>
-          }
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            @for (user of users; track user.id) {
+              <tr>
+                <td class="user-cell">
+                  <div class="user-avatar">
+                    {{ user.firstName.charAt(0) }}{{ user.lastName.charAt(0) }}
+                  </div>
+                  <div>
+                    <a class="user-name" [routerLink]="['/users', user.id]">{{ user.firstName }} {{ user.lastName }}</a>
+                    <div class="text-muted" style="font-size: var(--fs-xs)">{{ user.email }}</div>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge" [class]="user.status === 'blocked' ? 'badge--red' : user.status === 'active' ? 'badge--green' : 'badge--amber'">
+                    {{ getStatusLabel(user.status) }}
+                  </span>
+                </td>
+                <td>
+                  @if (user.documentsVerified) {
+                    <span class="badge badge--green">Верифицирован</span>
+                  } @else {
+                    <span class="badge badge--gray">Нет</span>
+                  }
+                </td>
+                <td class="text-muted">{{ user.createdAt | date:'dd.MM.yy' }}</td>
+                <td>
+                  <button
+                    class="btn btn--sm"
+                    [class]="user.status === 'blocked' ? 'btn--secondary' : 'btn--danger'"
+                    (click)="toggleBlock(user)"
+                  >
+                    @if (user.status === 'blocked') {
+                      <span class="material-symbols-rounded">lock_open</span>
+                      Разблокировать
+                    } @else {
+                      <span class="material-symbols-rounded">block</span>
+                      Заблокировать
+                    }
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+
+      <!-- ── TEAM TABLE ─────────────────────────────────────────── -->
+      @if (activeTab === 'team') {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Сотрудник</th>
+              <th>Роль</th>
+              <th>Статус</th>
+              <th>Регистрация</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of users; track user.id) {
+              <tr>
+                <td class="user-cell">
+                  <div class="user-avatar user-avatar--team">
+                    {{ user.firstName.charAt(0) }}{{ user.lastName.charAt(0) }}
+                  </div>
+                  <div>
+                    <a class="user-name" [routerLink]="['/users', user.id]">{{ user.firstName }} {{ user.lastName }}</a>
+                    <div class="text-muted" style="font-size: var(--fs-xs)">{{ user.email }}</div>
+                  </div>
+                </td>
+                <td>
+                  <select
+                    class="status-select"
+                    [value]="user.role"
+                    (change)="updateRole(user, $any($event.target).value)"
+                  >
+                    @for (r of teamRoles; track r) {
+                      <option [value]="r" [selected]="user.role === r">{{ roleLabels[r] }}</option>
+                    }
+                  </select>
+                </td>
+                <td>
+                  <span class="badge" [class]="user.status === 'blocked' ? 'badge--red' : user.status === 'active' ? 'badge--green' : 'badge--amber'">
+                    {{ getStatusLabel(user.status) }}
+                  </span>
+                </td>
+                <td class="text-muted">{{ user.createdAt | date:'dd.MM.yy' }}</td>
+                <td>
+                  <button
+                    class="btn btn--sm"
+                    [class]="user.status === 'blocked' ? 'btn--secondary' : 'btn--danger'"
+                    (click)="toggleBlock(user)"
+                  >
+                    @if (user.status === 'blocked') {
+                      <span class="material-symbols-rounded">lock_open</span>
+                      Разблокировать
+                    } @else {
+                      <span class="material-symbols-rounded">block</span>
+                      Заблокировать
+                    }
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+
     </div>
 
     @if (users.length === 0) {
       <div class="empty-state">
         <span class="material-symbols-rounded">group</span>
-        <p>Пользователи не найдены</p>
+        <p>
+          @if (activeTab === 'clients') { Клиенты не найдены }
+          @else { Сотрудники не найдены }
+        </p>
       </div>
     }
 

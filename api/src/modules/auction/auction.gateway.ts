@@ -42,7 +42,7 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
   constructor(
     private readonly auctionService: AuctionService,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   handleConnection(client: Socket) {
     try {
@@ -152,7 +152,7 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
       const userId = client.data.userId as string | undefined;
 
       if (!userId) {
-        return { event: 'bid_error', data: { message: 'Authentication required' } };
+        return { status: 'error', message: 'Authentication required' };
       }
 
       const result: PlaceBidResult = await this.auctionService.placeBid(
@@ -219,10 +219,10 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
         timestamp: result.bid.createdAt,
       });
 
-      return { event: 'bid_placed', data: result.bid };
+      return { status: 'success', data: result.bid };
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to place bid';
-      return { event: 'bid_error', data: { message } };
+      return { status: 'error', message };
     }
   }
 
@@ -235,7 +235,7 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
       const userId = client.data.userId as string | undefined;
 
       if (!userId) {
-        return { event: 'bid_error', data: { message: 'Authentication required' } };
+        return { status: 'error', message: 'Authentication required' };
       }
 
       const idempotencyKey = `pre:${payload.lotId}:${userId}:${Date.now()}`;
@@ -300,10 +300,10 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
         timestamp: result.bid.createdAt,
       });
 
-      return { event: 'bid_placed', data: result.bid };
+      return { status: 'success', data: result.bid };
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to place pre-bid';
-      return { event: 'bid_error', data: { message } };
+      return { status: 'error', message };
     }
   }
 
@@ -324,5 +324,23 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
       winnerId,
       finalPrice,
     });
+  }
+
+  emitBidRollback(lotId: string, rolledBackBidId: string, newCurrentPrice: number) {
+    const payload = { lotId, rolledBackBidId, newCurrentPrice };
+    this.server.to(`auction:${lotId}`).emit('bid_rollback', payload);
+    this.server.to('feed:global').emit('bid_rollback', payload);
+  }
+
+  emitAuctionPaused(lotId: string, pausedRemainingMs: number) {
+    const payload = { lotId, pausedRemainingMs };
+    this.server.to(`auction:${lotId}`).emit('auction_paused', payload);
+    this.server.to('feed:global').emit('auction_paused', payload);
+  }
+
+  emitAuctionResumed(lotId: string, newEndAt: Date) {
+    const payload = { lotId, newEndAt };
+    this.server.to(`auction:${lotId}`).emit('auction_resumed', payload);
+    this.server.to('feed:global').emit('auction_resumed', payload);
   }
 }

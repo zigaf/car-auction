@@ -53,6 +53,21 @@ export class AuctionBotConfig {
   @Column({ name: 'max_delay_sec', type: 'int', default: 10 })
   maxDelaySec: number;
 
+  /**
+   * Bid step multiplier. The bot places currentPrice + bidStep * intensity.
+   * Default 1.0 means one step at a time. 2.0 means two steps per bid, etc.
+   */
+  @Column({ type: 'decimal', precision: 4, scale: 2, default: 1.0 })
+  intensity: number;
+
+  /**
+   * How many minutes before auction end the bot starts bidding.
+   * Applies to SNIPER and RANDOM patterns.
+   * NULL means use the hardcoded 0.5-minute (30-second) default.
+   */
+  @Column({ name: 'start_minutes_before_end', type: 'int', nullable: true, default: null })
+  startMinutesBeforeEnd: number | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

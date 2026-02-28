@@ -1,0 +1,244 @@
+@use 'shared-page' as *;
+@use 'styles/variables' as *;
+
+// ── WebSocket status badge ────────────────────────────────────────
+
+.ws-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: $radius-round;
+  font-size: $fs-xs;
+  font-weight: $fw-medium;
+  background: $bg-elevated;
+
+  &__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+  }
+
+  &--connected {
+    color: $color-success;
+    .ws-badge__dot { background: $color-success; }
+  }
+
+  &--connecting {
+    color: $text-secondary;
+    .ws-badge__dot { background: $text-tertiary; }
+  }
+
+  &--error {
+    color: $color-danger;
+    .ws-badge__dot { background: $color-danger; }
+  }
+}
+
+// ── Two-column grid ───────────────────────────────────────────────
+
+.monitor-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $space-lg;
+  align-items: start;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ── Panel ─────────────────────────────────────────────────────────
+
+.monitor-panel {
+  background: $bg-elevated;
+  border-radius: $radius-md;
+  border: 1px solid $border;
+  overflow: hidden;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: $space-xs;
+    padding: $space-sm $space-md;
+    font-size: $fs-sm;
+    font-weight: $fw-semibold;
+    color: $text-primary;
+    border-bottom: 1px solid $border;
+    background: $bg-surface;
+
+    .material-symbols-rounded { font-size: 18px; color: $text-secondary; }
+  }
+}
+
+// ── Tab badge (reuse) ─────────────────────────────────────────────
+
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: $color-primary;
+  color: #fff;
+  font-size: 11px;
+  font-weight: $fw-semibold;
+  line-height: 1;
+}
+
+// ── Lot card ──────────────────────────────────────────────────────
+
+.lot-card {
+  padding: $space-md;
+  border-bottom: 1px solid $border;
+  transition: background 0.15s;
+
+  &:last-child { border-bottom: none; }
+  &--paused { background: color-mix(in srgb, $color-warning 6%, transparent); }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $space-xs;
+  }
+
+  &__title {
+    font-size: $fs-sm;
+    font-weight: $fw-semibold;
+    color: $text-primary;
+    text-decoration: none;
+    &:hover { color: $color-primary; }
+  }
+
+  &__timer {
+    font-size: 22px;
+    font-weight: $fw-bold;
+    font-variant-numeric: tabular-nums;
+    color: $text-primary;
+    display: flex;
+    align-items: center;
+    gap: $space-xs;
+    margin-bottom: $space-xs;
+
+    .material-symbols-rounded { font-size: 20px; color: $text-secondary; }
+
+    &--warning { color: $color-danger; }
+  }
+
+  &__price {
+    display: flex;
+    align-items: baseline;
+    gap: $space-xs;
+    margin-bottom: $space-sm;
+  }
+
+  &__price-label {
+    font-size: $fs-xs;
+    color: $text-tertiary;
+  }
+
+  &__price-value {
+    font-size: $fs-md;
+    font-weight: $fw-semibold;
+    color: $text-primary;
+  }
+
+  &__controls {
+    display: flex;
+    align-items: center;
+    gap: $space-xs;
+  }
+}
+
+.form-control--xs {
+  height: 28px;
+  width: 56px;
+  padding: 0 $space-xs;
+  font-size: $fs-sm;
+}
+
+.text-xs { font-size: $fs-xs; }
+
+// ── Feed list ─────────────────────────────────────────────────────
+
+.feed-list {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.feed-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-sm;
+  padding: $space-xs $space-md;
+  border-bottom: 1px solid $border;
+  font-size: $fs-sm;
+  transition: background 0.12s;
+
+  &:last-child { border-bottom: none; }
+  &--auto { background: color-mix(in srgb, $color-primary 4%, transparent); }
+
+  &__left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__amount {
+    font-weight: $fw-semibold;
+    color: $text-primary;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__lot {
+    font-size: $fs-xs;
+    color: $text-secondary;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: $space-xs;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  &__bidder {
+    font-size: $fs-xs;
+    color: $text-tertiary;
+    font-family: monospace;
+  }
+
+  &__time {
+    font-size: $fs-xs;
+    color: $text-tertiary;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.badge--xs {
+  font-size: 10px;
+  padding: 1px 5px;
+}
+
+// ── Empty state ───────────────────────────────────────────────────
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-xl $space-md;
+  color: $text-tertiary;
+
+  .material-symbols-rounded { font-size: 36px; }
+  p { margin: 0; font-size: $fs-sm; }
+}

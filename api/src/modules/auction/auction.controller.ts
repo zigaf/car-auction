@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Body,
   Param,
   Query,
@@ -9,8 +10,12 @@ import {
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { AuctionService } from './auction.service';
+import { AuctionGateway } from './auction.gateway';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Role } from '../../common/enums/role.enum';
 import { User } from '../../db/entities/user.entity';
 import { PlaceBidDto } from './dto/place-bid.dto';
 import { BuyNowDto } from './dto/buy-now.dto';
@@ -19,7 +24,10 @@ import { GetBidsDto } from './dto/get-bids.dto';
 
 @Controller()
 export class AuctionController {
-  constructor(private readonly auctionService: AuctionService) {}
+  constructor(
+    private readonly auctionService: AuctionService,
+    private readonly auctionGateway: AuctionGateway,
+  ) {}
 
   @Post('bids')
   @UseGuards(JwtAuthGuard)
@@ -70,5 +78,15 @@ export class AuctionController {
   @Get('auction/active')
   getActiveLots() {
     return this.auctionService.getActiveLots();
+  }
+
+  /** Admin: rollback the highest bid on a lot. */
+  @Delete('admin/bids/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.MANAGER, Role.ADMIN)
+  async rollbackBid(@Param('id', ParseUUIDPipe) id: string) {
+    const result = await this.auctionService.rollbackBid(id);
+    this.auctionGateway.emitBidRollback(result.lotId, id, result.newCurrentPrice);
+    return result;
   }
 }

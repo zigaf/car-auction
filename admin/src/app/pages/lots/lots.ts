@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe, DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { LotService, ILot } from '../../core/services/lot.service';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -22,7 +23,7 @@ const STATUS_BADGE: Record<string, string> = {
 @Component({
   selector: 'app-lots',
   standalone: true,
-  imports: [FormsModule, DecimalPipe, DatePipe],
+  imports: [FormsModule, DecimalPipe, DatePipe, RouterLink],
   templateUrl: './lots.html',
   styleUrl: './lots.scss',
 })

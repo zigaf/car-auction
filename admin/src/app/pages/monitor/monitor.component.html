@@ -1,0 +1,124 @@
+<div class="page">
+
+  <div class="page-header">
+    <div class="page-header__left">
+      <h1 class="page-title">
+        <span class="material-symbols-rounded">monitor_heart</span>
+        Live Monitor
+      </h1>
+      <span class="ws-badge" [ngClass]="{
+        'ws-badge--connected': wsStatus === 'connected',
+        'ws-badge--error': wsStatus === 'error',
+        'ws-badge--connecting': wsStatus === 'connecting'
+      }">
+        <span class="ws-badge__dot"></span>
+        {{ wsStatus === 'connected' ? 'Подключено' : wsStatus === 'connecting' ? 'Подключение…' : 'Ошибка соединения' }}
+      </span>
+    </div>
+    <button class="btn btn--secondary btn--sm" (click)="loadActiveLots()">
+      <span class="material-symbols-rounded">refresh</span>
+      Обновить
+    </button>
+  </div>
+
+  <div class="monitor-grid">
+
+    <!-- Active lots panel -->
+    <div class="monitor-panel">
+      <div class="monitor-panel__header">
+        <span class="material-symbols-rounded">gavel</span>
+        Активные аукционы
+        <span class="tab-badge">{{ monitorLots.length }}</span>
+      </div>
+
+      @if (monitorLots.length === 0) {
+        <div class="empty-state">
+          <span class="material-symbols-rounded">hourglass_empty</span>
+          <p>Нет активных аукционов</p>
+        </div>
+      }
+
+      @for (ml of monitorLots; track trackByLotId($index, ml)) {
+        <div class="lot-card" [class.lot-card--paused]="ml.isPaused">
+
+          <div class="lot-card__header">
+            <a class="lot-card__title" [routerLink]="['/lots', ml.lot.id]">
+              {{ ml.lot.brand }} {{ ml.lot.model }} {{ ml.lot.year }}
+            </a>
+            @if (ml.isPaused) {
+              <span class="badge badge--amber">Пауза</span>
+            }
+          </div>
+
+          <div class="lot-card__timer" [class.lot-card__timer--warning]="ml.remainingMs < 60000 && !ml.isPaused">
+            <span class="material-symbols-rounded">{{ ml.isPaused ? 'pause_circle' : 'timer' }}</span>
+            {{ formatRemaining(ml.remainingMs) }}
+          </div>
+
+          <div class="lot-card__price">
+            <span class="lot-card__price-label">Текущая цена</span>
+            <span class="lot-card__price-value">{{ (ml.lot.currentPrice ?? ml.lot.startingBid ?? 0) | number }} EUR</span>
+          </div>
+
+          <div class="lot-card__controls">
+            @if (!ml.isPaused) {
+              <button class="btn btn--secondary btn--sm" (click)="pauseLot(ml)" [disabled]="ml.saving">
+                <span class="material-symbols-rounded">pause</span>
+              </button>
+            } @else {
+              <button class="btn btn--primary btn--sm" (click)="resumeLot(ml)" [disabled]="ml.saving">
+                <span class="material-symbols-rounded">play_arrow</span>
+              </button>
+            }
+            <input class="form-control form-control--xs" type="number" [(ngModel)]="ml.extendMinutes" min="1" max="120" />
+            <span class="text-muted text-xs">мин</span>
+            <button class="btn btn--secondary btn--sm" (click)="extendLot(ml)" [disabled]="ml.saving || !ml.extendMinutes">
+              <span class="material-symbols-rounded">more_time</span>
+            </button>
+          </div>
+
+        </div>
+      }
+    </div>
+
+    <!-- Live bid feed panel -->
+    <div class="monitor-panel">
+      <div class="monitor-panel__header">
+        <span class="material-symbols-rounded">stream</span>
+        Лента ставок
+        @if (feedEntries.length > 0) {
+          <span class="tab-badge">{{ feedEntries.length }}</span>
+        }
+      </div>
+
+      @if (feedEntries.length === 0) {
+        <div class="empty-state">
+          <span class="material-symbols-rounded">radio_button_unchecked</span>
+          <p>Ставок ещё нет</p>
+        </div>
+      }
+
+      <div class="feed-list">
+        @for (entry of feedEntries; track trackByFeedId($index, entry)) {
+          <div class="feed-item" [class.feed-item--auto]="entry.isAutoBid">
+            <div class="feed-item__left">
+              <span class="feed-item__amount">{{ entry.amount | number }} EUR</span>
+              <span class="feed-item__lot">
+                <a [routerLink]="['/lots', entry.lotId]" class="link">{{ entry.lotTitle }}</a>
+              </span>
+            </div>
+            <div class="feed-item__right">
+              <span class="feed-item__bidder">{{ entry.bidderFlag }}</span>
+              @if (entry.isAutoBid) {
+                <span class="badge badge--blue badge--xs">Авто</span>
+              }
+              <span class="feed-item__time">{{ entry.timestamp | date:'HH:mm:ss' }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+  </div>
+
+</div>

@@ -27,6 +27,7 @@ export class AdminLayout {
     { label: 'Задачи', icon: 'checklist', path: '/tasks' },
     { label: 'Расписание', icon: 'calendar_month', path: '/auctions/schedule' },
     { label: 'Боты', icon: 'smart_toy', path: '/bots' },
+    { label: 'Монитор', icon: 'monitor_heart', path: '/monitor' },
   ];
 
   get currentUser() {

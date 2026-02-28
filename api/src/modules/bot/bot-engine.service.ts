@@ -34,7 +34,7 @@ export class BotEngineService {
     private readonly lotRepository: Repository<Lot>,
     private readonly auctionService: AuctionService,
     private readonly auctionGateway: AuctionGateway,
-  ) {}
+  ) { }
 
   @Cron(CronExpression.EVERY_5_SECONDS)
   async tick(): Promise<void> {
@@ -49,6 +49,7 @@ export class BotEngineService {
 
       for (const config of configs) {
         if (!config.lot || config.lot.status !== LotStatus.TRADING) continue;
+        if (config.lot.isPaused) continue;
 
         await this.processConfig(config).catch((err) =>
           this.logger.error(`Bot tick error for config ${config.id}`, err),
@@ -64,6 +65,7 @@ export class BotEngineService {
       where: { id: config.lotId },
     });
     if (!lot || lot.status !== LotStatus.TRADING) return;
+    if (lot.isPaused) return;
 
     const currentPrice = parseFloat(String(lot.currentPrice ?? lot.startingBid ?? 0));
     const maxPrice = parseFloat(String(config.maxPrice));
@@ -78,9 +80,12 @@ export class BotEngineService {
     });
     const botIsLeading = latestBid?.userId === config.botUserId;
 
+    if (botIsLeading) return;
+
     const now = Date.now();
     const bidStep = parseFloat(String(lot.bidStep)) || 100;
-    const bidAmount = currentPrice + bidStep;
+    const intensity = parseFloat(String(config.intensity ?? 1.0));
+    const bidAmount = currentPrice + bidStep * intensity;
 
     if (bidAmount > maxPrice) return;
 
@@ -163,12 +168,23 @@ export class BotEngineService {
         // Bid once every maxDelaySec seconds regardless of who is leading
         return elapsed > config.maxDelaySec * 1000;
 
-      case BotPattern.SNIPER:
-        // Only bid in the last 30 seconds of the auction
+      case BotPattern.SNIPER: {
         if (!lot.auctionEndAt) return false;
-        return !botIsLeading && lot.auctionEndAt.getTime() - now <= 30_000;
+        const sniperWindowMs =
+          config.startMinutesBeforeEnd != null
+            ? config.startMinutesBeforeEnd * 60_000
+            : 30_000;
+        return !botIsLeading && lot.auctionEndAt.getTime() - now <= sniperWindowMs;
+      }
 
       case BotPattern.RANDOM: {
+        if (!lot.auctionEndAt) return false;
+        const randomWindowMs =
+          config.startMinutesBeforeEnd != null
+            ? config.startMinutesBeforeEnd * 60_000
+            : 30_000;
+        const withinWindow = lot.auctionEndAt.getTime() - now <= randomWindowMs;
+        if (!withinWindow) return false;
         // Use a pre-computed random delay; refresh each time
         if (!this.nextRandomDelay.has(config.id)) {
           this.nextRandomDelay.set(

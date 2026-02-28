@@ -220,6 +220,20 @@ export class Lot {
   @Column({ name: 'winner_id', type: 'uuid', nullable: true })
   winnerId: string | null;
 
+  /**
+   * When true the auction timer is frozen.
+   * The scheduler and bot engine will skip this lot.
+   */
+  @Column({ name: 'is_paused', type: 'boolean', default: false })
+  isPaused: boolean;
+
+  /**
+   * Milliseconds remaining at the moment the auction was paused.
+   * Used to recalculate the new auctionEndAt when resumed.
+   */
+  @Column({ name: 'paused_remaining_ms', type: 'bigint', nullable: true, default: null })
+  pausedRemainingMs: number | null;
+
   // Timestamps
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

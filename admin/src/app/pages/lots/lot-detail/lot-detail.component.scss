@@ -1,0 +1,176 @@
+@use 'shared-page' as *;
+@use 'styles/variables' as *;
+
+.page-header__left {
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+}
+
+.back-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: $text-secondary;
+  text-decoration: none;
+  font-size: $fs-sm;
+  transition: color 0.15s;
+
+  &:hover { color: $text-primary; }
+
+  .material-symbols-rounded { font-size: 18px; }
+}
+
+// ── Images strip ─────────────────────────────────────────────────
+
+.images-strip {
+  display: flex;
+  gap: $space-sm;
+  overflow-x: auto;
+  padding-bottom: $space-xs;
+  margin-bottom: $space-lg;
+
+  &__img {
+    width: 140px;
+    height: 96px;
+    object-fit: cover;
+    border-radius: $radius-sm;
+    flex-shrink: 0;
+  }
+}
+
+// ── Price banner ─────────────────────────────────────────────────
+
+.price-banner {
+  display: flex;
+  gap: $space-lg;
+  flex-wrap: wrap;
+  background: $bg-elevated;
+  border-radius: $radius-md;
+  padding: $space-md $space-lg;
+  margin-bottom: $space-lg;
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__label {
+    font-size: $fs-xs;
+    color: $text-tertiary;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__value {
+    font-size: $fs-lg;
+    font-weight: $fw-semibold;
+    color: $text-primary;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    &--met { color: $color-success; }
+    &--unmet { color: $color-danger; }
+  }
+}
+
+// ── Detail grid ──────────────────────────────────────────────────
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: $space-lg;
+  margin-bottom: $space-lg;
+}
+
+// ── Info list (dl) ───────────────────────────────────────────────
+
+.info-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px $space-md;
+  margin: 0;
+
+  dt {
+    font-size: $fs-sm;
+    color: $text-tertiary;
+    white-space: nowrap;
+    padding-top: 1px;
+  }
+
+  dd {
+    margin: 0;
+    font-size: $fs-sm;
+    color: $text-primary;
+    word-break: break-word;
+  }
+}
+
+.description-text {
+  margin-top: $space-md;
+  font-size: $fs-sm;
+  color: $text-secondary;
+  line-height: 1.6;
+  border-top: 1px solid $border;
+  padding-top: $space-sm;
+}
+
+// ── Form inline (status editor) ──────────────────────────────────
+
+.form-inline {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  flex-wrap: wrap;
+
+  .form-control { max-width: 220px; }
+}
+
+// ── Auction control row ──────────────────────────────────────────
+
+.control-row {
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+  flex-wrap: wrap;
+  margin-bottom: $space-sm;
+}
+
+.extend-row {
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+}
+
+.btn--danger-ghost {
+  color: $color-danger;
+  background: transparent;
+  border: none;
+
+  &:hover { background: color-mix(in srgb, $color-danger 12%, transparent); }
+}
+
+.form-control--sm {
+  height: 32px;
+  padding: 0 $space-xs;
+  font-size: $fs-sm;
+}
+
+// ── Tab badge ────────────────────────────────────────────────────
+
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: $color-primary;
+  color: #fff;
+  font-size: 11px;
+  font-weight: $fw-semibold;
+  line-height: 1;
+}

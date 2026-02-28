@@ -87,7 +87,10 @@
                 </select>
               </td>
               <td class="text-muted">{{ lot.createdAt | date:'dd.MM.yy' }}</td>
-              <td>
+              <td class="actions-cell">
+                <a class="btn btn--icon" [routerLink]="['/lots', lot.id]" title="Открыть лот">
+                  <span class="material-symbols-rounded">open_in_new</span>
+                </a>
                 <button class="btn btn--icon" (click)="deleteLot(lot.id)" title="Удалить лот">
                   <span class="material-symbols-rounded">delete</span>
                 </button>

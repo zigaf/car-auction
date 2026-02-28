@@ -26,6 +26,8 @@ export interface IBotConfig {
   isActive: boolean;
   minDelaySec: number;
   maxDelaySec: number;
+  intensity: number;
+  startMinutesBeforeEnd: number | null;
   createdAt: string;
 }
 
@@ -45,6 +47,8 @@ export interface CreateBotConfigPayload {
   isActive?: boolean;
   minDelaySec?: number;
   maxDelaySec?: number;
+  intensity?: number;
+  startMinutesBeforeEnd?: number | null;
 }
 
 export interface UpdateBotConfigPayload {
@@ -53,6 +57,8 @@ export interface UpdateBotConfigPayload {
   isActive?: boolean;
   minDelaySec?: number;
   maxDelaySec?: number;
+  intensity?: number;
+  startMinutesBeforeEnd?: number | null;
 }
 
 @Injectable({ providedIn: 'root' })

@@ -33,18 +33,42 @@ export class UsersPage implements OnInit {
   page = 1;
   limit = 20;
 
+  /**
+   * 'clients' → role=client
+   * 'team'    → role=manager by default; user can switch to admin via teamRoleFilter
+   */
+  activeTab: 'clients' | 'team' = 'clients';
+
   filterSearch = '';
-  filterRole = '';
   filterStatus = '';
+
+  /** Used only when activeTab === 'team' */
+  teamRoleFilter: 'manager' | 'admin' | '' = '';
 
   readonly roleLabels = ROLE_LABELS;
   readonly statusLabels = STATUS_LABELS;
   getStatusLabel(status: string): string { return STATUS_LABELS[status] ?? status; }
-  readonly roles = ['client', 'manager', 'admin'];
+  readonly clientRoles = ['client'];
+  readonly teamRoles = ['manager', 'admin'];
   readonly statuses = ['active', 'blocked', 'pending'];
 
   ngOnInit(): void {
     this.load();
+  }
+
+  switchTab(tab: 'clients' | 'team'): void {
+    if (this.activeTab === tab) return;
+    this.activeTab = tab;
+    this.page = 1;
+    this.filterSearch = '';
+    this.filterStatus = '';
+    if (tab === 'team') this.teamRoleFilter = '';
+    this.load();
+  }
+
+  private get activeRoleFilter(): string | undefined {
+    if (this.activeTab === 'clients') return 'client';
+    return this.teamRoleFilter || undefined;
   }
 
   load(): void {
@@ -55,7 +79,7 @@ export class UsersPage implements OnInit {
       page: this.page,
       limit: this.limit,
       search: this.filterSearch || undefined,
-      role: this.filterRole || undefined,
+      role: this.activeRoleFilter,
       status: this.filterStatus || undefined,
     }).subscribe({
       next: (res) => {

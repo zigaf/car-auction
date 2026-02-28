@@ -447,6 +447,65 @@ export class LotService {
     return this.lotRepository.save(lot);
   }
 
+  /**
+   * Freeze the auction timer. Stores remaining ms and sets isPaused=true.
+   * The scheduler and bot engine will skip paused lots.
+   */
+  async pauseAuction(id: string): Promise<Lot> {
+    const lot = await this.lotRepository.findOne({ where: { id }, relations: ['images'] });
+    if (!lot) throw new NotFoundException('Lot not found');
+    if (lot.status !== LotStatus.TRADING) {
+      throw new BadRequestException('Only TRADING lots can be paused');
+    }
+    if (lot.isPaused) throw new BadRequestException('Auction is already paused');
+    if (!lot.auctionEndAt) throw new BadRequestException('Lot has no auction end time');
+
+    lot.isPaused = true;
+    lot.pausedRemainingMs = Math.max(0, lot.auctionEndAt.getTime() - Date.now());
+    return this.lotRepository.save(lot);
+  }
+
+  /**
+   * Resume a paused auction. Recalculates auctionEndAt from stored remaining ms.
+   */
+  async resumeAuction(id: string): Promise<Lot> {
+    const lot = await this.lotRepository.findOne({ where: { id }, relations: ['images'] });
+    if (!lot) throw new NotFoundException('Lot not found');
+    if (!lot.isPaused) throw new BadRequestException('Auction is not paused');
+
+    const remainingMs = Number(lot.pausedRemainingMs ?? 0);
+    lot.auctionEndAt = new Date(Date.now() + remainingMs);
+    lot.isPaused = false;
+    lot.pausedRemainingMs = null;
+    return this.lotRepository.save(lot);
+  }
+
+  /**
+   * Add or remove minutes from the auction end time.
+   * Works for both paused (modifies pausedRemainingMs) and active (modifies auctionEndAt) lots.
+   */
+  async extendAuction(id: string, minutes: number): Promise<Lot> {
+    const lot = await this.lotRepository.findOne({ where: { id }, relations: ['images'] });
+    if (!lot) throw new NotFoundException('Lot not found');
+    if (lot.status !== LotStatus.TRADING) {
+      throw new BadRequestException('Only TRADING lots can be extended');
+    }
+    if (!lot.auctionEndAt && !lot.isPaused) {
+      throw new BadRequestException('Lot has no auction end time');
+    }
+
+    const deltaMs = minutes * 60_000;
+
+    if (lot.isPaused) {
+      lot.pausedRemainingMs = Math.max(0, Number(lot.pausedRemainingMs ?? 0) + deltaMs);
+    } else {
+      const current = lot.auctionEndAt!.getTime();
+      lot.auctionEndAt = new Date(Math.max(Date.now() + 1000, current + deltaMs));
+    }
+
+    return this.lotRepository.save(lot);
+  }
+
   private parseCsvLine(line: string): string[] {
     const result: string[] = [];
     let current = '';

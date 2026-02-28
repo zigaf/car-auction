@@ -17,6 +17,10 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/lots/lots').then(m => m.LotsPage),
       },
       {
+        path: 'lots/:id',
+        loadComponent: () => import('./pages/lots/lot-detail/lot-detail.component').then(m => m.LotDetailComponent),
+      },
+      {
         path: 'orders',
         loadComponent: () => import('./pages/orders/orders').then(m => m.OrdersPage),
       },
@@ -43,6 +47,10 @@ export const routes: Routes = [
       {
         path: 'bots',
         loadComponent: () => import('./pages/bots/bots.component').then(m => m.BotsPage),
+      },
+      {
+        path: 'monitor',
+        loadComponent: () => import('./pages/monitor/monitor.component').then(m => m.MonitorComponent),
       },
     ],
   },

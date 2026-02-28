@@ -1,0 +1,363 @@
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="page-header__left">
+      <a class="back-link" routerLink="/lots">
+        <span class="material-symbols-rounded">arrow_back</span>
+        Лоты
+      </a>
+      @if (lot) {
+        <h1 class="page-title">{{ lot.brand }} {{ lot.model }} {{ lot.year }}</h1>
+      } @else {
+        <h1 class="page-title">Загрузка…</h1>
+      }
+    </div>
+    @if (lot) {
+      <span class="badge" [class]="'badge--' + (lot.status === 'trading' ? 'green' : lot.status === 'sold' ? 'amber' : lot.status === 'cancelled' ? 'red' : lot.status === 'active' ? 'blue' : 'gray')">
+        {{ statusLabels[lot.status] ?? lot.status }}
+      </span>
+    }
+  </div>
+
+  <!-- Loading / Error -->
+  @if (loading) {
+    <div class="state-loading">
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    </div>
+  }
+
+  @if (error && !loading) {
+    <div class="state-error">
+      <span class="material-symbols-rounded">error</span>
+      {{ error }}
+    </div>
+  }
+
+  @if (!loading && lot) {
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn" [class.tab-btn--active]="activeTab === 'info'" (click)="activeTab = 'info'">
+        <span class="material-symbols-rounded">info</span> Информация
+      </button>
+      <button class="tab-btn" [class.tab-btn--active]="activeTab === 'bids'" (click)="openBidsTab()">
+        <span class="material-symbols-rounded">gavel</span> Ставки
+        @if (bidsTotal > 0) { <span class="tab-badge">{{ bidsTotal }}</span> }
+      </button>
+      <button class="tab-btn" [class.tab-btn--active]="activeTab === 'bot'" (click)="activeTab = 'bot'">
+        <span class="material-symbols-rounded">smart_toy</span> Бот
+      </button>
+    </div>
+
+    <!-- ── INFO TAB ─────────────────────────────────────────────── -->
+    @if (activeTab === 'info') {
+
+      <!-- Car images -->
+      @if (lot.images && lot.images.length > 0) {
+        <div class="images-strip">
+          @for (img of lot.images.slice(0, 6); track img.id) {
+            <img class="images-strip__img" [src]="img.url" [alt]="lot.title" />
+          }
+        </div>
+      }
+
+      <!-- Current price banner -->
+      <div class="price-banner">
+        <div class="price-banner__item">
+          <span class="price-banner__label">Текущая цена</span>
+          <span class="price-banner__value">{{ currentPriceDisplay | number }} EUR</span>
+        </div>
+        @if (lot.reservePrice) {
+          <div class="price-banner__item">
+            <span class="price-banner__label">Резервная цена</span>
+            <span class="price-banner__value" [class.price-banner__value--met]="reserveMet" [class.price-banner__value--unmet]="!reserveMet">
+              {{ lot.reservePrice | number }} EUR
+              @if (reserveMet) { <span class="material-symbols-rounded" style="font-size:14px">check_circle</span> }
+              @else { <span class="material-symbols-rounded" style="font-size:14px">cancel</span> }
+            </span>
+          </div>
+        }
+        @if (lot.buyNowPrice) {
+          <div class="price-banner__item">
+            <span class="price-banner__label">Купить сейчас</span>
+            <span class="price-banner__value">{{ lot.buyNowPrice | number }} EUR</span>
+          </div>
+        }
+        @if (lot.bidStep) {
+          <div class="price-banner__item">
+            <span class="price-banner__label">Шаг ставки</span>
+            <span class="price-banner__value">{{ lot.bidStep | number }} EUR</span>
+          </div>
+        }
+      </div>
+
+      <div class="detail-grid">
+
+        <!-- Vehicle info -->
+        <div class="card">
+          <div class="card-title">
+            <span class="material-symbols-rounded">directions_car</span>
+            Автомобиль
+          </div>
+          <dl class="info-list">
+            <dt>Марка / Модель</dt>
+            <dd>{{ lot.brand }} {{ lot.model }} {{ lot.derivative }}</dd>
+            <dt>Год</dt>
+            <dd>{{ lot.year }}</dd>
+            <dt>Пробег</dt>
+            <dd>{{ lot.mileage | number }} км</dd>
+            <dt>Топливо</dt>
+            <dd>{{ fuelLabels[lot.fuelType] ?? lot.fuelType }}</dd>
+            @if (lot.vin) {
+              <dt>VIN</dt>
+              <dd class="mono">{{ lot.vin }}</dd>
+            }
+            @if (lot.saleLocation) {
+              <dt>Место продажи</dt>
+              <dd>{{ lot.saleLocation }}</dd>
+            }
+            @if (lot.vehicleLocation) {
+              <dt>Местоположение</dt>
+              <dd>{{ lot.vehicleLocation }}</dd>
+            }
+            @if (lot.cosmeticGrade || lot.mechanicalGrade) {
+              <dt>Состояние (косм. / мех.)</dt>
+              <dd>{{ lot.cosmeticGrade ?? '—' }} / {{ lot.mechanicalGrade ?? '—' }}</dd>
+            }
+            @if (lot.conditionReportUrl) {
+              <dt>Отчёт</dt>
+              <dd><a [href]="lot.conditionReportUrl" target="_blank" class="link">Открыть</a></dd>
+            }
+          </dl>
+          @if (lot.description) {
+            <p class="description-text">{{ lot.description }}</p>
+          }
+        </div>
+
+        <!-- Auction & Status -->
+        <div class="card">
+          <div class="card-title">
+            <span class="material-symbols-rounded">timer</span>
+            Аукцион
+          </div>
+          <dl class="info-list">
+            <dt>Стартовая ставка</dt>
+            <dd>{{ lot.startingBid | number }} EUR</dd>
+            <dt>Тип аукциона</dt>
+            <dd>{{ auctionTypeLabels[lot.auctionType ?? ''] ?? lot.auctionType ?? '—' }}</dd>
+            @if (lot.auctionStartAt ?? lot.auctionStart) {
+              <dt>Начало</dt>
+              <dd>{{ (lot.auctionStartAt ?? lot.auctionStart) | date:'dd.MM.yyyy HH:mm' }}</dd>
+            }
+            @if (lot.auctionEndAt ?? lot.auctionEnd) {
+              <dt>Конец</dt>
+              <dd>{{ (lot.auctionEndAt ?? lot.auctionEnd) | date:'dd.MM.yyyy HH:mm' }}</dd>
+            }
+            @if (lot.winnerId) {
+              <dt>Победитель ID</dt>
+              <dd class="mono">{{ lot.winnerId.slice(0, 8) }}…</dd>
+            }
+            <dt>ID лота</dt>
+            <dd class="mono">{{ lot.id }}</dd>
+            <dt>Создан</dt>
+            <dd>{{ lot.createdAt | date:'dd.MM.yyyy HH:mm' }}</dd>
+          </dl>
+        </div>
+
+      </div><!-- /detail-grid -->
+
+      <!-- Status editor -->
+      <div class="card">
+        <div class="card-title">
+          <span class="material-symbols-rounded">edit</span>
+          Статус лота
+        </div>
+        <div class="form-inline">
+          <select class="form-control" [(ngModel)]="editStatus">
+            @for (s of statuses; track s) {
+              <option [value]="s">{{ statusLabels[s] }}</option>
+            }
+          </select>
+          <button class="btn btn--secondary btn--sm" (click)="saveStatus()" [disabled]="statusSaving || editStatus === lot.status">
+            @if (statusSaving) { <span class="material-symbols-rounded spin">progress_activity</span> }
+            Сохранить
+          </button>
+          @if (statusSaved) {
+            <span class="save-success">
+              <span class="material-symbols-rounded">check_circle</span> Сохранено
+            </span>
+          }
+        </div>
+      </div>
+
+      <!-- Auction control (trading lots only) -->
+      @if (isTrading) {
+        <div class="card">
+          <div class="card-title">
+            <span class="material-symbols-rounded">manage_accounts</span>
+            Управление аукционом
+            @if (lot.isPaused) {
+              <span class="badge badge--amber" style="margin-left:8px">Пауза</span>
+            }
+          </div>
+          <div class="control-row">
+            @if (!lot.isPaused) {
+              <button class="btn btn--secondary btn--sm" (click)="pauseAuction()" [disabled]="controlSaving">
+                <span class="material-symbols-rounded">pause</span>
+                Пауза
+              </button>
+            } @else {
+              <button class="btn btn--primary btn--sm" (click)="resumeAuction()" [disabled]="controlSaving">
+                <span class="material-symbols-rounded">play_arrow</span>
+                Возобновить
+              </button>
+            }
+            <div class="extend-row">
+              <input class="form-control form-control--sm" type="number" [(ngModel)]="extendMinutes" min="1" max="120" style="width:80px" />
+              <span class="text-muted" style="font-size:12px">мин</span>
+              <button class="btn btn--secondary btn--sm" (click)="extendAuction()" [disabled]="controlSaving || !extendMinutes">
+                <span class="material-symbols-rounded">more_time</span>
+                Продлить
+              </button>
+            </div>
+          </div>
+          @if (controlSuccess) {
+            <span class="save-success"><span class="material-symbols-rounded">check_circle</span> {{ controlSuccess }}</span>
+          }
+          @if (controlError) {
+            <span class="save-error">{{ controlError }}</span>
+          }
+        </div>
+      }
+
+      <!-- Schedule editor -->
+      <div class="card">
+        <div class="card-title">
+          <span class="material-symbols-rounded">schedule</span>
+          Расписание аукциона
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Тип</label>
+            <select class="form-control" [(ngModel)]="editAuctionType">
+              @for (t of auctionTypes; track t) {
+                <option [value]="t">{{ auctionTypeLabels[t] }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Начало</label>
+            <input class="form-control" type="datetime-local" [(ngModel)]="editStartAt" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Конец</label>
+            <input class="form-control" type="datetime-local" [(ngModel)]="editEndAt" />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button
+            class="btn btn--secondary btn--sm"
+            (click)="saveSchedule()"
+            [disabled]="scheduleSaving || !editStartAt || !editEndAt"
+          >
+            @if (scheduleSaving) { <span class="material-symbols-rounded spin">progress_activity</span> }
+            <span class="material-symbols-rounded">save</span>
+            Сохранить расписание
+          </button>
+          @if (scheduleSaved) {
+            <span class="save-success"><span class="material-symbols-rounded">check_circle</span> Сохранено</span>
+          }
+          @if (scheduleError) { <span class="save-error">{{ scheduleError }}</span> }
+        </div>
+      </div>
+
+    }
+    <!-- /INFO TAB -->
+
+    <!-- ── BIDS TAB ─────────────────────────────────────────────── -->
+    @if (activeTab === 'bids') {
+      @if (bidsLoading) {
+        <div class="state-loading">
+          <span class="material-symbols-rounded spin">progress_activity</span>
+        </div>
+      }
+
+      @if (!bidsLoading) {
+        @if (bids.length === 0) {
+          <div class="empty-state">
+            <span class="material-symbols-rounded">gavel</span>
+            <p>Ставок ещё нет</p>
+          </div>
+        } @else {
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Сумма</th>
+                  <th>Участник (ID)</th>
+                  <th>Тип</th>
+                  <th>Время</th>
+                  @if (isTrading) { <th></th> }
+                </tr>
+              </thead>
+              <tbody>
+                @for (bid of bids; track bid.id; let i = $index) {
+                  <tr>
+                    <td class="text-muted">{{ (bidsPage - 1) * bidsLimit + i + 1 }}</td>
+                    <td class="mono fw-semibold">{{ bid.amount | number }} EUR</td>
+                    <td class="mono text-muted">{{ bid.userId.slice(0, 8) }}…</td>
+                    <td>
+                      @if (bid.isPreBid) {
+                        <span class="badge badge--blue">Авто</span>
+                      } @else {
+                        <span class="badge badge--gray">Ручная</span>
+                      }
+                    </td>
+                    <td class="text-muted">{{ bid.createdAt | date:'dd.MM.yy HH:mm:ss' }}</td>
+                    @if (isTrading) {
+                      <td>
+                        @if (i === 0 && bidsPage === 1) {
+                          <button class="btn btn--icon btn--danger-ghost" title="Откатить ставку" (click)="rollbackBid(bid.id)">
+                            <span class="material-symbols-rounded">undo</span>
+                          </button>
+                        }
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          @if (bidsPages > 1) {
+            <div class="pagination">
+              <button class="btn btn--secondary btn--sm" [disabled]="bidsPage === 1" (click)="prevBidsPage()">
+                <span class="material-symbols-rounded">chevron_left</span>
+              </button>
+              <span class="pagination__info">{{ bidsPage }} / {{ bidsPages }}</span>
+              <button class="btn btn--secondary btn--sm" [disabled]="bidsPage === bidsPages" (click)="nextBidsPage()">
+                <span class="material-symbols-rounded">chevron_right</span>
+              </button>
+            </div>
+          }
+        }
+      }
+    }
+    <!-- /BIDS TAB -->
+
+    <!-- ── BOT TAB ──────────────────────────────────────────────── -->
+    @if (activeTab === 'bot') {
+      <div class="card">
+        <div class="card-title">
+          <span class="material-symbols-rounded">smart_toy</span>
+          Настройки бота для этого лота
+        </div>
+        <app-bot-settings [lotId]="lotId" />
+      </div>
+    }
+    <!-- /BOT TAB -->
+
+  }
+</div>
