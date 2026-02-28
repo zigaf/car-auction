@@ -16,7 +16,7 @@ export interface IOrder {
     model: string;
     year: number;
   };
-  buyer: {
+  user: {
     id: string;
     email: string;
     firstName: string;

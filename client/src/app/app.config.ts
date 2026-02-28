@@ -24,7 +24,10 @@ function initializeAuth(platformId: object, stateService: StateService): () => P
       });
 
       if (!res.ok) {
-        // Token expired — try to refresh silently
+        // Only attempt refresh / clear tokens on actual auth errors (401)
+        // For server errors (5xx) or network issues, keep tokens and let user retry
+        if (res.status !== 401) return;
+
         const refreshToken = localStorage.getItem('refreshToken');
         if (!refreshToken) {
           localStorage.removeItem('accessToken');
@@ -39,8 +42,10 @@ function initializeAuth(platformId: object, stateService: StateService): () => P
         });
 
         if (!refreshRes.ok) {
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
+          if (refreshRes.status === 401) {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+          }
           return;
         }
 

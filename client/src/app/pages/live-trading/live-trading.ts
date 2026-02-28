@@ -1,6 +1,6 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy, PLATFORM_ID, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DecimalPipe } from '@angular/common';
+import { DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { Subject, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { AuctionService } from '../../core/services/auction.service';
@@ -70,6 +70,8 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
     totalBids: 0,
   };
 
+  private readonly platformId = inject(PLATFORM_ID);
+
   constructor(
     private readonly auctionService: AuctionService,
     private readonly wsService: WebsocketService,
@@ -79,6 +81,10 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      this.loading = false;
+      return;
+    }
     this.now = this.timeService.now();
     this.currentUserId = this.stateService.snapshot.user?.id ?? null;
     this.loadGlobalFeedHistory();

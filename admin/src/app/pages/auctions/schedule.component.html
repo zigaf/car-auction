@@ -1,105 +1,251 @@
 <div class="page">
   <div class="page-header">
-    <h1 class="page-title">Планирование аукционов</h1>
+    <h1 class="page-title">Аукционы</h1>
   </div>
 
-  <div class="schedule-layout">
-    <!-- Lot picker -->
-    <div class="card lot-picker">
-      <h2 class="card-title">1. Выберите лот</h2>
-      <input
-        class="form-control"
-        type="text"
-        placeholder="Поиск лота..."
-        [(ngModel)]="lotSearch"
-        (input)="loadLots()"
-      />
-      @if (lotsLoading) {
-        <div class="state-loading" style="padding: 20px 0">
-          <span class="material-symbols-rounded spin">progress_activity</span>
-        </div>
-      }
-      <div class="lot-list">
-        @for (lot of lots; track lot.id) {
-          <button
-            class="lot-item"
-            [class.lot-item--selected]="selectedLot?.id === lot.id"
-            (click)="selectLot(lot)"
-          >
-            <div class="lot-item__title">{{ lot.brand }} {{ lot.model }} {{ lot.year }}</div>
-            <div class="lot-item__meta text-muted">{{ lot.status }} · €{{ lot.startingBid | number }}</div>
-          </button>
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn" [class.tab-btn--active]="activeTab === 'upcoming'" (click)="setTab('upcoming')">
+      <span class="material-symbols-rounded">event_upcoming</span>
+      Предстоящие
+      @if (upcomingLots.length > 0) { <span class="tab-badge">{{ upcomingLots.length }}</span> }
+    </button>
+    <button class="tab-btn" [class.tab-btn--active]="activeTab === 'current'" (click)="setTab('current')">
+      <span class="material-symbols-rounded">live_tv</span>
+      Текущие
+      @if (currentLots.length > 0) { <span class="tab-badge tab-badge--green">{{ currentLots.length }}</span> }
+    </button>
+    <button class="tab-btn" [class.tab-btn--active]="activeTab === 'past'" (click)="setTab('past')">
+      <span class="material-symbols-rounded">history</span>
+      Прошедшие
+    </button>
+    <button class="tab-btn" [class.tab-btn--active]="activeTab === 'plan'" (click)="setTab('plan')">
+      <span class="material-symbols-rounded">add_circle</span>
+      Запланировать
+    </button>
+  </div>
+
+  <!-- Loading -->
+  @if (listsLoading && activeTab !== 'plan') {
+    <div class="state-loading">
+      <span class="material-symbols-rounded spin">progress_activity</span>
+    </div>
+  }
+
+  <!-- ── Upcoming ── -->
+  @if (activeTab === 'upcoming' && !listsLoading) {
+    @if (upcomingLots.length === 0) {
+      <div class="empty-state">
+        <span class="material-symbols-rounded">event_upcoming</span>
+        <p>Нет запланированных аукционов</p>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Лот</th>
+              <th>Начало</th>
+              <th>Конец</th>
+              <th>До начала</th>
+              <th>Тип</th>
+              <th>Стартовая цена</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (lot of upcomingLots; track lot.id) {
+              <tr>
+                <td>
+                  <div class="lot-name">{{ lot.brand }} {{ lot.model }} {{ lot.year }}</div>
+                  <div class="text-muted">{{ lot.title }}</div>
+                </td>
+                <td class="text-muted">{{ (lot.auctionStartAt || lot.auctionStart) | date:'dd.MM.yy HH:mm' }}</td>
+                <td class="text-muted">{{ (lot.auctionEndAt || lot.auctionEnd) | date:'dd.MM.yy HH:mm' }}</td>
+                <td><span class="badge badge--blue">{{ getTimeUntil(lot.auctionStartAt || lot.auctionStart) }}</span></td>
+                <td class="text-muted">{{ lot.auctionType || '—' }}</td>
+                <td>€{{ lot.startingBid | number }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+
+  <!-- ── Current ── -->
+  @if (activeTab === 'current' && !listsLoading) {
+    @if (currentLots.length === 0) {
+      <div class="empty-state">
+        <span class="material-symbols-rounded">live_tv</span>
+        <p>Нет активных торгов</p>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Лот</th>
+              <th>Текущая цена</th>
+              <th>До конца</th>
+              <th>Конец</th>
+              <th>Тип</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (lot of currentLots; track lot.id) {
+              <tr>
+                <td>
+                  <div class="lot-name">{{ lot.brand }} {{ lot.model }} {{ lot.year }}</div>
+                  <div class="text-muted">{{ lot.title }}</div>
+                </td>
+                <td><strong>€{{ (lot.currentPrice || lot.startingBid) | number }}</strong></td>
+                <td><span class="badge badge--green">{{ getTimeLeft(lot.auctionEndAt || lot.auctionEnd) }}</span></td>
+                <td class="text-muted">{{ (lot.auctionEndAt || lot.auctionEnd) | date:'dd.MM.yy HH:mm' }}</td>
+                <td class="text-muted">{{ lot.auctionType || '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+
+  <!-- ── Past ── -->
+  @if (activeTab === 'past' && !listsLoading) {
+    @if (pastLots.length === 0) {
+      <div class="empty-state">
+        <span class="material-symbols-rounded">history</span>
+        <p>Нет завершённых аукционов</p>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Лот</th>
+              <th>Итоговая цена</th>
+              <th>Дата окончания</th>
+              <th>Тип</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (lot of pastLots; track lot.id) {
+              <tr>
+                <td>
+                  <div class="lot-name">{{ lot.brand }} {{ lot.model }} {{ lot.year }}</div>
+                  <div class="text-muted">{{ lot.title }}</div>
+                </td>
+                <td><strong>€{{ (lot.currentPrice || lot.startingBid) | number }}</strong></td>
+                <td class="text-muted">{{ (lot.auctionEndAt || lot.auctionEnd) | date:'dd.MM.yy HH:mm' }}</td>
+                <td class="text-muted">{{ lot.auctionType || '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+
+  <!-- ── Plan ── -->
+  @if (activeTab === 'plan') {
+    <div class="schedule-layout">
+      <!-- Lot picker -->
+      <div class="card lot-picker">
+        <h2 class="card-title">1. Выберите лот</h2>
+        <input
+          class="form-control"
+          type="text"
+          placeholder="Поиск лота..."
+          [(ngModel)]="lotSearch"
+          (input)="loadPlanLots()"
+        />
+        @if (planLotsLoading) {
+          <div class="state-loading" style="padding: 20px 0">
+            <span class="material-symbols-rounded spin">progress_activity</span>
+          </div>
         }
-        @if (!lotsLoading && lots.length === 0) {
-          <p class="text-muted" style="padding: 12px 0">Нет лотов в статусе IMPORTED / ACTIVE</p>
+        <div class="lot-list">
+          @for (lot of planLots; track lot.id) {
+            <button
+              class="lot-item"
+              [class.lot-item--selected]="selectedLot?.id === lot.id"
+              (click)="selectLot(lot)"
+            >
+              <div class="lot-item__title">{{ lot.brand }} {{ lot.model }} {{ lot.year }}</div>
+              <div class="lot-item__meta text-muted">{{ lot.status }} · €{{ lot.startingBid | number }}</div>
+            </button>
+          }
+          @if (!planLotsLoading && planLots.length === 0) {
+            <p class="text-muted" style="padding: 12px 0">Нет лотов в статусе IMPORTED / ACTIVE</p>
+          }
+        </div>
+      </div>
+
+      <!-- Schedule form -->
+      <div class="card schedule-form">
+        <h2 class="card-title">2. Расписание</h2>
+
+        @if (!selectedLot) {
+          <p class="text-muted">Сначала выберите лот слева</p>
+        } @else {
+          <div class="selected-lot-banner">
+            <span class="material-symbols-rounded">directions_car</span>
+            {{ selectedLot.brand }} {{ selectedLot.model }} {{ selectedLot.year }} — {{ selectedLot.title }}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Тип аукциона</label>
+            <select class="form-control" [(ngModel)]="auctionType">
+              @for (t of auctionTypes; track t.value) {
+                <option [value]="t.value">{{ t.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Начало</label>
+              <input class="form-control" type="datetime-local" [(ngModel)]="auctionStartAt" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Конец</label>
+              <input class="form-control" type="datetime-local" [(ngModel)]="auctionEndAt" />
+            </div>
+          </div>
+
+          <!-- Bot section -->
+          <div class="bot-toggle">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="enableBot" />
+              Подключить торгового бота
+            </label>
+          </div>
+
+          @if (enableBot && selectedLot) {
+            <app-bot-settings [lotId]="selectedLot.id" />
+          }
+
+          <div class="form-actions">
+            <button
+              class="btn btn--primary"
+              [disabled]="saving || !auctionStartAt || !auctionEndAt"
+              (click)="save()"
+            >
+              @if (saving) { <span class="material-symbols-rounded spin">progress_activity</span> }
+              <span class="material-symbols-rounded">save</span>
+              Сохранить расписание
+            </button>
+            @if (saved) {
+              <span class="save-success">
+                <span class="material-symbols-rounded">check_circle</span> Сохранено
+              </span>
+            }
+            @if (saveError) {
+              <span class="save-error">{{ saveError }}</span>
+            }
+          </div>
         }
       </div>
     </div>
-
-    <!-- Schedule form -->
-    <div class="card schedule-form">
-      <h2 class="card-title">2. Расписание</h2>
-
-      @if (!selectedLot) {
-        <p class="text-muted">Сначала выберите лот слева</p>
-      } @else {
-        <div class="selected-lot-banner">
-          <span class="material-symbols-rounded">directions_car</span>
-          {{ selectedLot.brand }} {{ selectedLot.model }} {{ selectedLot.year }} — {{ selectedLot.title }}
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Тип аукциона</label>
-          <select class="form-control" [(ngModel)]="auctionType">
-            @for (t of auctionTypes; track t.value) {
-              <option [value]="t.value">{{ t.label }}</option>
-            }
-          </select>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Начало</label>
-            <input class="form-control" type="datetime-local" [(ngModel)]="auctionStartAt" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Конец</label>
-            <input class="form-control" type="datetime-local" [(ngModel)]="auctionEndAt" />
-          </div>
-        </div>
-
-        <!-- Bot section -->
-        <div class="bot-toggle">
-          <label class="checkbox-label">
-            <input type="checkbox" [(ngModel)]="enableBot" />
-            Подключить торгового бота
-          </label>
-        </div>
-
-        @if (enableBot && selectedLot) {
-          <app-bot-settings [lotId]="selectedLot.id" />
-        }
-
-        <div class="form-actions">
-          <button
-            class="btn btn--primary"
-            [disabled]="saving || !auctionStartAt || !auctionEndAt"
-            (click)="save()"
-          >
-            @if (saving) { <span class="material-symbols-rounded spin">progress_activity</span> }
-            <span class="material-symbols-rounded">save</span>
-            Сохранить расписание
-          </button>
-          @if (saved) {
-            <span class="save-success">
-              <span class="material-symbols-rounded">check_circle</span> Сохранено
-            </span>
-          }
-          @if (saveError) {
-            <span class="save-error">{{ saveError }}</span>
-          }
-        </div>
-      }
-    </div>
-  </div>
+  }
 </div>

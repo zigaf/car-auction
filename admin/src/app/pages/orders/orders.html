@@ -47,8 +47,8 @@
                 <div class="order-lot">{{ order.lot.brand }} {{ order.lot.model }} {{ order.lot.year }}</div>
               </td>
               <td>
-                <div class="buyer-name">{{ order.buyer.firstName }} {{ order.buyer.lastName }}</div>
-                <div class="buyer-email">{{ order.buyer.email }}</div>
+                <div class="buyer-name">{{ order.user?.firstName }} {{ order.user?.lastName }}</div>
+                <div class="buyer-email">{{ order.user?.email }}</div>
               </td>
               <td class="order-amount">{{ order.totalAmount | number }} {{ order.currency }}</td>
               <td>
