@@ -35,7 +35,13 @@ export class EcarsTradeBrowserService implements OnModuleDestroy {
         this.log('Launching browser for eCarsTrade...');
         this.browser = await chromium.launch({
             headless: true,
-            args: ['--disable-blink-features=AutomationControlled']
+            args: [
+                '--disable-blink-features=AutomationControlled',
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-gpu',
+            ]
         });
 
         // Check if we have an existing session
