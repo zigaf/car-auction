@@ -139,10 +139,10 @@ export class EcarsTradeBrowserService implements OnModuleDestroy {
         // We will extract the URLs of the cars to scrape their detail pages
         const carLinks = await this.page.evaluate(() => {
             const links = Array.from(document.querySelectorAll('a'));
-            // eCarsTrade car URLs usually look like /auctions/xx-xxxx/car-name-id
+            // eCarsTrade car URLs visually look like /cars/1234567
             return Array.from(new Set(links
                 .map(a => a.href)
-                .filter(href => href.includes('/auctions/') && href.split('/').length > 5)
+                .filter(href => href && /\/cars\/\d+/.test(href))
             ));
         });
 

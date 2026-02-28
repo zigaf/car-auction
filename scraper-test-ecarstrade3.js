@@ -59,6 +59,7 @@ const fs = require('fs');
             }
             return {
                 carLinksCount: carLinks.length,
+                carLinks: carLinks.map(a => a.href),
                 cardsCount: cards.length,
                 sampleTexts: texts
             };
@@ -66,6 +67,7 @@ const fs = require('fs');
 
         console.log('\n--- DOM Analysis ---');
         console.log('Potenial Car Links:', carsInDom.carLinksCount);
+        console.log('URLs:', carsInDom.carLinks.slice(0, 10)); // just look at first 10
         console.log('Cards:', carsInDom.cardsCount);
         console.log('Sample texts from cards:', carsInDom.sampleTexts);
 
