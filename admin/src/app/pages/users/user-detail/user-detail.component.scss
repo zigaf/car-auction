@@ -1,10 +1,16 @@
-// ─── Tabs ────────────────────────────────────────────────────────────────────
+@use 'shared-page';
+@use 'styles/variables' as v;
+
+// ─── Tabs (underline style — overrides shared-page pill) ──────────────────────
 .tabs {
   display: flex;
   gap: 4px;
   margin-bottom: 20px;
   border-bottom: 1px solid var(--border);
-  padding-bottom: 0;
+  padding: 0;
+  background: none;
+  border-radius: 0;
+  width: auto;
 }
 
 .tab-btn {
@@ -19,14 +25,20 @@
   font-size: var(--fs-sm);
   font-weight: 500;
   border-bottom: 2px solid transparent;
+  border-radius: 0;
   margin-bottom: -1px;
+  box-shadow: none;
   transition: color 0.15s, border-color 0.15s;
 
-  &:hover { color: var(--text-primary); }
+  &:hover { color: var(--text-primary); background: none; }
   &--active {
     color: var(--accent);
     border-bottom-color: var(--accent);
+    background: none;
+    box-shadow: none;
   }
+
+  .material-symbols-rounded { font-size: 18px; }
 }
 
 // ─── Restriction banner ───────────────────────────────────────────────────────
@@ -102,12 +114,6 @@
   }
 }
 
-.form-label {
-  font-size: var(--fs-sm);
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
 .checkbox-label {
   display: flex;
   align-items: center;
@@ -121,20 +127,6 @@
   align-items: center;
   gap: 12px;
   margin-top: 24px;
-}
-
-// ─── Feedback messages ────────────────────────────────────────────────────────
-.save-success {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--green);
-  font-size: var(--fs-sm);
-}
-
-.save-error {
-  color: var(--red);
-  font-size: var(--fs-sm);
 }
 
 // ─── Balance summary ──────────────────────────────────────────────────────────
@@ -212,18 +204,3 @@
   &--negative { color: var(--red); }
 }
 
-// ─── Pagination ───────────────────────────────────────────────────────────────
-.pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 16px;
-
-  &__info {
-    font-size: var(--fs-sm);
-    color: var(--text-secondary);
-    min-width: 60px;
-    text-align: center;
-  }
-}
