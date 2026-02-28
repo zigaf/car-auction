@@ -27,7 +27,12 @@
                 <div class="form-actions">
                     <button class="btn btn--primary" (click)="startScraper()" [disabled]="isRunning">
                         <span class="material-symbols-rounded">play_arrow</span>
-                        {{ isRunning ? 'Парсер работает...' : 'Запустить парсер' }}
+                        Запустить парсер
+                    </button>
+                    <button *ngIf="isRunning" class="btn btn--danger" style="margin-left: 10px;" (click)="stopScraper()"
+                        [disabled]="isStopping">
+                        <span class="material-symbols-rounded">stop</span>
+                        {{ isStopping ? 'Останавливается...' : 'Остановить' }}
                     </button>
                 </div>
             </div>

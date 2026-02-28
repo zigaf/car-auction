@@ -42,46 +42,44 @@ const fs = require('fs');
         });
         console.log('Login Error Message (if any):', loginError);
 
-        await page.goto('https://ecarstrade.com/auctions/cars', { waitUntil: 'domcontentloaded' });
+        // Go to specific car URL
+        console.log('Navigating to specific car...');
+        await page.goto('https://ecarstrade.com/cars/6921528', { waitUntil: 'domcontentloaded' });
         await page.waitForTimeout(5000);
 
-        const carsInDom = await page.evaluate(() => {
-            // Find possible car cards
-            const links = Array.from(document.querySelectorAll('a'));
-            const carLinks = links.filter(a => a.href && (a.href.includes('/cars/') || a.href.includes('/auctions/')));
+        const carData = await page.evaluate(() => {
+            const h1 = document.querySelector('h1')?.innerText?.trim();
+            // Try to find images in the slider
+            const imgs = Array.from(document.querySelectorAll('img'))
+                .map(img => img.src)
+                .filter(src => src.includes('http') && !src.includes('logo') && !src.includes('icon'));
 
-            const texts = [];
-            const cards = Array.from(document.querySelectorAll('div.card, article, div[class*="vehicle"]'));
+            // Try to find the price
+            const priceEl = document.querySelector('.price, [class*="price"], .amount, [class*="amount"]');
+            const priceText = priceEl ? priceEl.innerText : null;
 
-            for (let i = 0; i < Math.min(5, cards.length); i++) {
-                const t = cards[i].innerText.replace(/\n/g, ' ').substring(0, 150);
-                if (t.length > 20) texts.push(t);
-            }
+            // Try to find specs/details
+            const details = {};
+            const dtElems = Array.from(document.querySelectorAll('dt, .label, [class*="label"]'));
+            const ddElems = Array.from(document.querySelectorAll('dd, .value, [class*="value"]'));
+
+            // Alternatively, they might use flex rows or lists
+            const listItems = Array.from(document.querySelectorAll('li, .list-item'));
+            const listTexts = listItems.map(li => li.innerText.trim()).filter(t => t.length > 0 && t.length < 100);
+
             return {
-                carLinksCount: carLinks.length,
-                carLinks: carLinks.map(a => a.href),
-                cardsCount: cards.length,
-                sampleTexts: texts
+                title: h1,
+                images: imgs.slice(0, 5), // Just top 5
+                price: priceText,
+                listTexts: listTexts.slice(0, 15),
             };
         });
 
-        console.log('\n--- DOM Analysis ---');
-        console.log('Potenial Car Links:', carsInDom.carLinksCount);
-        console.log('URLs:', carsInDom.carLinks.slice(0, 10)); // just look at first 10
-        console.log('Cards:', carsInDom.cardsCount);
-        console.log('Sample texts from cards:', carsInDom.sampleTexts);
+        console.log('\n--- Car Data ---');
+        console.log(JSON.stringify(carData, null, 2));
 
-        // Also extract raw JSON if there's any SSR state embedded in script tags (vue/react)
-        const ssrState = await page.evaluate(() => {
-            const scripts = Array.from(document.querySelectorAll('script'));
-            for (const s of scripts) {
-                if (s.innerHTML.includes('vehicles') || s.innerHTML.includes('auctions')) {
-                    return true; // we found data
-                }
-            }
-            return false;
-        });
-        console.log('SSR Data Found in script tags:', ssrState);
+        const html = await page.content();
+        fs.writeFileSync('ecars-car.html', html);
 
     } catch (error) {
         console.error('Test failed:', error);

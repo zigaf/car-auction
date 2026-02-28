@@ -20,6 +20,7 @@ export class ScraperPageComponent implements OnInit, OnDestroy, AfterViewChecked
     @ViewChild('terminalBody') terminalBody!: ElementRef;
 
     isRunning = false;
+    isStopping = false;
     logs: { timestamp: string, message: string }[] = [];
     selectedVendor = 'ecarstrade';
 
@@ -53,8 +54,9 @@ export class ScraperPageComponent implements OnInit, OnDestroy, AfterViewChecked
     }
 
     checkStatus() {
-        this.http.get<{ isRunning: boolean }>(`${environment.apiUrl}/scraper/status`).subscribe(res => {
+        this.http.get<{ isRunning: boolean, isStopping?: boolean }>(`${environment.apiUrl}/scraper/status`).subscribe(res => {
             this.isRunning = res.isRunning;
+            this.isStopping = !!res.isStopping;
             this.cdr.detectChanges();
         });
     }
@@ -75,6 +77,23 @@ export class ScraperPageComponent implements OnInit, OnDestroy, AfterViewChecked
             error: (err) => {
                 this.isRunning = false;
                 this.logs.push({ timestamp: new Date().toISOString(), message: `Error starting scraper: ${err.message}` });
+                this.cdr.detectChanges();
+            }
+        });
+    }
+
+    stopScraper() {
+        if (!this.isRunning || this.isStopping) return;
+        this.isStopping = true;
+
+        this.http.post(`${environment.apiUrl}/scraper/stop`, {}).subscribe({
+            next: (res: any) => {
+                this.logs.push({ timestamp: new Date().toISOString(), message: res.message || 'Остановка парсера...' });
+                this.checkStatus();
+            },
+            error: (err) => {
+                this.isStopping = false;
+                this.logs.push({ timestamp: new Date().toISOString(), message: `Ошибка при остановке парсера: ${err.message}` });
                 this.cdr.detectChanges();
             }
         });

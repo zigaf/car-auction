@@ -20,27 +20,61 @@ export class EcarsTradeDataMapperService {
         vehicleId: string,
         detailUrl: string
     ): Partial<Lot> & { _categorizedImages?: { url: string; category: string }[] } {
-        // ssr data contains title, specsStr, images, price
-        const { ssr, title, specsStr, images, price } = sourceData;
+        // extractedData contains jsonLd, title, specs, images, price
+        const { jsonLd, title, specs, images, price } = sourceData;
 
-        // Parse specs from string (e.g. "Brand X | Model Y | 2019 | 50.000 km | Diesel | 110 kW (150 PS)")
-        let brand, model, yearStr, mileageStr, fuelStr, powerStr;
-        const parts = specsStr ? specsStr.split(' | ') : [];
+        // Extract from JSON-LD if available
+        let brand = jsonLd?.brand?.name || undefined;
+        let model = undefined;
+        let year = undefined;
+        let mileage = undefined;
+        let fuelType = null;
+        let power = { kw: null as number | null, ps: null as number | null };
+        let startingBid = this.parseGermanPrice(price);
+
+        if (jsonLd) {
+            year = jsonLd.dateVehicleFirstRegistered ? parseInt(jsonLd.dateVehicleFirstRegistered.split('/').pop() || '', 10) : undefined;
+            if (jsonLd.mileageFromOdometer?.value) {
+                mileage = this.parseGermanInt(jsonLd.mileageFromOdometer.value);
+            }
+            if (jsonLd.fuelType) {
+                fuelType = this.mapFuelType(jsonLd.fuelType);
+            }
+        }
+
+        // Fallback or override with specs grid
+        if (specs) {
+            const specKeys = Object.keys(specs);
+            const getSpec = (keywords: string[]) => {
+                const key = specKeys.find(k => keywords.some(kw => k.toLowerCase().includes(kw)));
+                return key ? specs[key] : null;
+            };
+
+            const specYear = getSpec(['год', 'registration', 'jahr', 'year']);
+            if (specYear && !year) {
+                const yearMatch = specYear.match(/\b20\d{2}\b/);
+                if (yearMatch) year = parseInt(yearMatch[0], 10);
+            }
+
+            const specMileage = getSpec(['пробег', 'mileage', 'kilometer', 'km']);
+            if (specMileage && !mileage) mileage = this.parseGermanInt(specMileage);
+
+            const specFuel = getSpec(['топливо', 'fuel', 'kraftstoff']);
+            if (specFuel && !fuelType) fuelType = this.mapFuelType(specFuel);
+
+            const specPower = getSpec(['мощность', 'power', 'leistung']);
+            if (specPower) power = this.parsePower(specPower);
+        }
 
         // Fallback extraction from title "Brand Model Derivative"
-        const titleParts = title ? title.split(' ') : [];
-        brand = titleParts[0] || parts[0];
-        model = titleParts.slice(1, 3).join(' ') || parts[1];
-
-        mileageStr = parts.find((p: string) => p.includes('km'));
-        fuelStr = parts.find((p: string) => Object.keys(this.fuelTypeMap).some(f => p.includes(f)));
-        yearStr = parts.find((p: string) => p.match(/\b20\d{2}\b/));
-        powerStr = parts.find((p: string) => p.includes('kW') || p.includes('PS'));
-
-        const year = yearStr ? parseInt(yearStr.match(/\b20\d{2}\b/)[0], 10) : null;
-        const mileage = mileageStr ? this.parseGermanInt(mileageStr) : null;
-        const power = this.parsePower(powerStr);
-        const startingBid = this.parseGermanPrice(price) || (ssr?.currentBid ? parseFloat(ssr.currentBid) : null);
+        if (!brand) {
+            const titleParts = title ? title.split(' ') : [];
+            brand = titleParts[0];
+            model = titleParts.slice(1, 3).join(' ');
+        } else {
+            // Strip brand from title to get model
+            model = title?.replace(new RegExp(`^${brand}\\s*`, 'i'), '').split(' ').slice(0, 2).join(' ') || undefined;
+        }
 
         // Categorize Images
         const categorizedImages: { url: string, category: string }[] = [];
@@ -63,7 +97,7 @@ export class EcarsTradeDataMapperService {
             model: model || undefined,
             year,
             mileage,
-            fuelType: this.mapFuelType(fuelStr),
+            fuelType: fuelType,
             enginePowerKw: power.kw,
             enginePowerPs: power.ps,
             saleCountry: 'EU',
@@ -71,7 +105,7 @@ export class EcarsTradeDataMapperService {
             originalCurrency: 'EUR',
             sourceImageUrl: categorizedImages.length > 0 ? categorizedImages[0].url : null,
             sourceUrl: detailUrl,
-            description: ssr ? JSON.stringify(ssr) : null,
+            description: jsonLd ? JSON.stringify(jsonLd) : null,
             auctionType: AuctionType.TIMED,
             status: LotStatus.IMPORTED,
             _categorizedImages: categorizedImages.length > 0 ? categorizedImages : undefined,

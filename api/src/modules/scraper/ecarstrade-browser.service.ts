@@ -158,36 +158,63 @@ export class EcarsTradeBrowserService implements OnModuleDestroy {
             await this.page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
             await this.page.waitForTimeout(3000);
 
-            // Extract Data from SSR script tag
-            // Sites like eCarsTrade often inject their React/Vue state in a script tag
-            const ssrData = await this.page.evaluate(() => {
-                let data = null;
-                const scripts = Array.from(document.querySelectorAll('script'));
-                for (const s of scripts) {
-                    const text = s.textContent;
-                    // Look for common window assignments or Vue initial state
-                    if (text && text.includes('window.__INITIAL_STATE__')) {
-                        try {
-                            const match = text.match(/window\.__INITIAL_STATE__\s*=\s*(\{.*?\});/s);
-                            if (match) data = JSON.parse(match[1]);
-                        } catch (e) { }
+            // Extract Data from JSON-LD and DOM
+            const extractedData = await this.page.evaluate(() => {
+                let jsonLd = null;
+                const scriptElements = document.querySelectorAll('script[type="application/ld+json"]');
+                scriptElements.forEach(s => {
+                    try {
+                        const parsed = JSON.parse(s.innerHTML);
+                        if (parsed['@type'] === 'Car' || parsed['@type'] === 'Product') {
+                            jsonLd = parsed;
+                        }
+                    } catch (e) { }
+                });
+
+                const title = document.querySelector('h1')?.innerText?.trim();
+
+                // Image extraction
+                const pswpSources = Array.from(document.querySelectorAll('picture[data-pswp-srcset]'));
+                let images = pswpSources.map(p => {
+                    const srcSet = p.getAttribute('data-pswp-srcset') || '';
+                    const parts = srcSet.split(',').map(s => s.trim());
+                    if (parts.length > 0) {
+                        let best = parts[parts.length - 1]; // get the highest resolution
+                        best = best.split(' ')[0];
+                        if (best && best.startsWith('//')) best = 'https:' + best;
+                        return best;
                     }
+                    return null;
+                }).filter(Boolean);
+
+                if (images.length === 0) {
+                    images = Array.from(document.querySelectorAll('img'))
+                        .map(img => img.src || img.getAttribute('data-src'))
+                        .filter(src => src && (src.includes('carsphotos') || src.includes('vehicles')))
+                        .map(src => (src ? src.replace('/thumbnails', '') : null));
                 }
+                images = [...new Set(images)];
 
-                // If no SSR data, we scrape the DOM
-                const title = (document.querySelector('h1') as HTMLElement)?.innerText?.trim();
-                const specsStr = Array.from(document.querySelectorAll('li, div')).map(e => (e as HTMLElement).innerText.trim()).join(' | ');
+                // Gather table/grid specs for manual parsing if JSON-LD is missing
+                const specs: Record<string, string> = {};
+                const specItems = Array.from(document.querySelectorAll('.item_description_item, .spec-item, li, tr'));
+                specItems.forEach(item => {
+                    const parts = (item as HTMLElement).innerText.split('\\n').map(s => s.trim()).filter(s => s);
+                    if (parts.length >= 2) {
+                        specs[parts[0]] = parts.slice(1).join(' ');
+                    } else if (item.children.length === 2) {
+                        specs[(item.children[0] as HTMLElement).innerText.trim()] = (item.children[1] as HTMLElement).innerText.trim();
+                    }
+                });
 
-                // Collect images
-                const images = Array.from(document.querySelectorAll('img')).map(img => img.src).filter(src => src.includes('http') && !src.includes('logo') && !src.includes('icon'));
-                // Collect price
-                const priceEl = Array.from(document.querySelectorAll('span, div')).find(el => (el as HTMLElement).innerText.includes('€') && el.children.length === 0);
-                const price = priceEl ? (priceEl as HTMLElement).innerText : null;
+                // Extract price
+                const priceEl = document.querySelector('.price, [class*="price"], .amount, [class*="amount"]');
+                const priceText = priceEl ? (priceEl as HTMLElement).innerText : null;
 
-                return { ssr: data, title, specsStr, images, price };
+                return { jsonLd, title, images, specs, price: priceText };
             });
 
-            return ssrData;
+            return extractedData;
         } catch (error) {
             this.log(`Failed to scrape ${url}: ${error.message}`);
             return null;

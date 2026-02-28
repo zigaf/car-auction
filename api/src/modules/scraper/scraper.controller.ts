@@ -19,9 +19,18 @@ export class ScraperController {
     return this.scraperService.runScraper('manual', dto.maxPages, vendor);
   }
 
+  @Post('stop')
+  async stopScraper() {
+    await this.scraperService.stop();
+    return { success: true, message: 'Парсер останавливается...' };
+  }
+
   @Get('status')
   async getStatus() {
-    return this.scraperService.getCurrentStatus();
+    return {
+      ...await this.scraperService.getCurrentStatus(),
+      isStopping: (this.scraperService as any).stopRequested
+    };
   }
 
   @Get('runs')

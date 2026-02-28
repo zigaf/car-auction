@@ -23,6 +23,7 @@ import { ScraperGateway } from './scraper.gateway';
 export class ScraperService {
   private readonly logger = new Logger(ScraperService.name);
   private isRunning = false;
+  private stopRequested = false;
 
   constructor(
     @InjectRepository(Lot)
@@ -103,9 +104,18 @@ export class ScraperService {
       this.log(`Scraper failed: ${error.message}`);
     } finally {
       this.isRunning = false;
+      this.stopRequested = false;
     }
 
     return run;
+  }
+
+  async stop(): Promise<void> {
+    if (!this.isRunning) {
+      throw new Error('Скрапер не запущен');
+    }
+    this.stopRequested = true;
+    this.log('Получен запрос на остановку парсера. Завершаем текущие операции...');
   }
 
   private async runEcarsTradeFlow(run: ScraperRun, maxPages?: number) {
@@ -124,9 +134,16 @@ export class ScraperService {
       this.log(`Found ${carLinks.length} total vehicles. Processing ${linksToProcess.length}...`);
 
       for (let i = 0; i < linksToProcess.length; i++) {
+        if (this.stopRequested) {
+          this.log(`Парсер остановлен пользователем на автомобиле ${i + 1}/${linksToProcess.length}.`);
+          run.status = ScraperRunStatus.FAILED;
+          run.errorLog = 'Stopped by user';
+          break;
+        }
+
         const url = linksToProcess[i];
-        const vehicleIdMatch = url.match(/\/auctions\/[^\/]+\/(.*?)-?(\d+)$/);
-        const vehicleId = vehicleIdMatch ? vehicleIdMatch[2] : `ecars_${i}`;
+        const vehicleIdMatch = url.match(/\/cars\/(\d+)$/);
+        const vehicleId = vehicleIdMatch ? vehicleIdMatch[1] : `ecars_${i}`;
 
         this.log(`[${i + 1}/${linksToProcess.length}] Processing lot ${vehicleId}`);
 
