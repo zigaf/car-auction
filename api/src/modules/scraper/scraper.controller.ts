@@ -11,11 +11,12 @@ import { TriggerScraperDto } from './dto/trigger-scraper.dto';
 
 @Controller('scraper')
 export class ScraperController {
-  constructor(private readonly scraperService: ScraperService) {}
+  constructor(private readonly scraperService: ScraperService) { }
 
   @Post('run')
   async triggerScraper(@Body() dto: TriggerScraperDto) {
-    return this.scraperService.runScraper('manual', dto.maxPages);
+    const vendor = dto.vendor || 'ecarstrade';
+    return this.scraperService.runScraper('manual', dto.maxPages, vendor);
   }
 
   @Get('status')

@@ -15,6 +15,9 @@ import { AutobidDataMapperService } from './autobid-data-mapper.service';
 import { PhotoDownloadService } from './photo-download.service';
 import { AutobidVehicleCard } from './interfaces/autobid-vehicle.interface';
 import { ImageCategory } from '../../common/enums/image-category.enum';
+import { EcarsTradeBrowserService } from './ecarstrade-browser.service';
+import { EcarsTradeDataMapperService } from './ecarstrade-data-mapper.service';
+import { ScraperGateway } from './scraper.gateway';
 
 @Injectable()
 export class ScraperService {
@@ -31,16 +34,27 @@ export class ScraperService {
     private readonly browserService: AutobidBrowserService,
     private readonly dataMapper: AutobidDataMapperService,
     private readonly photoService: PhotoDownloadService,
-  ) {}
+    private readonly ecarsTradeBrowser: EcarsTradeBrowserService,
+    private readonly ecarsTradeMapper: EcarsTradeDataMapperService,
+    private readonly gateway: ScraperGateway,
+  ) {
+    // Pipe eCarsTrade browser logs to our gateway
+    this.ecarsTradeBrowser.setLogEmitter((msg) => this.log(msg));
+  }
+
+  private log(message: string) {
+    this.logger.log(message);
+    this.gateway.sendLog(message);
+  }
 
   @Cron(process.env.SCRAPER_CRON || '0 3 * * *')
   async handleCron(): Promise<void> {
     if (process.env.SCRAPER_ENABLED !== 'true') {
       return;
     }
-    this.logger.log('Cron triggered scraper run');
+    this.log('Cron triggered scraper run');
     try {
-      await this.runScraper('cron');
+      await this.runScraper('cron', undefined, 'autobid'); // keep default to autobid for cron
     } catch (error) {
       this.logger.error('Cron scraper run failed', error.stack);
     }
@@ -49,6 +63,7 @@ export class ScraperService {
   async runScraper(
     triggeredBy: string = 'manual',
     maxPages?: number,
+    vendor: string = 'autobid',
   ): Promise<ScraperRun> {
     if (this.isRunning) {
       throw new ConflictException('Scraper is already running');
@@ -62,17 +77,141 @@ export class ScraperService {
     });
     await this.scraperRunRepository.save(run);
 
+    this.log(`Starting ${vendor} scraper run (Triggered by: ${triggeredBy})`);
+
     try {
-      // Initialize browser
+      if (vendor === 'ecarstrade') {
+        await this.runEcarsTradeFlow(run, maxPages);
+      } else {
+        await this.runAutobidFlow(run, maxPages);
+      }
+
+      // Mark completed
+      run.status = ScraperRunStatus.COMPLETED;
+      run.finishedAt = new Date();
+      await this.scraperRunRepository.save(run);
+
+      this.log(
+        `Scraper completed: ${run.lotsCreated} created, ${run.lotsUpdated} updated, ${run.imagesDownloaded} images, ${run.errorsCount} errors`,
+      );
+    } catch (error) {
+      run.status = ScraperRunStatus.FAILED;
+      run.errorLog = error.message;
+      run.finishedAt = new Date();
+      await this.scraperRunRepository.save(run);
+      this.logger.error('Scraper run failed', error.stack);
+      this.log(`Scraper failed: ${error.message}`);
+    } finally {
+      this.isRunning = false;
+    }
+
+    return run;
+  }
+
+  private async runEcarsTradeFlow(run: ScraperRun, maxPages?: number) {
+    try {
+      await this.ecarsTradeBrowser.initialize();
+
+      // Get list of cars. In a real scenario you'd paginate, but their list is huge.
+      const carLinks = await this.ecarsTradeBrowser.getLiveAuctions();
+      const limit = maxPages ? maxPages * 20 : carLinks.length; // rough max pages equivalent
+      const linksToProcess = carLinks.slice(0, limit);
+
+      run.totalPages = 1;
+      run.lotsFound = carLinks.length;
+      await this.scraperRunRepository.save(run);
+
+      this.log(`Found ${carLinks.length} total vehicles. Processing ${linksToProcess.length}...`);
+
+      for (let i = 0; i < linksToProcess.length; i++) {
+        const url = linksToProcess[i];
+        const vehicleIdMatch = url.match(/\/auctions\/[^\/]+\/(.*?)-?(\d+)$/);
+        const vehicleId = vehicleIdMatch ? vehicleIdMatch[2] : `ecars_${i}`;
+
+        this.log(`[${i + 1}/${linksToProcess.length}] Processing lot ${vehicleId}`);
+
+        try {
+          // Check if already updated recently
+          const existingLot = await this.lotRepository.findOne({
+            where: { sourceId: `ecars_${vehicleId}` },
+            relations: ['images'],
+          });
+
+          if (existingLot && this.isRecentlyUpdated(existingLot, 12)) {
+            run.lotsUpdated++;
+            this.log(`Skipping recently updated lot: ${vehicleId}`);
+            continue;
+          }
+
+          await this.crawlDelay(2000, 5000); // Shorter delay for eCarsTrade internal pages
+
+          const detail = await this.ecarsTradeBrowser.scrapeVehicleDetail(url, vehicleId);
+          if (!detail) continue;
+
+          const lotData = this.ecarsTradeMapper.mapVehicleToLot(detail, vehicleId, url);
+          const categorizedImages = (lotData as any)._categorizedImages || [];
+          delete (lotData as any)._categorizedImages;
+
+          if (existingLot) {
+            await this.lotRepository.update(existingLot.id, lotData as any);
+            run.lotsUpdated++;
+            if (!existingLot.images || existingLot.images.length === 0) {
+              await this.saveCategorizedImagesFromExternal(existingLot, categorizedImages, run);
+            }
+          } else {
+            let newLot = this.lotRepository.create(lotData);
+            newLot = await this.lotRepository.save(newLot);
+            run.lotsCreated++;
+            await this.saveCategorizedImagesFromExternal(newLot, categorizedImages, run);
+          }
+        } catch (error) {
+          run.errorsCount++;
+          this.log(`Error processing ${vehicleId}: ${error.message}`);
+        }
+      }
+      run.pagesScraped = 1;
+    } finally {
+      await this.ecarsTradeBrowser.destroy();
+    }
+  }
+
+  private async saveCategorizedImagesFromExternal(lot: Lot, images: { url: string, category: string }[], run: ScraperRun) {
+    if (!images || images.length === 0) return;
+
+    const categoryMap: Record<string, ImageCategory> = {
+      main: ImageCategory.MAIN,
+      exterior: ImageCategory.EXTERIOR,
+      interior: ImageCategory.INTERIOR,
+      damage: ImageCategory.DAMAGE,
+      document: ImageCategory.DOCUMENT,
+    };
+
+    try {
+      let sortOrder = 0;
+      for (const img of images) {
+        const category = categoryMap[img.category] || ImageCategory.EXTERIOR;
+        const lotImage = this.lotImageRepository.create({
+          url: img.url,
+          category,
+          sortOrder: sortOrder++,
+          lotId: lot.id,
+        });
+        await this.lotImageRepository.save(lotImage);
+        run.imagesDownloaded++;
+      }
+    } catch (e) {
+      this.logger.warn(`Failed to save ecars images for lot ${lot.id}`);
+    }
+  }
+
+  private async runAutobidFlow(run: ScraperRun, maxPages?: number) {
+    try {
       await this.browserService.initialize();
 
-      // Phase 1: Fetch first search page to discover pagination
       const firstPage = await this.browserService.fetchSearchPage(1);
       const totalVehiclesOnPage = firstPage.vehicles.length;
 
-      this.logger.log(
-        `Search page 1: ${totalVehiclesOnPage} vehicles, totalCount=${firstPage.totalCount}, totalPages=${firstPage.totalPages}`,
-      );
+      this.log(`Search page 1: ${totalVehiclesOnPage} vehicles, totalCount=${firstPage.totalCount}, totalPages=${firstPage.totalPages}`);
 
       const totalPages = firstPage.totalPages || (totalVehiclesOnPage > 0 ? 1 : 0);
       const configMaxPages = parseInt(process.env.SCRAPER_MAX_PAGES || '0', 10);
@@ -86,24 +225,18 @@ export class ScraperService {
       run.lotsFound = firstPage.totalCount || totalVehiclesOnPage;
       await this.scraperRunRepository.save(run);
 
-      this.logger.log(
-        `Will scrape ${pagesToScrape} pages (${run.lotsFound} total vehicles)`,
-      );
+      this.log(`Will scrape ${pagesToScrape} pages (${run.lotsFound} total vehicles)`);
 
-      // Save debug HTML if no vehicles found on first page
       if (totalVehiclesOnPage === 0 && (firstPage as any)._debugHtml) {
         run.errorLog = `DEBUG: No vehicles on page 1. HTML: ${(firstPage as any)._debugHtml}`;
         await this.scraperRunRepository.save(run);
       }
 
-      // Phase 2: Process vehicles from page 1
       await this.processVehicleCards(firstPage.vehicles, run);
       run.pagesScraped = 1;
       await this.scraperRunRepository.save(run);
 
-      // Fetch and process remaining pages
       for (let page = 2; page <= pagesToScrape; page++) {
-        // Crawl delay between pages (robots.txt: 10s)
         await this.crawlDelay();
 
         try {
@@ -111,33 +244,15 @@ export class ScraperService {
           await this.processVehicleCards(pageData.vehicles, run);
         } catch (error) {
           run.errorsCount++;
-          this.logger.warn(`Failed to process page ${page}: ${error.message}`);
+          this.log(`Failed to process page ${page}: ${error.message}`);
         }
 
         run.pagesScraped = page;
         await this.scraperRunRepository.save(run);
       }
-
-      // Mark completed
-      run.status = ScraperRunStatus.COMPLETED;
-      run.finishedAt = new Date();
-      await this.scraperRunRepository.save(run);
-
-      this.logger.log(
-        `Scraper completed: ${run.lotsCreated} created, ${run.lotsUpdated} updated, ${run.imagesDownloaded} images, ${run.errorsCount} errors`,
-      );
-    } catch (error) {
-      run.status = ScraperRunStatus.FAILED;
-      run.errorLog = error.message;
-      run.finishedAt = new Date();
-      await this.scraperRunRepository.save(run);
-      this.logger.error('Scraper run failed', error.stack);
     } finally {
       await this.browserService.destroy();
-      this.isRunning = false;
     }
-
-    return run;
   }
 
   async getCurrentStatus(): Promise<{
@@ -172,10 +287,6 @@ export class ScraperService {
     return this.scraperRunRepository.findOne({ where: { id } });
   }
 
-  /**
-   * Process vehicle cards from a search results page.
-   * For each card: visit detail page, extract full data, save to DB.
-   */
   private async processVehicleCards(
     cards: AutobidVehicleCard[],
     run: ScraperRun,
@@ -190,28 +301,24 @@ export class ScraperService {
           relations: ['images'],
         });
 
-        // Skip recently updated lots (updated within last 12 hours)
-        // BUT always re-scrape if data looks incomplete (no specs or no images)
+        // Skip recently updated lots
         const hasGoodData = lot && lot.images?.length > 2 && lot.mileage;
         if (lot && hasGoodData && this.isRecentlyUpdated(lot, 12)) {
           run.lotsUpdated++;
-          this.logger.debug(`Skipping recently updated lot: ${vehicleId}`);
+          // this.log(`Skipping recently updated lot: ${vehicleId}`);
           continue;
         }
         if (lot && !hasGoodData) {
-          this.logger.log(`Re-scraping lot ${vehicleId} (incomplete data: images=${lot.images?.length || 0}, mileage=${lot.mileage})`);
+          // this.log(`Re-scraping lot ${vehicleId} (incomplete data)`);
         }
 
-        // Crawl delay before visiting detail page
         await this.crawlDelay();
 
-        // Fetch full detail from the vehicle page
         const detail = await this.browserService.fetchVehicleDetail(
           card.detailUrl,
           vehicleId,
         );
 
-        // Map to lot entity (pass card for fallback data)
         const lotData = this.dataMapper.mapVehicleToLot(
           detail,
           vehicleId,
@@ -219,21 +326,16 @@ export class ScraperService {
           card,
         );
 
-        // Extract categorized images from mapper result
         const categorizedImages = (lotData as any)._categorizedImages || [];
         delete (lotData as any)._categorizedImages;
 
-        // Use card price as fallback if detail page price is missing
         if (!lotData.startingBid && card.price) {
           lotData.startingBid = this.dataMapper.parseGermanPrice(card.price);
         }
 
         if (lot) {
-          // Update existing lot
           await this.lotRepository.update(lot.id, lotData as any);
           run.lotsUpdated++;
-
-          // Add images if lot has none
           if (!lot.images || lot.images.length === 0) {
             if (categorizedImages.length > 0) {
               await this.saveCategorizedImages(lot, categorizedImages, run);
@@ -245,12 +347,10 @@ export class ScraperService {
             }
           }
         } else {
-          // Create new lot
           lot = this.lotRepository.create(lotData);
           lot = await this.lotRepository.save(lot);
           run.lotsCreated++;
 
-          // Save image references with categories
           if (categorizedImages.length > 0) {
             await this.saveCategorizedImages(lot, categorizedImages, run);
           } else {
@@ -262,9 +362,7 @@ export class ScraperService {
         }
       } catch (error) {
         run.errorsCount++;
-        this.logger.warn(
-          `Failed to process vehicle ${card.vehicleId}: ${error.message}`,
-        );
+        this.log(`Failed to process vehicle ${card.vehicleId}: ${error.message}`);
       }
     }
   }
@@ -277,7 +375,6 @@ export class ScraperService {
   ): Promise<void> {
     try {
       const imageRefs = this.photoService.createImageRefsFromUrls(imageUrls, damageImageUrls);
-
       for (const img of imageRefs) {
         const lotImage = this.lotImageRepository.create({
           ...img,
@@ -287,9 +384,7 @@ export class ScraperService {
         run.imagesDownloaded++;
       }
     } catch (error) {
-      this.logger.warn(
-        `Failed to save image refs for lot ${lot.id}: ${error.message}`,
-      );
+      this.logger.warn(`Failed to save image refs for lot ${lot.id}: ${error.message}`);
       run.errorsCount++;
     }
   }
@@ -326,9 +421,7 @@ export class ScraperService {
         run.imagesDownloaded++;
       }
     } catch (error) {
-      this.logger.warn(
-        `Failed to save categorized images for lot ${lot.id}: ${error.message}`,
-      );
+      this.logger.warn(`Failed to save categorized images for lot ${lot.id}: ${error.message}`);
       run.errorsCount++;
     }
   }
@@ -340,12 +433,9 @@ export class ScraperService {
     return lot.updatedAt > threshold;
   }
 
-  /**
-   * Crawl delay respecting robots.txt (10s) + random jitter
-   */
-  private crawlDelay(): Promise<void> {
-    const min = parseInt(process.env.SCRAPER_PAGE_DELAY_MIN || '10000', 10);
-    const max = parseInt(process.env.SCRAPER_PAGE_DELAY_MAX || '15000', 10);
+  private crawlDelay(minDelay = 10000, maxDelay = 15000): Promise<void> {
+    const min = parseInt(process.env.SCRAPER_PAGE_DELAY_MIN || minDelay.toString(), 10);
+    const max = parseInt(process.env.SCRAPER_PAGE_DELAY_MAX || maxDelay.toString(), 10);
     const ms = Math.floor(Math.random() * (max - min + 1)) + min;
     return new Promise((resolve) => setTimeout(resolve, ms));
   }

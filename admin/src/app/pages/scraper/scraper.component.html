@@ -1,0 +1,68 @@
+<div class="page-header">
+    <div class="page-header__title-area">
+        <h1 class="page-header__title">Парсер</h1>
+        <p class="page-header__subtitle">Управление сбором данных с аукционов</p>
+    </div>
+    <div class="page-header__actions">
+        <button class="btn btn--outline" (click)="checkStatus()">
+            <span class="material-symbols-rounded">refresh</span>
+            Обновить статус
+        </button>
+    </div>
+</div>
+
+<div class="scraper-content">
+    <div class="card scraper-control-card">
+        <div class="card-body">
+            <h2 class="card-title">Запуск парсера</h2>
+            <div class="control-form">
+                <div class="form-group">
+                    <label class="form-label">Источник данных</label>
+                    <select [(ngModel)]="selectedVendor" class="form-select" [disabled]="isRunning">
+                        <option value="ecarstrade">eCarsTrade</option>
+                        <option value="autobid">Autobid.de</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button class="btn btn--primary" (click)="startScraper()" [disabled]="isRunning">
+                        <span class="material-symbols-rounded">play_arrow</span>
+                        {{ isRunning ? 'Парсер работает...' : 'Запустить парсер' }}
+                    </button>
+                </div>
+            </div>
+
+            <div class="status-indicator" [class.status-indicator--running]="isRunning">
+                <span class="status-indicator__dot"></span>
+                <span class="status-indicator__text">
+                    {{ isRunning ? 'Активный процесс сбора данных' : 'Ожидает запуска' }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card terminal-card">
+        <div class="terminal-header">
+            <div class="terminal-header__actions">
+                <div class="terminal-btn terminal-btn--red"></div>
+                <div class="terminal-btn terminal-btn--yellow"></div>
+                <div class="terminal-btn terminal-btn--green"></div>
+            </div>
+            <div class="terminal-title">Live Logs</div>
+            <button class="btn btn--icon terminal-clear" (click)="clearLogs()" title="Очистить логи">
+                <span class="material-symbols-rounded">clear_all</span>
+            </button>
+        </div>
+        <div class="terminal-body" #terminalBody>
+            <div class="terminal-empty" *ngIf="logs.length === 0">
+                Нет доступных логов. Парсер еще не был запущен.
+            </div>
+            <div class="terminal-line" *ngFor="let log of logs">
+                <span class="terminal-time">[{{ log.timestamp | date:'HH:mm:ss' }}]</span>
+                <span class="terminal-text"
+                    [ngClass]="{'terminal-text--error': log.message.includes('Error') || log.message.includes('Fail')}">{{
+                    log.message }}</span>
+            </div>
+        </div>
+    </div>
+</div>

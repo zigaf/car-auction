@@ -24,10 +24,6 @@ export class HomeComponent implements OnInit {
   brands: IBrandCount[] = [];
   stats: ILotStats = { totalLots: 0, totalBrands: 0, countries: 0, withPhotos: 0 };
 
-  scraperLoading = false;
-  scraperMessage = '';
-  scraperStatus: 'idle' | 'success' | 'error' = 'idle';
-
   steps = [
     { title: 'Регистрация', desc: 'Создайте аккаунт и пройдите верификацию' },
     { title: 'Пополните баланс', desc: 'Внесите депозит для участия в торгах' },
@@ -85,42 +81,5 @@ export class HomeComponent implements OnInit {
     if (!path) return '';
     if (path.startsWith('http')) return path;
     return `${environment.apiUrl.replace('/api', '')}${path}`;
-  }
-
-  async startScraper(): Promise<void> {
-    this.scraperLoading = true;
-    this.scraperMessage = '';
-    this.scraperStatus = 'idle';
-    this.cdr.detectChanges();
-    try {
-      const resp = await fetch(`${environment.apiUrl}/scraper/run`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ maxPages: 2 }),
-      });
-      const data = await resp.json();
-      if (resp.ok) {
-        this.scraperStatus = 'success';
-        this.scraperMessage = `Парсер запущен! Найдено: ${data.lotsFound ?? '\u{2014}'}, создано: ${data.lotsCreated ?? '\u{2014}'}, обновлено: ${data.lotsUpdated ?? '\u{2014}'}`;
-        this.loadData();
-      } else {
-        this.scraperStatus = 'error';
-        this.scraperMessage = data.message || 'Ошибка запуска парсера';
-      }
-    } catch {
-      this.scraperStatus = 'error';
-      this.scraperMessage = 'Не удалось подключиться к серверу';
-    } finally {
-      this.scraperLoading = false;
-      this.cdr.detectChanges();
-    }
-  }
-
-  getFuelLabel(fuelType: string): string {
-    const labels: Record<string, string> = {
-      petrol: 'Бензин', diesel: 'Дизель', hybrid: 'Гибрид',
-      electric: 'Электро', lpg: 'Газ', other: 'Другое',
-    };
-    return labels[fuelType] || fuelType || '-';
   }
 }

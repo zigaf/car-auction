@@ -7,4 +7,7 @@ export class TriggerScraperDto {
   @Min(1)
   @Type(() => Number)
   maxPages?: number;
+
+  @IsOptional()
+  vendor?: string;
 }

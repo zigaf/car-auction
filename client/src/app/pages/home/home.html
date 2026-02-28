@@ -17,27 +17,16 @@
             <span class="material-symbols-rounded">search</span>
             Смотреть каталог
           </a>
-          <button class="hero__btn hero__btn--secondary" (click)="startScraper()" [disabled]="scraperLoading">
-            <span class="material-symbols-rounded">sync</span>
-            @if (scraperLoading) { Парсинг... } @else { Запустить парсер }
-          </button>
         </div>
-        @if (scraperMessage) {
-        <div class="hero__scraper-msg" [class.hero__scraper-msg--success]="scraperStatus === 'success'"
-          [class.hero__scraper-msg--error]="scraperStatus === 'error'">
-          {{ scraperMessage }}
-        </div>
-        }
-      </div>
 
-      <div class="hero__tags">
-        <span class="hero__tags-label">Популярное:</span>
-        @for (tag of popularTags; track tag) {
-        <a routerLink="/catalog" class="hero__tag">{{ tag }}</a>
-        }
+        <div class="hero__tags">
+          <span class="hero__tags-label">Популярное:</span>
+          @for (tag of popularTags; track tag) {
+          <a routerLink="/catalog" class="hero__tag">{{ tag }}</a>
+          }
+        </div>
       </div>
     </div>
-  </div>
 </section>
 
 <!-- Лоты из базы -->
@@ -194,7 +183,7 @@
     <div class="auctions__header">
       <div>
         <h2 class="auctions__title">Автомобили на аукционе</h2>
-        <p class="auctions__count">Пока нет лотов в базе. Запустите парсер в настройках.</p>
+        <p class="auctions__count">Пока нет лотов в базе.</p>
       </div>
     </div>
   </div>

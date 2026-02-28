@@ -10,6 +10,9 @@ import { AutobidBrowserService } from './autobid-browser.service';
 import { AutobidDataMapperService } from './autobid-data-mapper.service';
 import { PhotoDownloadService } from './photo-download.service';
 import { AuthModule } from '../auth/auth.module';
+import { EcarsTradeBrowserService } from './ecarstrade-browser.service';
+import { EcarsTradeDataMapperService } from './ecarstrade-data-mapper.service';
+import { ScraperGateway } from './scraper.gateway';
 
 @Module({
   imports: [
@@ -23,7 +26,10 @@ import { AuthModule } from '../auth/auth.module';
     AutobidBrowserService,
     AutobidDataMapperService,
     PhotoDownloadService,
+    EcarsTradeBrowserService,
+    EcarsTradeDataMapperService,
+    ScraperGateway,
   ],
   exports: [ScraperService],
 })
-export class ScraperModule {}
+export class ScraperModule { }

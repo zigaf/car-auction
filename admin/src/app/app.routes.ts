@@ -52,6 +52,10 @@ export const routes: Routes = [
         path: 'monitor',
         loadComponent: () => import('./pages/monitor/monitor.component').then(m => m.MonitorComponent),
       },
+      {
+        path: 'scraper',
+        loadComponent: () => import('./pages/scraper/scraper.component').then(m => m.ScraperPageComponent),
+      },
     ],
   },
   { path: '**', redirectTo: '' },
