@@ -67,7 +67,7 @@ export class MonitorComponent implements OnInit, OnDestroy {
     }
   }
 
-  private loadActiveLots(): void {
+  loadActiveLots(): void {
     this.lotService.getActiveLots().subscribe({
       next: (lots) => {
         const now = Date.now();

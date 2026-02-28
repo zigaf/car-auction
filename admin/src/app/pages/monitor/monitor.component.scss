@@ -20,8 +20,8 @@
   }
 
   &--connected {
-    color: $color-success;
-    .ws-badge__dot { background: $color-success; }
+    color: $status-green;
+    .ws-badge__dot { background: $status-green; }
   }
 
   &--connecting {
@@ -30,8 +30,8 @@
   }
 
   &--error {
-    color: $color-danger;
-    .ws-badge__dot { background: $color-danger; }
+    color: $status-red;
+    .ws-badge__dot { background: $status-red; }
   }
 }
 
@@ -53,7 +53,7 @@
 .monitor-panel {
   background: $bg-elevated;
   border-radius: $radius-md;
-  border: 1px solid $border;
+  border: 1px solid $border-color;
   overflow: hidden;
 
   &__header {
@@ -64,8 +64,8 @@
     font-size: $fs-sm;
     font-weight: $fw-semibold;
     color: $text-primary;
-    border-bottom: 1px solid $border;
-    background: $bg-surface;
+    border-bottom: 1px solid $border-color;
+    background: $bg-secondary;
 
     .material-symbols-rounded { font-size: 18px; color: $text-secondary; }
   }
@@ -81,7 +81,7 @@
   height: 18px;
   padding: 0 5px;
   border-radius: 9px;
-  background: $color-primary;
+  background: $accent;
   color: #fff;
   font-size: 11px;
   font-weight: $fw-semibold;
@@ -92,11 +92,11 @@
 
 .lot-card {
   padding: $space-md;
-  border-bottom: 1px solid $border;
+  border-bottom: 1px solid $border-color;
   transition: background 0.15s;
 
   &:last-child { border-bottom: none; }
-  &--paused { background: color-mix(in srgb, $color-warning 6%, transparent); }
+  &--paused { background: color-mix(in srgb, $status-yellow 6%, transparent); }
 
   &__header {
     display: flex;
@@ -110,7 +110,7 @@
     font-weight: $fw-semibold;
     color: $text-primary;
     text-decoration: none;
-    &:hover { color: $color-primary; }
+    &:hover { color: $accent; }
   }
 
   &__timer {
@@ -125,7 +125,7 @@
 
     .material-symbols-rounded { font-size: 20px; color: $text-secondary; }
 
-    &--warning { color: $color-danger; }
+    &--warning { color: $status-red; }
   }
 
   &__price {
@@ -175,12 +175,12 @@
   justify-content: space-between;
   gap: $space-sm;
   padding: $space-xs $space-md;
-  border-bottom: 1px solid $border;
+  border-bottom: 1px solid $border-color;
   font-size: $fs-sm;
   transition: background 0.12s;
 
   &:last-child { border-bottom: none; }
-  &--auto { background: color-mix(in srgb, $color-primary 4%, transparent); }
+  &--auto { background: color-mix(in srgb, $accent 4%, transparent); }
 
   &__left {
     display: flex;

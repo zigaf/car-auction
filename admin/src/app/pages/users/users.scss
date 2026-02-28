@@ -22,8 +22,8 @@
   text-transform: uppercase;
 
   &--team {
-    background: color-mix(in srgb, $color-success 15%, transparent);
-    color: $color-success;
+    background: color-mix(in srgb, $status-green 15%, transparent);
+    color: $status-green;
   }
 }
 

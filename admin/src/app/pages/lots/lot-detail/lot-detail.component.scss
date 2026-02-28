@@ -71,8 +71,8 @@
     align-items: center;
     gap: 4px;
 
-    &--met { color: $color-success; }
-    &--unmet { color: $color-danger; }
+    &--met { color: $status-green; }
+    &--unmet { color: $status-red; }
   }
 }
 
@@ -113,7 +113,7 @@
   font-size: $fs-sm;
   color: $text-secondary;
   line-height: 1.6;
-  border-top: 1px solid $border;
+  border-top: 1px solid $border-color;
   padding-top: $space-sm;
 }
 
@@ -145,11 +145,11 @@
 }
 
 .btn--danger-ghost {
-  color: $color-danger;
+  color: $status-red;
   background: transparent;
   border: none;
 
-  &:hover { background: color-mix(in srgb, $color-danger 12%, transparent); }
+  &:hover { background: color-mix(in srgb, $status-red 12%, transparent); }
 }
 
 .form-control--sm {
@@ -168,7 +168,7 @@
   height: 18px;
   padding: 0 5px;
   border-radius: 9px;
-  background: $color-primary;
+  background: $accent;
   color: #fff;
   font-size: 11px;
   font-weight: $fw-semibold;
