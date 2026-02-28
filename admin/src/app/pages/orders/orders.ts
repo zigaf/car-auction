@@ -4,25 +4,25 @@ import { DecimalPipe, DatePipe } from '@angular/common';
 import { OrderService, IOrder } from '../../core/services/order.service';
 
 const STATUS_LABELS: Record<string, string> = {
-  pending: 'Ожидает',
-  payment_pending: 'Ожидает оплаты',
+  pending: 'Ожидает подтверждения',
+  approved: 'Подтверждён',
   paid: 'Оплачен',
-  processing: 'Обработка',
-  shipped: 'Отправлен',
-  delivered: 'Доставлен',
+  delivered_svh: 'Доставлен на СВХ',
+  customs: 'На растаможке',
+  cleared: 'Растаможен',
+  delivering: 'В доставке',
   completed: 'Завершён',
-  cancelled: 'Отменён',
 };
 
 const STATUS_BADGE: Record<string, string> = {
-  pending: 'badge--gray',
-  payment_pending: 'badge--amber',
+  pending: 'badge--amber',
+  approved: 'badge--blue',
   paid: 'badge--blue',
-  processing: 'badge--blue',
-  shipped: 'badge--blue',
-  delivered: 'badge--green',
+  delivered_svh: 'badge--orange',
+  customs: 'badge--orange',
+  cleared: 'badge--orange',
+  delivering: 'badge--purple',
   completed: 'badge--green',
-  cancelled: 'badge--red',
 };
 
 @Component({

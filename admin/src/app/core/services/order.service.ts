@@ -33,14 +33,14 @@ export interface IOrdersResponse {
 
 @Injectable({ providedIn: 'root' })
 export class OrderService {
-  constructor(private readonly api: ApiService) {}
+  constructor(private readonly api: ApiService) { }
 
   getOrders(params: {
     page?: number;
     limit?: number;
     status?: string;
   } = {}): Observable<IOrdersResponse> {
-    return this.api.get<IOrdersResponse>('/orders/all', {
+    return this.api.get<IOrdersResponse>('/orders', {
       page: params.page ?? 1,
       limit: params.limit ?? 20,
       status: params.status,
