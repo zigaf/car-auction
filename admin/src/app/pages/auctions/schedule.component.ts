@@ -61,6 +61,7 @@ export class SchedulePage implements OnInit {
   calendarYear = new Date().getFullYear();
   calendarMonth = new Date().getMonth();
   calendarCells: CalendarCell[][] = [];
+  readonly yearRange = Array.from({ length: 11 }, (_, i) => new Date().getFullYear() - 2 + i);
 
   // ─── Calendar Edit ─────────────────────────────────────────────────────────
   selectedCalendarLot: ILot | null = null;
