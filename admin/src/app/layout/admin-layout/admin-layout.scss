@@ -21,22 +21,15 @@
 .sidebar__logo {
   display: flex;
   align-items: center;
-  gap: $space-sm;
   padding: 0 $space-base $space-lg;
   border-bottom: 1px solid $border-color;
   margin-bottom: $space-md;
-
-  .material-symbols-rounded {
-    font-size: 22px;
-    color: $accent;
-  }
 }
 
-.sidebar__logo-text {
-  font-size: $fs-md;
-  font-weight: $fw-bold;
-  color: $text-primary;
-  white-space: nowrap;
+.sidebar__logo-img {
+  height: 28px;
+  width: auto;
+  display: block;
 }
 
 // ── Nav ───────────────────────────────────────────────────────────────────────

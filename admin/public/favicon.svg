@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="primaryBlue" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0066FF" />
+      <stop offset="100%" stop-color="#0052CC" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Subtle dark background matching the brand vibe -->
+  <rect width="512" height="512" rx="110" fill="#0F172A" />
+  
+  <!-- "RB" Monogram (Centered) -->
+  <text x="256" y="340" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="260" fill="#FFFFFF" letter-spacing="-10" text-anchor="middle">RB</text>
+  
+  <!-- The signature brand blue accent dash -->
+  <rect x="156" y="390" width="200" height="30" fill="url(#primaryBlue)" rx="15" />
+</svg>

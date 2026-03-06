@@ -29,29 +29,10 @@
   flex-shrink: 0;
 }
 
-.header__logo-badge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
+.header__logo-img {
   height: 32px;
-  background: $accent;
-  color: #FFFFFF;
-  font-size: $fs-sm;
-  font-weight: $fw-bold;
-  border-radius: $radius-base;
-}
-
-.header__logo-text {
-  font-family: $font-ui;
-  font-size: $fs-md;
-  font-weight: $fw-bold;
-  letter-spacing: -0.02em;
-
-  .accent {
-    color: $text-primary;
-    font-weight: $fw-extrabold;
-  }
+  width: auto;
+  display: block;
 }
 
 // --- Navigation ---

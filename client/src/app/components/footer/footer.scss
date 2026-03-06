@@ -36,22 +36,13 @@
 .footer__logo {
   display: flex;
   align-items: center;
-  gap: $space-sm;
-  font-size: $fs-lg;
-  font-weight: $fw-bold;
-  color: $footer-text;
+}
 
-  .material-symbols-rounded {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: $accent;
-    color: #FFFFFF;
-    font-size: 18px;
-    border-radius: $radius-base;
-  }
+.footer__logo-img {
+  height: 28px;
+  width: auto;
+  display: block;
+  filter: brightness(0) invert(1);
 }
 
 .footer__desc {
