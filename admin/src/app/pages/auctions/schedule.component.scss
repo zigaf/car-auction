@@ -247,6 +247,10 @@
   }
 }
 
+.calendar-nav__spacer {
+  flex: 1;
+}
+
 .cal-lot {
   font-size: 11px;
   font-weight: 500;
@@ -255,7 +259,15 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  cursor: default;
+  cursor: pointer;
+  transition: opacity 0.1s, outline 0.1s;
+
+  &:hover { opacity: 0.8; }
+
+  &--selected {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
 
   &--upcoming {
     background: rgba(99, 102, 241, 0.12);
@@ -270,6 +282,8 @@
   &--past {
     background: var(--surface-hover);
     color: var(--text-secondary);
+    cursor: default;
+    &:hover { opacity: 1; }
   }
 }
 
@@ -281,5 +295,205 @@
   .cal-lot {
     cursor: default;
     font-size: var(--fs-xs);
+    &:hover { opacity: 1; }
   }
+}
+
+// ─── Calendar Edit Panel ────────────────────────────────────────────────────
+
+.calendar-edit-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--surface-hover);
+    border-bottom: 1px solid var(--border);
+
+    .material-symbols-rounded { font-size: 18px; color: var(--text-secondary); }
+  }
+
+  &__title {
+    font-weight: 600;
+    font-size: var(--fs-sm);
+    flex: 1;
+  }
+
+  &__body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+}
+
+.cal-edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.icon-link {
+  display: flex;
+  align-items: center;
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 4px;
+  border-radius: var(--radius);
+  transition: color 0.15s, background 0.15s;
+
+  &:hover {
+    color: var(--accent);
+    background: var(--surface-hover);
+  }
+
+  .material-symbols-rounded { font-size: 18px; }
+}
+
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  transition: color 0.15s, background 0.15s;
+
+  &:hover {
+    color: var(--text-primary);
+    background: var(--surface-hover);
+  }
+
+  .material-symbols-rounded { font-size: 18px; }
+}
+
+// ─── Fill Month Panel ───────────────────────────────────────────────────────
+
+.fill-month-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: var(--fs-sm);
+
+    .material-symbols-rounded { font-size: 18px; color: var(--accent); }
+  }
+}
+
+.fill-month-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.fill-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fill-range-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+
+  .text-muted { font-size: var(--fs-sm); white-space: nowrap; }
+}
+
+.fill-control--sm {
+  width: 64px;
+  text-align: center;
+  padding: 6px 8px !important;
+}
+
+.fill-options-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.fill-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fill-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.brand-chip {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: none;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+
+  &:hover { border-color: var(--accent); color: var(--accent); }
+
+  &--active {
+    background: rgba(99, 102, 241, 0.12);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+}
+
+.fill-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fill-progress {
+  flex: 1;
+  height: 6px;
+  background: var(--surface-hover);
+  border-radius: 3px;
+  overflow: hidden;
+
+  &__bar {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+  }
+}
+
+.fill-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn--active {
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+  background: rgba(99, 102, 241, 0.08) !important;
 }

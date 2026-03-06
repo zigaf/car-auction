@@ -153,6 +153,8 @@
   <!-- ── Calendar ── -->
   @if (activeTab === 'calendar') {
     <div class="calendar-wrap">
+
+      <!-- Navigation + Fill Month button -->
       <div class="calendar-nav">
         <button class="btn btn--secondary btn--sm" (click)="prevMonth()">
           <span class="material-symbols-rounded">chevron_left</span>
@@ -161,8 +163,165 @@
         <button class="btn btn--secondary btn--sm" (click)="nextMonth()">
           <span class="material-symbols-rounded">chevron_right</span>
         </button>
+        <div class="calendar-nav__spacer"></div>
+        <button class="btn btn--secondary btn--sm" [class.btn--active]="fillMonthOpen" (click)="toggleFillMonth()">
+          <span class="material-symbols-rounded">auto_fix_high</span>
+          Заполнить месяц
+          <span class="material-symbols-rounded">{{ fillMonthOpen ? 'expand_less' : 'expand_more' }}</span>
+        </button>
       </div>
 
+      <!-- Fill Month Settings Panel -->
+      @if (fillMonthOpen) {
+        <div class="fill-month-panel">
+          <div class="fill-month-panel__title">
+            <span class="material-symbols-rounded">auto_fix_high</span>
+            Заполнение расписания на {{ monthNames[calendarMonth] }} {{ calendarYear }}
+          </div>
+
+          <div class="fill-month-grid">
+
+            <!-- Auctions per day -->
+            <div class="fill-field">
+              <label class="form-label">Аукционов в день</label>
+              <div class="fill-range-row">
+                <span class="text-muted">от</span>
+                <input class="form-control fill-control--sm" type="number" min="1" max="10"
+                  [(ngModel)]="fillMonthSettings.minPerDay" />
+                <span class="text-muted">до</span>
+                <input class="form-control fill-control--sm" type="number" min="1" max="10"
+                  [(ngModel)]="fillMonthSettings.maxPerDay" />
+              </div>
+            </div>
+
+            <!-- Duration range -->
+            <div class="fill-field">
+              <label class="form-label">Длительность (часов)</label>
+              <div class="fill-range-row">
+                <span class="text-muted">от</span>
+                <input class="form-control fill-control--sm" type="number" min="1" max="72"
+                  [(ngModel)]="fillMonthSettings.minDurationHours" />
+                <span class="text-muted">до</span>
+                <input class="form-control fill-control--sm" type="number" min="1" max="72"
+                  [(ngModel)]="fillMonthSettings.maxDurationHours" />
+              </div>
+            </div>
+
+            <!-- Time window -->
+            <div class="fill-field">
+              <label class="form-label">Временной диапазон</label>
+              <div class="fill-range-row">
+                <span class="text-muted">с</span>
+                <input class="form-control fill-control--sm" type="number" min="0" max="23"
+                  [(ngModel)]="fillMonthSettings.startHour" />
+                <span class="text-muted">:00 до</span>
+                <input class="form-control fill-control--sm" type="number" min="1" max="24"
+                  [(ngModel)]="fillMonthSettings.endHour" />
+                <span class="text-muted">:00</span>
+              </div>
+            </div>
+
+            <!-- Auction type -->
+            <div class="fill-field">
+              <label class="form-label">Тип аукциона</label>
+              <select class="form-control" [(ngModel)]="fillMonthSettings.auctionType">
+                @for (t of auctionTypes; track t.value) {
+                  <option [value]="t.value">{{ t.label }}</option>
+                }
+              </select>
+            </div>
+
+          </div>
+
+          <!-- Options row -->
+          <div class="fill-options-row">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="fillMonthSettings.skipWeekends" />
+              Пропускать выходные (Сб/Вс)
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="fillMonthSettings.skipExisting" />
+              Пропускать дни с аукционами
+            </label>
+          </div>
+
+          <!-- Status filter -->
+          <div class="fill-section">
+            <label class="form-label">Статус лотов</label>
+            <div class="fill-chips-row">
+              @for (status of ['imported', 'active']; track status) {
+                <button
+                  class="brand-chip"
+                  [class.brand-chip--active]="fillMonthSettings.filterStatuses.includes(status)"
+                  (click)="toggleFilterStatus(status)"
+                >{{ status }}</button>
+              }
+            </div>
+          </div>
+
+          <!-- Brand filter -->
+          @if (availableBrands.length > 0) {
+            <div class="fill-section">
+              <label class="form-label">
+                Фильтр по бренду
+                <span class="text-muted" style="font-weight:400">
+                  (пусто = все бренды)
+                </span>
+              </label>
+              <div class="fill-chips-row">
+                @for (brand of availableBrands; track brand) {
+                  <button
+                    class="brand-chip"
+                    [class.brand-chip--active]="fillMonthSettings.filterBrands.includes(brand)"
+                    (click)="toggleFilterBrand(brand)"
+                  >{{ brand }}</button>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Progress bar -->
+          @if (fillMonthRunning || (fillMonthTotal > 0 && !fillMonthDone)) {
+            <div class="fill-progress-wrap">
+              <div class="fill-progress">
+                <div class="fill-progress__bar"
+                  [style.width.%]="fillMonthTotal > 0 ? (fillMonthProgress / fillMonthTotal) * 100 : 0">
+                </div>
+              </div>
+              <span class="text-muted" style="font-size: var(--fs-xs)">
+                {{ fillMonthProgress }} / {{ fillMonthTotal }} лотов
+              </span>
+            </div>
+          }
+
+          <!-- Actions -->
+          <div class="fill-actions">
+            <button
+              class="btn btn--primary"
+              [disabled]="fillMonthRunning"
+              (click)="runFillMonth()"
+            >
+              @if (fillMonthRunning) {
+                <span class="material-symbols-rounded spin">progress_activity</span>
+              } @else {
+                <span class="material-symbols-rounded">rocket_launch</span>
+              }
+              Запустить заполнение
+            </button>
+            @if (fillMonthDone) {
+              <span class="save-success">
+                <span class="material-symbols-rounded">check_circle</span>
+                Готово! Размещено {{ fillMonthProgress }} аукционов
+              </span>
+            }
+            @if (fillMonthError) {
+              <span class="save-error">{{ fillMonthError }}</span>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Calendar grid -->
       @if (listsLoading) {
         <div class="state-loading">
           <span class="material-symbols-rounded spin">progress_activity</span>
@@ -178,7 +337,12 @@
                 @if (cell.date) {
                   <span class="calendar-cell__day">{{ cell.date.getDate() }}</span>
                   @for (lot of cell.lots; track lot.id) {
-                    <div [class]="'cal-lot ' + lotStatusClass(lot)" [title]="lot.brand + ' ' + lot.model + ' ' + lot.year">
+                    <div
+                      [class]="'cal-lot ' + lotStatusClass(lot)"
+                      [class.cal-lot--selected]="selectedCalendarLot?.id === lot.id"
+                      [title]="lot.brand + ' ' + lot.model + ' ' + lot.year"
+                      (click)="openCalendarLotEdit(lot, $event)"
+                    >
                       {{ lot.brand }} {{ lot.model }}
                     </div>
                   }
@@ -193,6 +357,75 @@
           <span class="cal-lot cal-lot--current">Текущие торги</span>
           <span class="cal-lot cal-lot--past">Завершённые</span>
         </div>
+
+        <!-- Inline edit panel -->
+        @if (selectedCalendarLot) {
+          <div class="calendar-edit-panel">
+            <div class="calendar-edit-panel__header">
+              <span class="material-symbols-rounded">directions_car</span>
+              <span class="calendar-edit-panel__title">
+                {{ selectedCalendarLot.brand }} {{ selectedCalendarLot.model }} {{ selectedCalendarLot.year }}
+              </span>
+              <a [routerLink]="['/lots', selectedCalendarLot.id]" class="icon-link" title="Открыть лот">
+                <span class="material-symbols-rounded">open_in_new</span>
+              </a>
+              <button class="icon-btn" (click)="closeCalendarEdit()" title="Закрыть">
+                <span class="material-symbols-rounded">close</span>
+              </button>
+            </div>
+
+            <div class="calendar-edit-panel__body">
+              <div class="form-group">
+                <label class="form-label">Тип аукциона</label>
+                <select class="form-control" [(ngModel)]="editAuctionType">
+                  @for (t of auctionTypes; track t.value) {
+                    <option [value]="t.value">{{ t.label }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Начало</label>
+                  <input class="form-control" type="datetime-local" [(ngModel)]="editStartAt" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Конец</label>
+                  <input class="form-control" type="datetime-local" [(ngModel)]="editEndAt" />
+                </div>
+              </div>
+
+              <div class="cal-edit-actions">
+                <button
+                  class="btn btn--primary btn--sm"
+                  [disabled]="editSaving || !editStartAt || !editEndAt"
+                  (click)="saveCalendarEdit()"
+                >
+                  @if (editSaving) { <span class="material-symbols-rounded spin">progress_activity</span> }
+                  <span class="material-symbols-rounded">save</span>
+                  Сохранить
+                </button>
+                <button
+                  class="btn btn--danger btn--sm"
+                  [disabled]="editUnscheduling"
+                  (click)="unscheduleLot()"
+                >
+                  @if (editUnscheduling) { <span class="material-symbols-rounded spin">progress_activity</span> }
+                  <span class="material-symbols-rounded">event_busy</span>
+                  Снять с расписания
+                </button>
+                @if (editSaved) {
+                  <span class="save-success">
+                    <span class="material-symbols-rounded">check_circle</span> Сохранено
+                  </span>
+                }
+                @if (editSaveError) {
+                  <span class="save-error">{{ editSaveError }}</span>
+                }
+              </div>
+            </div>
+          </div>
+        }
       }
     </div>
   }
