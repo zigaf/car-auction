@@ -88,12 +88,16 @@ export class LotService {
     limit?: number;
     status?: string;
     search?: string;
+    dateFrom?: string;
+    dateTo?: string;
   } = {}): Observable<ILotsResponse> {
     return this.api.get<ILotsResponse>('/lots', {
       page: params.page ?? 1,
       limit: params.limit ?? 20,
       status: params.status,
       search: params.search,
+      dateFrom: params.dateFrom,
+      dateTo: params.dateTo,
     });
   }
 

@@ -159,12 +159,12 @@
         <button class="btn btn--secondary btn--sm" (click)="prevMonth()">
           <span class="material-symbols-rounded">chevron_left</span>
         </button>
-        <select class="calendar-nav__select" [(ngModel)]="calendarMonth" (change)="buildCalendar()">
+        <select class="calendar-nav__select" [(ngModel)]="calendarMonth" (change)="loadCalendarData()">
           @for (name of monthNames; track $index) {
             <option [value]="$index">{{ name }}</option>
           }
         </select>
-        <select class="calendar-nav__select" [(ngModel)]="calendarYear" (change)="buildCalendar()">
+        <select class="calendar-nav__select" [(ngModel)]="calendarYear" (change)="loadCalendarData()">
           @for (year of yearRange; track year) {
             <option [value]="year">{{ year }}</option>
           }

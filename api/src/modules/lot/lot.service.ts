@@ -34,6 +34,9 @@ export class LotService {
     country?: string;
     sort?: string;
     search?: string;
+    status?: string;
+    dateFrom?: string;
+    dateTo?: string;
   }): Promise<{ data: Lot[]; total: number; page: number; limit: number }> {
     const page = query.page || 1;
     const limit = query.limit || 20;
@@ -42,6 +45,18 @@ export class LotService {
       .createQueryBuilder('lot')
       .leftJoinAndSelect('lot.images', 'images')
       .where('lot.deletedAt IS NULL');
+
+    if (query.status) {
+      qb.andWhere('lot.status = :status', { status: query.status });
+    }
+
+    if (query.dateFrom) {
+      qb.andWhere('lot.auctionStartAt >= :dateFrom', { dateFrom: new Date(query.dateFrom) });
+    }
+
+    if (query.dateTo) {
+      qb.andWhere('lot.auctionStartAt < :dateTo', { dateTo: new Date(query.dateTo) });
+    }
 
     if (query.brand) {
       qb.andWhere('LOWER(lot.brand) = LOWER(:brand)', { brand: query.brand });

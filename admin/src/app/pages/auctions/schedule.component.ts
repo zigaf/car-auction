@@ -97,18 +97,17 @@ export class SchedulePage implements OnInit {
 
   ngOnInit(): void {
     this.loadAuctionLists();
-    this.loadPlanLots();
   }
 
   setTab(tab: Tab): void {
     this.activeTab = tab;
     if (tab === 'calendar') {
-      if (!this.listsLoading && this.upcomingLots.length === 0 && this.currentLots.length === 0 && this.pastLots.length === 0) {
-        this.loadAuctionLists();
-      } else {
-        this.buildCalendar();
+      this.loadCalendarData();
+    } else if (tab === 'plan') {
+      if (this.planLots.length === 0 && !this.planLotsLoading) {
+        this.loadPlanLots();
       }
-    } else if (tab !== 'plan' && !this.listsLoading) {
+    } else if (!this.listsLoading) {
       this.loadAuctionLists();
     }
   }
@@ -148,6 +147,37 @@ export class SchedulePage implements OnInit {
     });
   }
 
+  loadCalendarData(): void {
+    const year = this.calendarYear;
+    const month = this.calendarMonth;
+    const dateFrom = new Date(year, month, 1).toISOString();
+    const dateTo = new Date(year, month + 1, 1).toISOString();
+
+    this.listsLoading = true;
+    let loaded = 0;
+    const done = () => {
+      if (++loaded === 3) {
+        this.listsLoading = false;
+        this.buildCalendar();
+      }
+    };
+
+    this.lotService.getLots({ limit: 200, status: 'active', dateFrom, dateTo }).subscribe({
+      next: (res) => { this.upcomingLots = res.data; done(); },
+      error: done,
+    });
+
+    this.lotService.getLots({ limit: 200, status: 'trading', dateFrom, dateTo }).subscribe({
+      next: (res) => { this.currentLots = res.data; done(); },
+      error: done,
+    });
+
+    this.lotService.getLots({ limit: 200, status: 'sold', dateFrom, dateTo }).subscribe({
+      next: (res) => { this.pastLots = res.data; done(); },
+      error: done,
+    });
+  }
+
   buildCalendar(): void {
     const year = this.calendarYear;
     const month = this.calendarMonth;
@@ -159,6 +189,19 @@ export class SchedulePage implements OnInit {
     const seen = new Set<string>();
     const allLots = [...this.upcomingLots, ...this.currentLots, ...this.pastLots]
       .filter(l => { if (seen.has(l.id)) return false; seen.add(l.id); return true; });
+
+    // Build day → lots map in O(n) instead of filtering per day
+    const lotsByDay = new Map<number, ILot[]>();
+    for (const lot of allLots) {
+      const start = lot.auctionStartAt || lot.auctionStart;
+      if (!start) continue;
+      const s = new Date(start);
+      if (s.getFullYear() === year && s.getMonth() === month) {
+        const day = s.getDate();
+        if (!lotsByDay.has(day)) lotsByDay.set(day, []);
+        lotsByDay.get(day)!.push(lot);
+      }
+    }
 
     // Start week on Monday (0=Mon … 6=Sun)
     let startDow = firstDay.getDay();
@@ -173,12 +216,7 @@ export class SchedulePage implements OnInit {
 
     for (let d = 1; d <= lastDay.getDate(); d++) {
       const date = new Date(year, month, d);
-      const lots = allLots.filter(l => {
-        const start = l.auctionStartAt || l.auctionStart;
-        if (!start) return false;
-        const s = new Date(start);
-        return s.getFullYear() === year && s.getMonth() === month && s.getDate() === d;
-      });
+      const lots = lotsByDay.get(d) ?? [];
       const isToday =
         today.getFullYear() === year &&
         today.getMonth() === month &&
@@ -206,7 +244,7 @@ export class SchedulePage implements OnInit {
     } else {
       this.calendarMonth--;
     }
-    this.buildCalendar();
+    this.loadCalendarData();
   }
 
   nextMonth(): void {
@@ -216,7 +254,7 @@ export class SchedulePage implements OnInit {
     } else {
       this.calendarMonth++;
     }
-    this.buildCalendar();
+    this.loadCalendarData();
   }
 
   lotStatusClass(lot: ILot): string {
@@ -504,7 +542,6 @@ export class SchedulePage implements OnInit {
         // Continue on individual failures
       }
       this.fillMonthProgress++;
-      this.buildCalendar();
     }
 
     this.buildCalendar();

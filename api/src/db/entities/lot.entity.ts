@@ -154,6 +154,7 @@ export class Lot {
   @Column({ name: 'service_history', type: 'jsonb', nullable: true })
   serviceHistory: Array<Record<string, unknown>> | null;
 
+  @Index()
   @Column({ type: 'enum', enum: LotStatus, default: LotStatus.IMPORTED })
   status: LotStatus;
 
@@ -214,6 +215,7 @@ export class Lot {
   })
   bidStep: number;
 
+  @Index()
   @Column({ name: 'auction_start_at', type: 'timestamp', nullable: true })
   auctionStartAt: Date | null;
 
@@ -268,6 +270,7 @@ export class Lot {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
+  @Index()
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: Date | null;
 }

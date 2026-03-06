@@ -51,6 +51,9 @@ export class LotController {
     @Query('country') country?: string,
     @Query('sort') sort?: string,
     @Query('search') search?: string,
+    @Query('status') status?: string,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
   ) {
     return this.lotService.findAll({
       page,
@@ -66,6 +69,9 @@ export class LotController {
       country,
       sort,
       search,
+      status,
+      dateFrom,
+      dateTo,
     });
   }
 
