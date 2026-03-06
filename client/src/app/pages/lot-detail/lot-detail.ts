@@ -109,7 +109,7 @@ export class LotDetailComponent implements OnInit, OnDestroy {
         next: (traders) => {
           this.traders = traders;
           if (traders.length === 1) {
-            this.selectedTraderId = traders[0].id;
+            this.selectTrader(traders[0].id);
           }
         },
         error: () => { },
@@ -148,7 +148,8 @@ export class LotDetailComponent implements OnInit, OnDestroy {
         this.auctionState.seedFromLots([lot]);
 
         if (this.stateService.snapshot.isAuthenticated) {
-          this.favoritesService.checkFavorite(id).subscribe({
+          const checkTarget = this.isBroker ? this.selectedTraderId : null;
+          this.favoritesService.checkFavorite(id, checkTarget).subscribe({
             next: (res) => (this.isFavorite = res.isFavorite),
             error: () => { },
           });
@@ -590,7 +591,7 @@ export class LotDetailComponent implements OnInit, OnDestroy {
     const lotId = this.lot.id;
     const effectiveTarget = targetUserId ?? (this.isBroker ? this.selectedTraderId ?? undefined : undefined);
     if (this.isFavorite) {
-      this.favoritesService.removeFavorite(lotId).subscribe({
+      this.favoritesService.removeFavorite(lotId, effectiveTarget).subscribe({
         next: () => { this.isFavorite = false; this.favoriteLoading = false; },
         error: () => (this.favoriteLoading = false),
       });
@@ -605,6 +606,13 @@ export class LotDetailComponent implements OnInit, OnDestroy {
   selectTrader(traderId: string | null): void {
     this.selectedTraderId = traderId;
     this.traderPickerOpen = false;
+    // Re-check favorite status for the selected trader
+    if (this.lot && traderId) {
+      this.favoritesService.checkFavorite(this.lot.id, traderId).subscribe({
+        next: (res) => (this.isFavorite = res.isFavorite),
+        error: () => { },
+      });
+    }
   }
 
   // ─── Legacy panel helpers ─────────────────────────────────────────────────

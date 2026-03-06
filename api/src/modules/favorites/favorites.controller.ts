@@ -35,8 +35,9 @@ export class FavoritesController {
   isFavorite(
     @CurrentUser() user: User,
     @Param('lotId', ParseUUIDPipe) lotId: string,
+    @Query('targetUserId') targetUserId?: string,
   ) {
-    return this.favoritesService.isFavorite(user.id, lotId);
+    return this.favoritesService.isFavorite(user.id, lotId, targetUserId);
   }
 
   @Post(':lotId')
@@ -52,7 +53,8 @@ export class FavoritesController {
   removeFavorite(
     @CurrentUser() user: User,
     @Param('lotId', ParseUUIDPipe) lotId: string,
+    @Query('targetUserId') targetUserId?: string,
   ) {
-    return this.favoritesService.removeFavorite(user.id, lotId);
+    return this.favoritesService.removeFavorite(user.id, lotId, targetUserId);
   }
 }

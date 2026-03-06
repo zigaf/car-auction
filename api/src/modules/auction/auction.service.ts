@@ -851,8 +851,8 @@ export class AuctionService {
         throw new BadRequestException('Only the current highest bid can be rolled back');
       }
 
-      // Unlock the current highest bidder's lock
-      await this.balanceService.unlockBalanceForBid(manager, bid.userId, lot.id);
+      // Unlock the current highest bidder's lock (use trader's account if this was a broker bid)
+      await this.balanceService.unlockBalanceForBid(manager, bid.traderId ?? bid.userId, lot.id);
 
       // Remove the bid
       await manager.delete(Bid, { id: bidId });

@@ -33,7 +33,15 @@ export class ApiService {
     return this.http.put<T>(`${this.baseUrl}${path}`, body);
   }
 
-  delete<T>(path: string): Observable<T> {
-    return this.http.delete<T>(`${this.baseUrl}${path}`);
+  delete<T>(path: string, params?: Record<string, string | number | boolean | undefined | null>): Observable<T> {
+    let httpParams = new HttpParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          httpParams = httpParams.set(key, String(value));
+        }
+      });
+    }
+    return this.http.delete<T>(`${this.baseUrl}${path}`, { params: httpParams });
   }
 }

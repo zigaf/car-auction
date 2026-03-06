@@ -78,17 +78,47 @@ export class FavoritesService {
     return this.favoriteRepository.save(favorite);
   }
 
-  async removeFavorite(userId: string, lotId: string): Promise<void> {
-    const result = await this.favoriteRepository.delete({ userId, lotId });
+  async removeFavorite(actorId: string, lotId: string, targetUserId?: string): Promise<void> {
+    let effectiveUserId = actorId;
+
+    if (targetUserId) {
+      const actor = await this.userRepository.findOneBy({ id: actorId });
+      if (!actor || (actor.role !== Role.BROKER && actor.role !== Role.ADMIN)) {
+        throw new ForbiddenException("Only brokers can remove from another user's favorites");
+      }
+      const target = await this.userRepository.findOneBy({ id: targetUserId });
+      if (!target) throw new NotFoundException('Target user not found');
+      if (target.brokerId !== actorId) {
+        throw new ForbiddenException('User is not assigned to your brokerage');
+      }
+      effectiveUserId = targetUserId;
+    }
+
+    const result = await this.favoriteRepository.delete({ userId: effectiveUserId, lotId });
 
     if (result.affected === 0) {
       throw new NotFoundException('Favorite not found');
     }
   }
 
-  async isFavorite(userId: string, lotId: string): Promise<{ isFavorite: boolean }> {
+  async isFavorite(actorId: string, lotId: string, targetUserId?: string): Promise<{ isFavorite: boolean }> {
+    let effectiveUserId = actorId;
+
+    if (targetUserId) {
+      const actor = await this.userRepository.findOneBy({ id: actorId });
+      if (!actor || (actor.role !== Role.BROKER && actor.role !== Role.ADMIN)) {
+        throw new ForbiddenException("Only brokers can check another user's favorites");
+      }
+      const target = await this.userRepository.findOneBy({ id: targetUserId });
+      if (!target) throw new NotFoundException('Target user not found');
+      if (target.brokerId !== actorId) {
+        throw new ForbiddenException('User is not assigned to your brokerage');
+      }
+      effectiveUserId = targetUserId;
+    }
+
     const favorite = await this.favoriteRepository.findOne({
-      where: { userId, lotId },
+      where: { userId: effectiveUserId, lotId },
     });
 
     return { isFavorite: !!favorite };

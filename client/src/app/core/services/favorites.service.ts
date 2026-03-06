@@ -18,8 +18,9 @@ export class FavoritesService {
     });
   }
 
-  checkFavorite(lotId: string): Observable<{ isFavorite: boolean }> {
-    return this.api.get<{ isFavorite: boolean }>(`/favorites/${lotId}/check`);
+  checkFavorite(lotId: string, targetUserId?: string | null): Observable<{ isFavorite: boolean }> {
+    const params = targetUserId ? { targetUserId } : undefined;
+    return this.api.get<{ isFavorite: boolean }>(`/favorites/${lotId}/check`, params);
   }
 
   addFavorite(lotId: string, targetUserId?: string): Observable<IFavorite> {
@@ -27,7 +28,8 @@ export class FavoritesService {
     return this.api.post<IFavorite>(`/favorites/${lotId}`, body);
   }
 
-  removeFavorite(lotId: string): Observable<void> {
-    return this.api.delete<void>(`/favorites/${lotId}`);
+  removeFavorite(lotId: string, targetUserId?: string | null): Observable<void> {
+    const params = targetUserId ? { targetUserId } : undefined;
+    return this.api.delete<void>(`/favorites/${lotId}`, params);
   }
 }
