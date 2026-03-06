@@ -320,8 +320,11 @@
             @if (fillMonthDone) {
               <span class="save-success">
                 <span class="material-symbols-rounded">check_circle</span>
-                Готово! Размещено {{ fillMonthProgress }} аукционов
+                Готово! Размещено {{ fillMonthProgress - fillMonthErrors }} аукционов
               </span>
+            }
+            @if (fillMonthDone && fillMonthErrors > 0) {
+              <span class="save-error">{{ fillMonthErrors }} не удалось разместить</span>
             }
             @if (fillMonthError) {
               <span class="save-error">{{ fillMonthError }}</span>

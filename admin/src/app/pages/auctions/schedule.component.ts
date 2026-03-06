@@ -93,6 +93,7 @@ export class SchedulePage implements OnInit {
   fillMonthTotal = 0;
   fillMonthDone = false;
   fillMonthError = '';
+  fillMonthErrors = 0;
   availableBrands: string[] = [];
 
   ngOnInit(): void {
@@ -154,27 +155,20 @@ export class SchedulePage implements OnInit {
     const dateTo = new Date(year, month + 1, 1).toISOString();
 
     this.listsLoading = true;
-    let loaded = 0;
-    const done = () => {
-      if (++loaded === 3) {
+    // Single query — fetch all lots with auctionStartAt in this month regardless of status,
+    // then classify client-side. Avoids missing lots that end up in unexpected statuses.
+    this.lotService.getLots({ limit: 500, dateFrom, dateTo }).subscribe({
+      next: (res) => {
+        this.upcomingLots = res.data.filter(l => l.status === 'active');
+        this.currentLots = res.data.filter(l => l.status === 'trading');
+        this.pastLots = res.data.filter(l => !['active', 'trading'].includes(l.status));
         this.listsLoading = false;
         this.buildCalendar();
-      }
-    };
-
-    this.lotService.getLots({ limit: 200, status: 'active', dateFrom, dateTo }).subscribe({
-      next: (res) => { this.upcomingLots = res.data; done(); },
-      error: done,
-    });
-
-    this.lotService.getLots({ limit: 200, status: 'trading', dateFrom, dateTo }).subscribe({
-      next: (res) => { this.currentLots = res.data; done(); },
-      error: done,
-    });
-
-    this.lotService.getLots({ limit: 200, status: 'sold', dateFrom, dateTo }).subscribe({
-      next: (res) => { this.pastLots = res.data; done(); },
-      error: done,
+      },
+      error: () => {
+        this.listsLoading = false;
+        this.buildCalendar();
+      },
     });
   }
 
@@ -396,6 +390,7 @@ export class SchedulePage implements OnInit {
     if (this.fillMonthOpen) {
       this.fillMonthDone = false;
       this.fillMonthError = '';
+      this.fillMonthErrors = 0;
       this.fillMonthProgress = 0;
       this.fillMonthTotal = 0;
     }
@@ -427,6 +422,7 @@ export class SchedulePage implements OnInit {
     this.fillMonthTotal = 0;
     this.fillMonthDone = false;
     this.fillMonthError = '';
+    this.fillMonthErrors = 0;
 
     const s = this.fillMonthSettings;
 
@@ -539,14 +535,15 @@ export class SchedulePage implements OnInit {
           });
         });
       } catch {
-        // Continue on individual failures
+        this.fillMonthErrors++;
       }
       this.fillMonthProgress++;
     }
 
-    this.buildCalendar();
     this.fillMonthRunning = false;
     this.fillMonthDone = true;
+    // Reload from DB so calendar reflects what's actually persisted
+    this.loadCalendarData();
   }
 
   private generateTimeSlots(
