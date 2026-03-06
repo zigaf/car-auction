@@ -26,6 +26,9 @@
   font-size: $fs-sm;
   font-weight: $fw-medium;
   color: $text-primary;
+  text-decoration: none;
+
+  &:hover { color: $accent; text-decoration: underline; }
 }
 
 .user-email {

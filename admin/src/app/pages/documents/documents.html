@@ -47,7 +47,7 @@
                   {{ doc.user.firstName.charAt(0) }}{{ doc.user.lastName.charAt(0) }}
                 </div>
                 <div>
-                  <div class="user-name">{{ doc.user.firstName }} {{ doc.user.lastName }}</div>
+                  <a class="user-name" [routerLink]="['/users', doc.user.id]">{{ doc.user.firstName }} {{ doc.user.lastName }}</a>
                   <div class="text-muted" style="font-size: var(--fs-xs)">{{ doc.user.email }}</div>
                 </div>
               </td>

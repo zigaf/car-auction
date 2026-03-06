@@ -1,12 +1,12 @@
-@use 'shared-page';
-@use 'styles/variables' as v;
+@use 'shared-page' as *;
+@use 'styles/variables' as *;
 
-// ─── Tabs (underline style — overrides shared-page pill) ──────────────────────
+// ─── Tabs (underline style — intentional override of shared-page pill) ────────
 .tabs {
   display: flex;
   gap: 4px;
   margin-bottom: 20px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid $border-color;
   padding: 0;
   background: none;
   border-radius: 0;
@@ -20,20 +20,20 @@
   padding: 10px 18px;
   border: none;
   background: none;
-  color: var(--text-secondary);
+  color: $text-secondary;
   cursor: pointer;
-  font-size: var(--fs-sm);
-  font-weight: 500;
+  font-size: $fs-sm;
+  font-weight: $fw-medium;
   border-bottom: 2px solid transparent;
   border-radius: 0;
   margin-bottom: -1px;
   box-shadow: none;
-  transition: color 0.15s, border-color 0.15s;
+  transition: color $transition-fast, border-color $transition-fast;
 
-  &:hover { color: var(--text-primary); background: none; }
+  &:hover { color: $text-primary; background: none; }
   &--active {
-    color: var(--accent);
-    border-bottom-color: var(--accent);
+    color: $accent;
+    border-bottom-color: $accent;
     background: none;
     box-shadow: none;
   }
@@ -48,7 +48,7 @@
   gap: 12px;
   background: rgba(245, 158, 11, 0.1);
   border: 1px solid rgba(245, 158, 11, 0.35);
-  border-radius: var(--radius-lg);
+  border-radius: $radius-lg;
   padding: 14px 18px;
   margin-bottom: 20px;
   color: #92400e;
@@ -61,33 +61,18 @@
   }
 
   &__text {
-    font-size: var(--fs-sm);
+    font-size: $fs-sm;
     line-height: 1.5;
 
     strong { display: block; margin-bottom: 2px; }
   }
 }
 
-// ─── Card ────────────────────────────────────────────────────────────────────
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 24px;
-  margin-bottom: 16px;
-}
-
-.card-title {
-  font-size: var(--fs-base);
-  font-weight: 600;
-  margin: 0 0 20px;
-}
-
-// ─── Form helpers ─────────────────────────────────────────────────────────────
+// ─── Form helpers (extended layout — different from shared-page grid/row) ─────
 .form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  gap: $space-md;
 }
 
 .form-row {
@@ -97,10 +82,8 @@
   margin-bottom: 4px;
 }
 
+// Extend shared-page .form-group with layout extras used on this page
 .form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
   flex: 1;
   min-width: 160px;
 
@@ -117,16 +100,9 @@
 .checkbox-label {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: var(--fs-sm);
+  gap: $space-sm;
+  font-size: $fs-sm;
   cursor: pointer;
-}
-
-.form-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 24px;
 }
 
 // ─── Balance summary ──────────────────────────────────────────────────────────
@@ -137,15 +113,15 @@
   padding: 20px 24px;
 
   &__label {
-    font-size: var(--fs-sm);
-    color: var(--text-secondary);
-    font-weight: 500;
+    font-size: $fs-sm;
+    color: $text-secondary;
+    font-weight: $fw-medium;
   }
 
   &__amount {
     font-size: 28px;
-    font-weight: 700;
-    color: var(--text-primary);
+    font-weight: $fw-bold;
+    color: $text-primary;
     flex: 1;
   }
 }
@@ -159,24 +135,24 @@
   display: flex;
   align-items: flex-start;
   gap: 14px;
-  color: var(--text-secondary);
+  color: $text-secondary;
 
   .material-symbols-rounded {
     font-size: 28px;
-    color: var(--text-secondary);
+    color: $text-secondary;
     opacity: 0.5;
     flex-shrink: 0;
   }
 
   strong {
     display: block;
-    color: var(--text-primary);
+    color: $text-primary;
     margin-bottom: 4px;
-    font-size: var(--fs-sm);
+    font-size: $fs-sm;
   }
 
   p {
-    font-size: var(--fs-sm);
+    font-size: $fs-sm;
     margin: 0;
     line-height: 1.5;
   }
@@ -185,7 +161,7 @@
 // ─── Transactions table ───────────────────────────────────────────────────────
 .tx-date {
   white-space: nowrap;
-  font-size: var(--fs-xs);
+  font-size: $fs-xs;
 }
 
 .tx-desc {
@@ -193,41 +169,40 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: var(--fs-xs);
+  font-size: $fs-xs;
 }
 
 .tx-amount {
-  font-weight: 600;
-  font-size: var(--fs-sm);
+  font-weight: $fw-semibold;
+  font-size: $fs-sm;
 
-  &--positive { color: var(--green); }
-  &--negative { color: var(--red); }
+  &--positive { color: $status-green; }
+  &--negative { color: $status-red; }
 }
 
 // ─── Broker assignment section ────────────────────────────────────────────────
 .broker-section {
-  margin-top: v.$space-xl;
-  padding-top: v.$space-xl;
-  border-top: 1px solid var(--border);
+  margin-top: $space-xl;
+  padding-top: $space-xl;
+  border-top: 1px solid $border-color;
 
   &__title {
     display: flex;
     align-items: center;
-    gap: v.$space-xs;
-    font-size: var(--fs-md);
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: v.$space-md;
+    gap: $space-xs;
+    font-size: $fs-base;
+    font-weight: $fw-semibold;
+    color: $text-primary;
+    margin-bottom: $space-md;
 
-    .material-symbols-rounded { color: var(--accent); }
+    .material-symbols-rounded { color: $accent; }
   }
 }
 
 .state-loading-sm {
   display: flex;
   align-items: center;
-  gap: v.$space-xs;
-  color: var(--text-secondary);
-  font-size: var(--fs-sm);
+  gap: $space-xs;
+  color: $text-secondary;
+  font-size: $fs-sm;
 }
-

@@ -2,19 +2,66 @@
 @use 'styles/variables' as *;
 
 // ── Lot cell ──────────────────────────────────────────────────────
+.lot-cell {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+}
+
+.lot-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: $radius-base;
+  background: $accent-muted;
+  color: $accent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  .material-symbols-rounded { font-size: 18px; }
+}
+
 .order-lot {
   font-size: $fs-sm;
   font-weight: $fw-semibold;
   color: $text-primary;
   white-space: nowrap;
+  text-decoration: none;
+
+  &:hover { color: $accent; text-decoration: underline; }
 }
 
 // ── Buyer cell ────────────────────────────────────────────────────
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: $radius-round;
+  background: $accent-muted;
+  color: $accent;
+  font-size: $fs-xs;
+  font-weight: $fw-bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
 .buyer-name {
   font-size: $fs-sm;
   font-weight: $fw-medium;
   color: $text-primary;
   white-space: nowrap;
+  text-decoration: none;
+
+  &:hover { color: $accent; text-decoration: underline; }
 }
 
 .buyer-email {

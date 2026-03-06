@@ -44,11 +44,37 @@
             <tr>
               <td class="mono text-muted">{{ order.id.slice(0, 8) }}…</td>
               <td>
-                <div class="order-lot">{{ order.lot?.brand }} {{ order.lot?.model }} {{ order.lot?.year }}</div>
+                <div class="lot-cell">
+                  <div class="lot-avatar">
+                    <span class="material-symbols-rounded">directions_car</span>
+                  </div>
+                  <div>
+                    @if (order.lot) {
+                      <a class="order-lot" [routerLink]="['/lots', order.lot.id]">
+                        {{ order.lot.brand }} {{ order.lot.model }} {{ order.lot.year }}
+                      </a>
+                    } @else {
+                      <span class="order-lot text-muted">—</span>
+                    }
+                  </div>
+                </div>
               </td>
               <td>
-                <div class="buyer-name">{{ order.user?.firstName }} {{ order.user?.lastName }}</div>
-                <div class="buyer-email">{{ order.user?.email }}</div>
+                @if (order.user) {
+                  <div class="user-cell">
+                    <div class="user-avatar">
+                      {{ order.user.firstName.charAt(0) }}{{ order.user.lastName.charAt(0) }}
+                    </div>
+                    <div>
+                      <a class="buyer-name" [routerLink]="['/users', order.user.id]">
+                        {{ order.user.firstName }} {{ order.user.lastName }}
+                      </a>
+                      <div class="buyer-email">{{ order.user.email }}</div>
+                    </div>
+                  </div>
+                } @else {
+                  <span class="text-muted">—</span>
+                }
               </td>
               <td class="order-amount">{{ order.total | number }} EUR</td>
               <td>

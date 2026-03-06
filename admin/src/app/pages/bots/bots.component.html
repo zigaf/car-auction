@@ -101,8 +101,19 @@
             <tbody>
               @for (cfg of configs; track cfg.id) {
                 <tr>
-                  <td class="text-muted">
-                    {{ cfg.lot?.title ?? cfg.lotId.slice(0, 8) + '…' }}
+                  <td>
+                    <div class="lot-cell">
+                      <div class="lot-avatar">
+                        <span class="material-symbols-rounded">directions_car</span>
+                      </div>
+                      <div>
+                        @if (cfg.lot) {
+                          <a class="lot-name" [routerLink]="['/lots', cfg.lot.id]">{{ cfg.lot.title }}</a>
+                        } @else {
+                          <span class="text-muted">{{ cfg.lotId.slice(0, 8) }}…</span>
+                        }
+                      </div>
+                    </div>
                   </td>
                   <td>
                     {{ cfg.botUser?.firstName ?? '—' }} {{ cfg.botUser?.lastName ?? '' }}

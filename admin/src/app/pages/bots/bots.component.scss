@@ -5,6 +5,36 @@
   margin-bottom: $space-lg;
 }
 
+// ── Lot cell (configs table) ───────────────────────────────────────
+.lot-cell {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+}
+
+.lot-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: $radius-base;
+  background: $accent-muted;
+  color: $accent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  .material-symbols-rounded { font-size: 18px; }
+}
+
+.lot-name {
+  font-size: $fs-sm;
+  font-weight: $fw-medium;
+  color: $text-primary;
+  text-decoration: none;
+
+  &:hover { color: $accent; text-decoration: underline; }
+}
+
 // ── Bot grid ──────────────────────────────────────────────────────
 
 .bot-grid {

@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { DocumentsService, IDocument } from '../../core/services/documents.service';
 
 const STATUS_LABELS: Record<string, string | undefined> = {
@@ -19,7 +20,7 @@ const TYPE_LABELS: Record<string, string | undefined> = {
 @Component({
   selector: 'app-documents',
   standalone: true,
-  imports: [FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe, RouterLink],
   templateUrl: './documents.html',
   styleUrl: './documents.scss',
 })

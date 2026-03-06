@@ -1,12 +1,13 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { BotService, IBotUser, IBotConfig } from '../../core/services/bot.service';
 
 @Component({
   selector: 'app-bots',
   standalone: true,
-  imports: [FormsModule, DecimalPipe],
+  imports: [FormsModule, DecimalPipe, RouterLink],
   templateUrl: './bots.component.html',
   styleUrl: './bots.component.scss',
 })

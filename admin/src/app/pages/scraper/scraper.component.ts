@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
@@ -8,7 +8,7 @@ import { io, Socket } from 'socket.io-client';
 @Component({
     selector: 'app-scraper-page',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [DatePipe, FormsModule],
     templateUrl: './scraper.component.html',
     styleUrl: './scraper.component.scss',
 })

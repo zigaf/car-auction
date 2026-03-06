@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe, DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { OrderService, IOrder } from '../../core/services/order.service';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -28,7 +29,7 @@ const STATUS_BADGE: Record<string, string> = {
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [FormsModule, DecimalPipe, DatePipe],
+  imports: [FormsModule, DecimalPipe, DatePipe, RouterLink],
   templateUrl: './orders.html',
   styleUrl: './orders.scss',
 })
