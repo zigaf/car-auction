@@ -13,6 +13,7 @@ import { NotificationService } from '../notification/notification.service';
 import { NotificationType } from '../../common/enums/notification-type.enum';
 
 const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
+  [OrderStatus.AWAITING_PAYMENT]: 'Ожидание оплаты',
   [OrderStatus.PENDING]: 'Заказ ожидает подтверждения',
   [OrderStatus.APPROVED]: 'Заказ подтверждён',
   [OrderStatus.PAID]: 'Оплата получена',
@@ -25,6 +26,7 @@ const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
 
 /** Defines the valid order status transitions */
 const ALLOWED_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  [OrderStatus.AWAITING_PAYMENT]: [OrderStatus.PENDING],
   [OrderStatus.PENDING]: [OrderStatus.APPROVED],
   [OrderStatus.APPROVED]: [OrderStatus.PAID],
   [OrderStatus.PAID]: [OrderStatus.DELIVERED_SVH],
