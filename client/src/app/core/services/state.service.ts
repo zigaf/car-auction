@@ -12,7 +12,7 @@ export interface UserState {
   email: string;
   firstName: string;
   lastName: string;
-  role: 'client' | 'manager' | 'admin';
+  role: 'client' | 'broker' | 'admin';
   status: 'pending' | 'active' | 'blocked';
   isVerified: boolean;
   countryFlag: string;

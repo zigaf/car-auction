@@ -52,7 +52,7 @@ function initializeAuth(authService: AuthService): () => Promise<void> {
         }
 
         const user = await retryRes.json();
-        if (user.role === 'manager' || user.role === 'admin') {
+        if (user.role === 'broker' || user.role === 'admin') {
           authService.setUser(user);
         } else {
           localStorage.removeItem('accessToken');
@@ -62,7 +62,7 @@ function initializeAuth(authService: AuthService): () => Promise<void> {
       }
 
       const user = await res.json();
-      if (user.role === 'manager' || user.role === 'admin') {
+      if (user.role === 'broker' || user.role === 'admin') {
         authService.setUser(user);
       } else {
         localStorage.removeItem('accessToken');

@@ -13,6 +13,7 @@ export interface IUser {
   role: string;
   status: string;
   isVerified: boolean;
+  brokerId: string | null;
   createdAt: string;
   documentsVerified: boolean;
 }
@@ -72,5 +73,9 @@ export class UserService {
 
   sendCustomEmail(id: string, subject: string, message: string): Observable<{ message: string }> {
     return this.api.post<{ message: string }>(`/users/${id}/send-email`, { subject, message });
+  }
+
+  assignBroker(userId: string, brokerId: string | null): Observable<IUser> {
+    return this.api.patch<IUser>(`/users/${userId}/broker`, { brokerId });
   }
 }

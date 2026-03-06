@@ -8,12 +8,14 @@ import { environment } from '../../../environments/environment';
 import { LotService } from '../../core/services/lot.service';
 import { AuctionService } from '../../core/services/auction.service';
 import { FavoritesService } from '../../core/services/favorites.service';
+import { BrokerService } from '../../core/services/broker.service';
 import { StateService } from '../../core/services/state.service';
 import { WebsocketService } from '../../core/services/websocket.service';
 import { AuctionStateService } from '../../core/services/auction-state.service';
 import { TimeService } from '../../core/services/time.service';
 import { ILot, ILotImage, ImageCategory, LotStatus } from '../../models/lot.model';
 import { IBid } from '../../models/auction.model';
+import { IUser } from '../../models/user.model';
 
 interface ConditionItem {
   part: string;
@@ -40,6 +42,7 @@ export class LotDetailComponent implements OnInit, OnDestroy {
   private readonly lotService = inject(LotService);
   private readonly auctionService = inject(AuctionService);
   private readonly favoritesService = inject(FavoritesService);
+  private readonly brokerService = inject(BrokerService);
   private readonly stateService = inject(StateService);
   private readonly wsService = inject(WebsocketService);
   private readonly auctionState = inject(AuctionStateService);
@@ -84,6 +87,11 @@ export class LotDetailComponent implements OnInit, OnDestroy {
   activeAutoBidMax: number | null = null;
   activeAutoBidLotId: string | null = null;
 
+  // ─── Broker state ─────────────────────────────────────────────────────────
+  traders: IUser[] = [];
+  selectedTraderId: string | null = null;
+  traderPickerOpen = false;
+
   // ─── Lifecycle ────────────────────────────────────────────────────────────
 
   ngOnInit(): void {
@@ -93,6 +101,19 @@ export class LotDetailComponent implements OnInit, OnDestroy {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.loadLot(id);
+    }
+
+    // Load trader list for brokers
+    if (this.isBroker) {
+      this.brokerService.getMyTraders().subscribe({
+        next: (traders) => {
+          this.traders = traders;
+          if (traders.length === 1) {
+            this.selectedTraderId = traders[0].id;
+          }
+        },
+        error: () => { },
+      });
     }
 
     // Keep timer ticking every second
@@ -129,7 +150,7 @@ export class LotDetailComponent implements OnInit, OnDestroy {
         if (this.stateService.snapshot.isAuthenticated) {
           this.favoritesService.checkFavorite(id).subscribe({
             next: (res) => (this.isFavorite = res.isFavorite),
-            error: () => {},
+            error: () => { },
           });
 
           // Join the auction room for per-lot real-time events
@@ -289,7 +310,7 @@ export class LotDetailComponent implements OnInit, OnDestroy {
       }
     }, 15000);
 
-    this.wsService.placeBid(this.lot.id, this.customBidAmount);
+    this.wsService.placeBid(this.lot.id, this.customBidAmount, this.selectedTraderId);
   }
 
   placePreBid(): void {
@@ -316,7 +337,7 @@ export class LotDetailComponent implements OnInit, OnDestroy {
       }
     }, 15000);
 
-    this.wsService.placePreBid(this.lot.id, this.maxAutoBidAmount);
+    this.wsService.placePreBid(this.lot.id, this.maxAutoBidAmount, this.selectedTraderId);
     this.maxAutoBidAmount = null;
   }
 
@@ -490,6 +511,23 @@ export class LotDetailComponent implements OnInit, OnDestroy {
     return this.stateService.snapshot.isAuthenticated;
   }
 
+  get isBroker(): boolean {
+    return this.stateService.snapshot.user?.role === 'broker';
+  }
+
+  get isClient(): boolean {
+    return this.stateService.snapshot.user?.role === 'client';
+  }
+
+  get canBid(): boolean {
+    const role = this.stateService.snapshot.user?.role;
+    return role === 'broker' || role === 'admin';
+  }
+
+  get selectedTrader(): IUser | null {
+    return this.traders.find((t) => t.id === this.selectedTraderId) ?? null;
+  }
+
   getCurrentPrice(lot: ILot): number {
     const livePrice = this.auctionState.getLotPrice(lot.id);
     if (livePrice !== null) return livePrice;
@@ -509,8 +547,8 @@ export class LotDetailComponent implements OnInit, OnDestroy {
   getQuickBidIncrements(): number[] {
     if (!this.lot) return [100, 250, 500, 1000];
     const price = this.getCurrentPrice(this.lot);
-    if (price < 1000)  return [50, 100, 200, 500];
-    if (price < 5000)  return [100, 250, 500, 1000];
+    if (price < 1000) return [50, 100, 200, 500];
+    if (price < 5000) return [100, 250, 500, 1000];
     if (price < 20000) return [250, 500, 1000, 2500];
     if (price < 50000) return [500, 1000, 2500, 5000];
     return [1000, 2500, 5000, 10000];
@@ -541,21 +579,32 @@ export class LotDetailComponent implements OnInit, OnDestroy {
 
   // ─── Favorites ────────────────────────────────────────────────────────────
 
-  toggleFavorite(): void {
+  toggleFavorite(targetUserId?: string): void {
     if (!this.stateService.snapshot.isAuthenticated || !this.lot || this.favoriteLoading) return;
+    // Broker must select a trader before toggling favorites
+    if (this.isBroker && !targetUserId && !this.selectedTraderId) {
+      this.traderPickerOpen = true;
+      return;
+    }
     this.favoriteLoading = true;
     const lotId = this.lot.id;
+    const effectiveTarget = targetUserId ?? (this.isBroker ? this.selectedTraderId ?? undefined : undefined);
     if (this.isFavorite) {
       this.favoritesService.removeFavorite(lotId).subscribe({
         next: () => { this.isFavorite = false; this.favoriteLoading = false; },
         error: () => (this.favoriteLoading = false),
       });
     } else {
-      this.favoritesService.addFavorite(lotId).subscribe({
+      this.favoritesService.addFavorite(lotId, effectiveTarget).subscribe({
         next: () => { this.isFavorite = true; this.favoriteLoading = false; },
         error: () => (this.favoriteLoading = false),
       });
     }
+  }
+
+  selectTrader(traderId: string | null): void {
+    this.selectedTraderId = traderId;
+    this.traderPickerOpen = false;
   }
 
   // ─── Legacy panel helpers ─────────────────────────────────────────────────
@@ -573,6 +622,7 @@ export class LotDetailComponent implements OnInit, OnDestroy {
   get hasSpecs(): boolean {
     if (!this.lot) return false;
     return !!(this.lot.enginePowerPs || this.lot.enginePowerKw || this.lot.fuelType ||
-      this.lot.mileage || this.lot.year || this.lot.transmission || this.lot.exteriorColor);
+      this.lot.mileage || this.lot.year || this.lot.transmission || this.lot.exteriorColor ||
+      this.lot.numberOfDoors || this.lot.engineCapacityCc);
   }
 }

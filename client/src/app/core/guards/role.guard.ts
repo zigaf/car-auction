@@ -12,7 +12,7 @@ export const managerGuard: CanActivateFn = () => {
     return router.createUrlTree(['/login']);
   }
 
-  if (user && (user.role === 'manager' || user.role === 'admin')) {
+  if (user && (user.role === 'broker' || user.role === 'admin')) {
     return true;
   }
 

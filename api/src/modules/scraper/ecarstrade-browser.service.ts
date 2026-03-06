@@ -207,11 +207,61 @@ export class EcarsTradeBrowserService implements OnModuleDestroy {
                     }
                 });
 
+                // Extract Features / Equipment (checkmarks)
+                const equipment: string[] = [];
+                const equipItems = Array.from(document.querySelectorAll('.equipment-item, .feature-item, [class*="features"] li, [class*="equipment"] li, .check-list li'));
+                // Use a broader selector because the screenshot showed lists with checkmarks
+                const listItems = Array.from(document.querySelectorAll('li'));
+                listItems.forEach(li => {
+                    const text = (li as HTMLElement).innerText.trim();
+                    // Basic heuristic: checkmark icon or short feature strings under a specific heading
+                    if (text && text.length > 3 && text.length < 60 && (li.querySelector('svg') || li.innerHTML.includes('check'))) {
+                        equipment.push(text.replace(/\\n/g, ' '));
+                    }
+                });
+
+                // In case the heuristic fails, try to grab raw text chunks from sections titled "Комфорт", "Защита", etc.
+                const allText = document.body.innerText;
+
+                // Extract Service History
+                const serviceHistory: any[] = [];
+                // Look for table with headers: date, mileage, company, description, price
+                const tables = Array.from(document.querySelectorAll('table'));
+                for (const table of tables) {
+                    const headers = Array.from(table.querySelectorAll('th')).map(th => th.innerText.toLowerCase());
+                    if (headers.some(h => h.includes('date') || h.includes('дата')) &&
+                        headers.some(h => h.includes('mileage') || h.includes('пробег'))) {
+                        const rows = Array.from(table.querySelectorAll('tbody tr'));
+                        rows.forEach(row => {
+                            const cells = Array.from(row.querySelectorAll('td')).map(td => td.innerText.trim());
+                            if (cells.length >= 4) {
+                                serviceHistory.push({
+                                    date: cells[0] || '',
+                                    mileage: cells[1] || '',
+                                    company: cells[2] || '',
+                                    description: cells[3] || '',
+                                    price: cells[4] || ''
+                                });
+                            }
+                        });
+                        break;
+                    }
+                }
+
+                // Try to find seller info strictly by text mapping
+                const dtElems = Array.from(document.querySelectorAll('dt, .label'));
+                const ddElems = Array.from(document.querySelectorAll('dd, .value'));
+                for (let i = 0; i < dtElems.length; i++) {
+                    if (ddElems[i]) {
+                        specs[(dtElems[i] as HTMLElement).innerText.trim()] = (ddElems[i] as HTMLElement).innerText.trim();
+                    }
+                }
+
                 // Extract price
                 const priceEl = document.querySelector('.price, [class*="price"], .amount, [class*="amount"]');
                 const priceText = priceEl ? (priceEl as HTMLElement).innerText : null;
 
-                return { jsonLd, title, images, specs, price: priceText };
+                return { jsonLd, title, images, specs, price: priceText, equipment: [...new Set(equipment)], serviceHistory };
             });
 
             return extractedData;

@@ -26,9 +26,9 @@ export class LoginPage {
 
     this.authService.login(this.email, this.password).subscribe({
       next: (res) => {
-        if (res.user.role !== 'manager' && res.user.role !== 'admin') {
+        if (res.user.role !== 'broker' && res.user.role !== 'admin') {
           this.authService.logout();
-          this.error = 'Недостаточно прав. Только менеджеры и администраторы.';
+          this.error = 'Недостаточно прав. Только брокеры и администраторы.';
           this.loading = false;
           return;
         }

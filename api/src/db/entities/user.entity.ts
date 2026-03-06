@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  OneToMany,
   JoinColumn,
 } from 'typeorm';
 import { Role } from '../../common/enums/role.enum';
@@ -84,6 +85,16 @@ export class User {
 
   @Column({ name: 'referred_by', type: 'uuid', nullable: true })
   referredById: string | null;
+
+  @Column({ name: 'broker_id', type: 'uuid', nullable: true })
+  brokerId: string | null;
+
+  @ManyToOne(() => User, (u) => u.traders, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'broker_id' })
+  broker: User | null;
+
+  @OneToMany(() => User, (u) => u.broker)
+  traders: User[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

@@ -20,8 +20,8 @@ export class EcarsTradeDataMapperService {
         vehicleId: string,
         detailUrl: string
     ): Partial<Lot> & { _categorizedImages?: { url: string; category: string }[] } {
-        // extractedData contains jsonLd, title, specs, images, price
-        const { jsonLd, title, specs, images, price } = sourceData;
+        // extractedData contains jsonLd, title, specs, images, price, equipment, serviceHistory
+        const { jsonLd, title, specs, images, price, equipment, serviceHistory } = sourceData;
 
         // Extract from JSON-LD if available
         let brand = jsonLd?.brand?.name || undefined;
@@ -31,6 +31,18 @@ export class EcarsTradeDataMapperService {
         let fuelType = null;
         let power = { kw: null as number | null, ps: null as number | null };
         let startingBid = this.parseGermanPrice(price);
+
+        // Extended specs
+        let transmission = undefined;
+        let numberOfGears = undefined;
+        let numberOfDoors = undefined;
+        let numberOfSeats = undefined;
+        let engineCapacityCc = undefined;
+        let emissionClass = undefined;
+        let co2Emissions = undefined;
+        let originCountry = undefined;
+        let sellerName = undefined;
+        let vin = undefined;
 
         if (jsonLd) {
             year = jsonLd.dateVehicleFirstRegistered ? parseInt(jsonLd.dateVehicleFirstRegistered.split('/').pop() || '', 10) : undefined;
@@ -64,6 +76,36 @@ export class EcarsTradeDataMapperService {
 
             const specPower = getSpec(['мощность', 'power', 'leistung']);
             if (specPower) power = this.parsePower(specPower);
+
+            const specTransmission = getSpec(['коробка', 'transmission', 'getriebe']);
+            if (specTransmission) transmission = specTransmission;
+
+            const specGears = getSpec(['передач', 'gears', 'gänge']);
+            if (specGears) numberOfGears = this.parseGermanInt(specGears);
+
+            const specDoors = getSpec(['дверей', 'doors', 'türen']);
+            if (specDoors) numberOfDoors = this.parseGermanInt(specDoors);
+
+            const specSeats = getSpec(['мест', 'seats', 'sitze']);
+            if (specSeats) numberOfSeats = this.parseGermanInt(specSeats);
+
+            const specEngine = getSpec(['объем', 'двигатель', 'engine', 'hubraum', 'capacity']);
+            if (specEngine) engineCapacityCc = this.parseGermanInt(specEngine);
+
+            const specEmission = getSpec(['эмиссии', 'emission']);
+            if (specEmission) emissionClass = specEmission;
+
+            const specCo2 = getSpec(['co2', 'co_2']);
+            if (specCo2) co2Emissions = specCo2;
+
+            const specOrigin = getSpec(['производства', 'origin', 'herkunft']);
+            if (specOrigin) originCountry = specOrigin;
+
+            const specSeller = getSpec(['продавец', 'seller', 'verkäufer']);
+            if (specSeller) sellerName = specSeller;
+
+            const specVin = getSpec(['vin', 'номер блока']);
+            if (specVin) vin = specVin;
         }
 
         // Fallback extraction from title "Brand Model Derivative"
@@ -100,12 +142,25 @@ export class EcarsTradeDataMapperService {
             fuelType: fuelType,
             enginePowerKw: power.kw,
             enginePowerPs: power.ps,
+            engineCapacityCc,
+            transmission,
+            numberOfGears,
+            numberOfDoors,
+            numberOfSeats,
+            emissionClass,
+            co2Emissions,
+            originCountry,
+            sellerName,
+            vin,
             saleCountry: 'EU',
             startingBid,
             originalCurrency: 'EUR',
             sourceImageUrl: categorizedImages.length > 0 ? categorizedImages[0].url : null,
             sourceUrl: detailUrl,
             description: jsonLd ? JSON.stringify(jsonLd) : null,
+            equipment: equipment && equipment.length > 0 ? equipment : undefined,
+            serviceHistory: serviceHistory && serviceHistory.length > 0 ? serviceHistory : undefined,
+            specs: specs || undefined,
             auctionType: AuctionType.TIMED,
             status: LotStatus.IMPORTED,
             _categorizedImages: categorizedImages.length > 0 ? categorizedImages : undefined,

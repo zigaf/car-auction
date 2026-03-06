@@ -53,7 +53,7 @@ export class DocumentsController {
 
   @Patch(':id/status')
   @UseGuards(RolesGuard)
-  @Roles(Role.MANAGER, Role.ADMIN)
+  @Roles(Role.BROKER, Role.ADMIN)
   updateStatus(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateDocumentStatusDto,

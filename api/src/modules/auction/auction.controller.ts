@@ -30,31 +30,36 @@ export class AuctionController {
   ) { }
 
   @Post('bids')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.BROKER, Role.ADMIN)
   placeBid(@CurrentUser() user: User, @Body() dto: PlaceBidDto) {
     return this.auctionService.placeBid(
       user.id,
       dto.lotId,
       dto.amount,
       dto.idempotencyKey,
+      dto.traderId,
     );
   }
 
   @Post('bids/pre-bid')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.BROKER, Role.ADMIN)
   placePreBid(@CurrentUser() user: User, @Body() dto: PlacePreBidDto) {
     return this.auctionService.placePreBid(
       user.id,
       dto.lotId,
       dto.maxAutoBid,
       dto.idempotencyKey,
+      dto.traderId,
     );
   }
 
   @Post('bids/buy-now')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.BROKER, Role.ADMIN)
   buyNow(@CurrentUser() user: User, @Body() dto: BuyNowDto) {
-    return this.auctionService.buyNow(user.id, dto.lotId);
+    return this.auctionService.buyNow(user.id, dto.lotId, dto.traderId);
   }
 
   @Get('bids/recent')
@@ -89,7 +94,7 @@ export class AuctionController {
   /** Admin: rollback the highest bid on a lot. */
   @Delete('admin/bids/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.MANAGER, Role.ADMIN)
+  @Roles(Role.BROKER, Role.ADMIN)
   async rollbackBid(@Param('id', ParseUUIDPipe) id: string) {
     const result = await this.auctionService.rollbackBid(id);
     this.auctionGateway.emitBidRollback(result.lotId, id, result.newCurrentPrice);

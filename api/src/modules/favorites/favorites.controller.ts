@@ -5,6 +5,7 @@ import {
   Delete,
   Param,
   Query,
+  Body,
   UseGuards,
   ParseUUIDPipe,
 } from '@nestjs/common';
@@ -42,8 +43,9 @@ export class FavoritesController {
   addFavorite(
     @CurrentUser() user: User,
     @Param('lotId', ParseUUIDPipe) lotId: string,
+    @Body('targetUserId') targetUserId?: string,
   ) {
-    return this.favoritesService.addFavorite(user.id, lotId);
+    return this.favoritesService.addFavorite(user.id, lotId, targetUserId);
   }
 
   @Delete(':lotId')

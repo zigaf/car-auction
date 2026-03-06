@@ -1563,3 +1563,51 @@
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
+
+// Broker-specific UI
+.live-panel__client-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-sm;
+  padding: $space-sm $space-md;
+  background: rgba($accent, 0.08);
+  border: 1px solid rgba($accent, 0.2);
+  border-radius: $radius-md;
+  color: $text-secondary;
+  font-size: $fs-sm;
+
+  .material-symbols-rounded { color: $accent; margin-top: 1px; }
+  p { margin: 0; line-height: 1.5; }
+}
+
+.live-panel__trader-picker {
+  display: flex;
+  flex-direction: column;
+  gap: $space-xs;
+  margin-bottom: $space-sm;
+}
+
+.live-panel__trader-label {
+  font-size: $fs-sm;
+  font-weight: $fw-semibold;
+  color: $text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.live-panel__trader-select {
+  width: 100%;
+  padding: $space-sm $space-md;
+  background: $bg-card;
+  border: 1px solid $border-color;
+  border-radius: $radius-md;
+  color: $text-primary;
+  font-size: $fs-sm;
+  cursor: pointer;
+  appearance: none;
+
+  &:focus {
+    outline: none;
+    border-color: $accent;
+  }
+}

@@ -59,6 +59,15 @@ export class Lot {
   @Column({ name: 'engine_power_ps', type: 'int', nullable: true })
   enginePowerPs: number | null;
 
+  @Column({ name: 'engine_capacity_cc', type: 'int', nullable: true })
+  engineCapacityCc: number | null;
+
+  @Column({ name: 'emission_class', type: 'varchar', nullable: true })
+  emissionClass: string | null;
+
+  @Column({ name: 'co2_emissions', type: 'varchar', nullable: true })
+  co2Emissions: string | null;
+
   @Column({ name: 'registration_date', type: 'date', nullable: true })
   registrationDate: Date | null;
 
@@ -81,6 +90,9 @@ export class Lot {
 
   @Column({ name: 'vehicle_location', type: 'varchar', nullable: true })
   vehicleLocation: string | null;
+
+  @Column({ name: 'origin_country', type: 'varchar', nullable: true })
+  originCountry: string | null;
 
   @Column({ name: 'sale_country', type: 'varchar', nullable: true })
   saleCountry: string | null;
@@ -139,6 +151,9 @@ export class Lot {
   @Column({ type: 'jsonb', nullable: true })
   specs: Record<string, unknown> | null;
 
+  @Column({ name: 'service_history', type: 'jsonb', nullable: true })
+  serviceHistory: Array<Record<string, unknown>> | null;
+
   @Column({ type: 'enum', enum: LotStatus, default: LotStatus.IMPORTED })
   status: LotStatus;
 
@@ -151,6 +166,15 @@ export class Lot {
   @Column({ type: 'varchar', nullable: true })
   transmission: string | null;
 
+  @Column({ name: 'number_of_gears', type: 'int', nullable: true })
+  numberOfGears: number | null;
+
+  @Column({ name: 'number_of_doors', type: 'int', nullable: true })
+  numberOfDoors: number | null;
+
+  @Column({ name: 'number_of_seats', type: 'int', nullable: true })
+  numberOfSeats: number | null;
+
   @Column({ name: 'number_of_owners', type: 'int', nullable: true })
   numberOfOwners: number | null;
 
@@ -159,6 +183,9 @@ export class Lot {
 
   @Column({ name: 'lot_number', type: 'varchar', nullable: true })
   lotNumber: string | null;
+
+  @Column({ name: 'seller_name', type: 'varchar', nullable: true })
+  sellerName: string | null;
 
   // Auction fields
   @Column({

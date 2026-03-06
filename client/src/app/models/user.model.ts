@@ -1,6 +1,6 @@
 export enum Role {
   CLIENT = 'client',
-  MANAGER = 'manager',
+  BROKER = 'broker',
   ADMIN = 'admin',
 }
 
@@ -41,6 +41,7 @@ export interface IUser {
   preferredCurrency: Currency;
   referralCode: string;
   referredById: string | null;
+  brokerId: string | null;
   createdAt: string;
   updatedAt: string;
 }

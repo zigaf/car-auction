@@ -44,6 +44,16 @@ export interface ILot {
   pausedRemainingMs: number | null;
   createdAt: string;
   updatedAt: string;
+  numberOfDoors?: number;
+  numberOfSeats?: number;
+  numberOfGears?: number;
+  engineCapacityCc?: number;
+  emissionClass?: string;
+  co2Emissions?: string;
+  originCountry?: string;
+  sellerName?: string;
+  serviceHistory?: any[];
+  equipment?: string[];
 }
 
 export interface ILotsResponse {
@@ -71,7 +81,7 @@ export interface IBidsResponse {
 
 @Injectable({ providedIn: 'root' })
 export class LotService {
-  constructor(private readonly api: ApiService) {}
+  constructor(private readonly api: ApiService) { }
 
   getLots(params: {
     page?: number;

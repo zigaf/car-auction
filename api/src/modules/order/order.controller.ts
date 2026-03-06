@@ -31,7 +31,7 @@ export class OrderController {
     const page = Math.max(parseInt(query.page || '1', 10), 1);
     const limit = Math.min(Math.max(parseInt(query.limit || '20', 10), 1), 100);
 
-    if (user.role === Role.MANAGER || user.role === Role.ADMIN) {
+    if (user.role === Role.BROKER || user.role === Role.ADMIN) {
       return this.orderService.getAllOrders({ page, limit, status: query.status });
     }
 
@@ -44,13 +44,13 @@ export class OrderController {
     @CurrentUser() user: User,
   ) {
     const isManager =
-      user.role === Role.MANAGER || user.role === Role.ADMIN;
+      user.role === Role.BROKER || user.role === Role.ADMIN;
     return this.orderService.getOrderById(id, user.id, isManager);
   }
 
   @Patch(':id/status')
   @UseGuards(RolesGuard)
-  @Roles(Role.MANAGER, Role.ADMIN)
+  @Roles(Role.BROKER, Role.ADMIN)
   updateStatus(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateOrderStatusDto,
@@ -71,7 +71,7 @@ export class OrderController {
     @CurrentUser() user: User,
   ) {
     const isManager =
-      user.role === Role.MANAGER || user.role === Role.ADMIN;
+      user.role === Role.BROKER || user.role === Role.ADMIN;
     return this.orderService.getOrderTracking(id, user.id, isManager);
   }
 }

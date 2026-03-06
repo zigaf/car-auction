@@ -16,11 +16,13 @@ interface PlaceBidPayload {
   lotId: string;
   amount: number;
   idempotencyKey: string;
+  traderId?: string;
 }
 
 interface PlacePreBidPayload {
   lotId: string;
   maxAutoBid: number;
+  traderId?: string;
 }
 
 const WS_CORS_ORIGINS = [
@@ -65,7 +67,8 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
       }
 
       client.data.userId = userId;
-      this.logger.log(`Client connected: ${client.id} (user: ${userId})`);
+      client.data.role = (payload.role as string) || 'client';
+      this.logger.log(`Client connected: ${client.id} (user: ${userId}, role: ${client.data.role})`);
     } catch (error) {
       this.logger.warn(`Client ${client.id} invalid token, disconnecting`);
       client.disconnect(true);
@@ -155,11 +158,17 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
         return { status: 'error', message: 'Authentication required' };
       }
 
+      const role = client.data.role as string;
+      if (role !== 'broker' && role !== 'admin') {
+        return { status: 'error', message: 'Only brokers can place bids' };
+      }
+
       const result: PlaceBidResult = await this.auctionService.placeBid(
         userId,
         payload.lotId,
         payload.amount,
         payload.idempotencyKey,
+        payload.traderId,
       );
 
       const room = `auction:${payload.lotId}`;
@@ -238,12 +247,18 @@ export class AuctionGateway implements OnGatewayConnection, OnGatewayDisconnect 
         return { status: 'error', message: 'Authentication required' };
       }
 
+      const preBidRole = client.data.role as string;
+      if (preBidRole !== 'broker' && preBidRole !== 'admin') {
+        return { status: 'error', message: 'Only brokers can place pre-bids' };
+      }
+
       const idempotencyKey = `pre:${payload.lotId}:${userId}:${Date.now()}`;
       const result: PlaceBidResult = await this.auctionService.placePreBid(
         userId,
         payload.lotId,
         payload.maxAutoBid,
         idempotencyKey,
+        payload.traderId,
       );
 
       const room = `auction:${payload.lotId}`;

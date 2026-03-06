@@ -78,6 +78,15 @@ export interface ILot {
   description: string | null;
   equipment: string[] | null;
   transmission: string | null;
+  numberOfGears: number | null;
+  numberOfDoors: number | null;
+  numberOfSeats: number | null;
+  engineCapacityCc: number | null;
+  emissionClass: string | null;
+  co2Emissions: string | null;
+  originCountry: string | null;
+  sellerName: string | null;
+  serviceHistory: Array<Record<string, unknown>> | null;
   numberOfOwners: number | null;
   numberOfKeys: number | null;
   lotNumber: string | null;

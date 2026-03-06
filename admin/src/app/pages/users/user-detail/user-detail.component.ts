@@ -62,7 +62,15 @@ export class UserDetailComponent implements OnInit {
   depositError = '';
 
   readonly statuses = ['active', 'blocked', 'pending'];
-  readonly roles = ['client', 'manager', 'admin', 'bot'];
+  readonly roles = ['client', 'broker', 'admin', 'bot'];
+
+  // Broker assignment (visible when user role = client)
+  brokers: IUser[] = [];
+  brokersLoading = false;
+  selectedBrokerId: string | null = null;
+  brokerSaving = false;
+  brokerSaveSuccess = false;
+  brokerSaveError = '';
 
   get isRestrictedCountry(): boolean {
     if (!this.user?.countryFlag) return false;
@@ -100,6 +108,41 @@ export class UserDetailComponent implements OnInit {
     this.formStatus = u.status;
     this.formRole = u.role;
     this.formIsVerified = u.isVerified;
+    this.selectedBrokerId = u.brokerId;
+
+    if (u.role === 'client') {
+      this.loadBrokers();
+    }
+  }
+
+  loadBrokers(): void {
+    this.brokersLoading = true;
+    this.userService.getUsers({ role: 'broker', limit: 200 }).subscribe({
+      next: (res) => {
+        this.brokers = res.data;
+        this.brokersLoading = false;
+      },
+      error: () => (this.brokersLoading = false),
+    });
+  }
+
+  assignBroker(): void {
+    this.brokerSaving = true;
+    this.brokerSaveSuccess = false;
+    this.brokerSaveError = '';
+    this.userService.assignBroker(this.userId, this.selectedBrokerId).subscribe({
+      next: (u) => {
+        this.user = u;
+        this.selectedBrokerId = u.brokerId;
+        this.brokerSaving = false;
+        this.brokerSaveSuccess = true;
+        setTimeout(() => (this.brokerSaveSuccess = false), 3000);
+      },
+      error: (err) => {
+        this.brokerSaveError = err?.error?.message ?? 'Ошибка назначения брокера';
+        this.brokerSaving = false;
+      },
+    });
   }
 
   saveInfo(): void {

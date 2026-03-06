@@ -49,9 +49,10 @@ export class WebsocketService implements OnDestroy {
         : null;
 
       const userId = this.getUserIdFromToken(token);
+      const role = this.getRoleFromToken(token);
 
       this.socket = io(`${environment.wsUrl}/auction`, {
-        auth: { token, userId },
+        auth: { token, userId, role },
         transports: ['websocket', 'polling'],
         reconnection: true,
         reconnectionAttempts: 10,
@@ -130,14 +131,17 @@ export class WebsocketService implements OnDestroy {
     }
   }
 
-  placeBid(lotId: string, amount: number): void {
+  placeBid(lotId: string, amount: number, traderId?: string | null): void {
     if (!this.socket?.connected) return;
 
     const idempotencyKey = typeof crypto !== 'undefined' && crypto.randomUUID
       ? crypto.randomUUID()
       : `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
 
-    this.socket.emit('place_bid', { lotId, amount, idempotencyKey }, (response: any) => {
+    const payload: Record<string, unknown> = { lotId, amount, idempotencyKey };
+    if (traderId) payload['traderId'] = traderId;
+
+    this.socket.emit('place_bid', payload, (response: any) => {
       if (response?.status === 'success') {
         this._bidPlaced$.next(response.data);
       } else if (response?.status === 'error') {
@@ -146,10 +150,13 @@ export class WebsocketService implements OnDestroy {
     });
   }
 
-  placePreBid(lotId: string, maxAutoBid: number): void {
+  placePreBid(lotId: string, maxAutoBid: number, traderId?: string | null): void {
     if (!this.socket?.connected) return;
 
-    this.socket.emit('place_pre_bid', { lotId, maxAutoBid }, (response: any) => {
+    const payload: Record<string, unknown> = { lotId, maxAutoBid };
+    if (traderId) payload['traderId'] = traderId;
+
+    this.socket.emit('place_pre_bid', payload, (response: any) => {
       if (response?.status === 'success') {
         this._bidPlaced$.next(response.data);
       } else if (response?.status === 'error') {
@@ -168,6 +175,17 @@ export class WebsocketService implements OnDestroy {
       const payload = token.split('.')[1];
       const decoded = JSON.parse(atob(payload));
       return decoded.sub || null;
+    } catch {
+      return null;
+    }
+  }
+
+  private getRoleFromToken(token: string | null): string | null {
+    if (!token) return null;
+    try {
+      const payload = token.split('.')[1];
+      const decoded = JSON.parse(atob(payload));
+      return decoded.role || null;
     } catch {
       return null;
     }

@@ -40,7 +40,7 @@ export class AuthService {
   }
 
   get isManager(): boolean {
-    return this._currentUser?.role === 'manager' || this._currentUser?.role === 'admin';
+    return this._currentUser?.role === 'broker' || this._currentUser?.role === 'admin';
   }
 
   login(email: string, password: string): Observable<LoginResponse> {

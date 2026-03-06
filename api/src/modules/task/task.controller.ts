@@ -21,7 +21,7 @@ import { TaskStatus } from '../../db/entities/user-task.entity';
 
 @Controller('tasks')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.MANAGER, Role.ADMIN)
+@Roles(Role.BROKER, Role.ADMIN)
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 

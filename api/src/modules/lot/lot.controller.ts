@@ -92,14 +92,14 @@ export class LotController {
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.MANAGER, Role.ADMIN)
+  @Roles(Role.BROKER, Role.ADMIN)
   async create(@CurrentUser() user: User, @Body() dto: CreateLotDto) {
     return this.lotService.create(dto, user.id);
   }
 
   @Post('import')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.MANAGER, Role.ADMIN)
+  @Roles(Role.BROKER, Role.ADMIN)
   @UseInterceptors(FileInterceptor('file'))
   async importCsv(
     @CurrentUser() user: User,
@@ -115,7 +115,7 @@ export class LotController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.MANAGER, Role.ADMIN)
+  @Roles(Role.BROKER, Role.ADMIN)
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateLotDto,
@@ -125,7 +125,7 @@ export class LotController {
 
   @Patch(':id/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.MANAGER, Role.ADMIN)
+  @Roles(Role.BROKER, Role.ADMIN)
   async updateStatus(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateLotStatusDto,
@@ -135,7 +135,7 @@ export class LotController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.MANAGER, Role.ADMIN)
+  @Roles(Role.BROKER, Role.ADMIN)
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     await this.lotService.remove(id);
     return { message: 'Lot deleted' };
@@ -143,7 +143,7 @@ export class LotController {
 
   @Patch(':id/schedule')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.MANAGER, Role.ADMIN)
+  @Roles(Role.BROKER, Role.ADMIN)
   async schedule(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ScheduleLotDto,
@@ -154,7 +154,7 @@ export class LotController {
   /** Freeze the auction timer. */
   @Post(':id/pause')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.MANAGER, Role.ADMIN)
+  @Roles(Role.BROKER, Role.ADMIN)
   async pause(@Param('id', ParseUUIDPipe) id: string) {
     const lot = await this.lotService.pauseAuction(id);
     this.auctionGateway.emitAuctionPaused(id, lot.pausedRemainingMs ?? 0);
@@ -164,7 +164,7 @@ export class LotController {
   /** Resume a paused auction, recalculating auctionEndAt from stored remaining ms. */
   @Post(':id/resume')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.MANAGER, Role.ADMIN)
+  @Roles(Role.BROKER, Role.ADMIN)
   async resume(@Param('id', ParseUUIDPipe) id: string) {
     const lot = await this.lotService.resumeAuction(id);
     this.auctionGateway.emitAuctionResumed(id, lot.auctionEndAt!);
@@ -174,7 +174,7 @@ export class LotController {
   /** Add or remove minutes from the auction end time. Body: { minutes: number } */
   @Post(':id/extend')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.MANAGER, Role.ADMIN)
+  @Roles(Role.BROKER, Role.ADMIN)
   async extend(
     @Param('id', ParseUUIDPipe) id: string,
     @Body('minutes') minutes: number,

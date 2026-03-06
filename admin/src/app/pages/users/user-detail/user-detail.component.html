@@ -106,6 +106,47 @@
             <span class="save-error">{{ error }}</span>
           }
         </div>
+
+        <!-- Broker assignment (CLIENT users only) -->
+        @if (user?.role === 'client') {
+        <div class="broker-section">
+          <h3 class="broker-section__title">
+            <span class="material-symbols-rounded">manage_accounts</span>
+            Назначить брокера
+          </h3>
+          <div class="form-group">
+            <label class="form-label">Брокер</label>
+            @if (brokersLoading) {
+              <span class="state-loading-sm">
+                <span class="material-symbols-rounded spin">progress_activity</span>
+              </span>
+            } @else {
+              <select class="form-control" [(ngModel)]="selectedBrokerId">
+                <option [ngValue]="null">— Без брокера —</option>
+                @for (b of brokers; track b.id) {
+                  <option [ngValue]="b.id">{{ b.firstName }} {{ b.lastName }} ({{ b.email }})</option>
+                }
+              </select>
+            }
+          </div>
+          <div class="form-actions">
+            <button class="btn btn--secondary" [disabled]="brokerSaving" (click)="assignBroker()">
+              @if (brokerSaving) {
+                <span class="material-symbols-rounded spin">progress_activity</span>
+              }
+              Сохранить брокера
+            </button>
+            @if (brokerSaveSuccess) {
+              <span class="save-success">
+                <span class="material-symbols-rounded">check_circle</span> Брокер назначен
+              </span>
+            }
+            @if (brokerSaveError) {
+              <span class="save-error">{{ brokerSaveError }}</span>
+            }
+          </div>
+        </div>
+        }
       </div>
     }
 

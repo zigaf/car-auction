@@ -21,7 +21,7 @@ import { Role } from '../../common/enums/role.enum';
 
 @Controller('bots')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.MANAGER, Role.ADMIN)
+@Roles(Role.BROKER, Role.ADMIN)
 export class BotController {
   constructor(private readonly botService: BotService) {}
 

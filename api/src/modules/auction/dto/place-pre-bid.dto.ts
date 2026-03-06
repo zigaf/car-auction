@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsPositive, IsString, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, IsUUID } from 'class-validator';
 
 export class PlacePreBidDto {
   @IsUUID()
@@ -12,4 +12,8 @@ export class PlacePreBidDto {
   @IsString()
   @IsNotEmpty()
   idempotencyKey: string;
+
+  @IsUUID()
+  @IsOptional()
+  traderId?: string;
 }

@@ -1,13 +1,22 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Favorite } from '../../db/entities/favorite.entity';
+import { User } from '../../db/entities/user.entity';
+import { Role } from '../../common/enums/role.enum';
 
 @Injectable()
 export class FavoritesService {
   constructor(
     @InjectRepository(Favorite)
     private readonly favoriteRepository: Repository<Favorite>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async getUserFavorites(
@@ -32,16 +41,40 @@ export class FavoritesService {
     return { data, total, page, limit };
   }
 
-  async addFavorite(userId: string, lotId: string): Promise<Favorite> {
+  async addFavorite(
+    actorId: string,
+    lotId: string,
+    targetUserId?: string,
+  ): Promise<Favorite> {
+    let effectiveUserId = actorId;
+
+    if (targetUserId) {
+      // Verify the caller is a BROKER or ADMIN before allowing delegation
+      const actor = await this.userRepository.findOneBy({ id: actorId });
+      if (!actor || (actor.role !== Role.BROKER && actor.role !== Role.ADMIN)) {
+        throw new ForbiddenException("Only brokers can add to another user's favorites");
+      }
+
+      const target = await this.userRepository.findOneBy({ id: targetUserId });
+      if (!target) throw new NotFoundException('Target user not found');
+      if (target.brokerId !== actorId) {
+        throw new ForbiddenException('User is not assigned to your brokerage');
+      }
+      effectiveUserId = targetUserId;
+    }
+
     const existing = await this.favoriteRepository.findOne({
-      where: { userId, lotId },
+      where: { userId: effectiveUserId, lotId },
     });
 
     if (existing) {
       throw new ConflictException('Lot is already in favorites');
     }
 
-    const favorite = this.favoriteRepository.create({ userId, lotId });
+    const favorite = this.favoriteRepository.create({
+      userId: effectiveUserId,
+      lotId,
+    });
     return this.favoriteRepository.save(favorite);
   }
 

@@ -40,14 +40,14 @@ export class BalanceController {
 
   @Get('user/:userId')
   @UseGuards(RolesGuard)
-  @Roles(Role.MANAGER, Role.ADMIN)
+  @Roles(Role.BROKER, Role.ADMIN)
   getUserBalance(@Param('userId', ParseUUIDPipe) userId: string) {
     return this.balanceService.getBalance(userId);
   }
 
   @Get('user/:userId/transactions')
   @UseGuards(RolesGuard)
-  @Roles(Role.MANAGER, Role.ADMIN)
+  @Roles(Role.BROKER, Role.ADMIN)
   getUserTransactions(
     @Param('userId', ParseUUIDPipe) userId: string,
     @Query() query: GetTransactionsDto,
@@ -59,7 +59,7 @@ export class BalanceController {
 
   @Post(':userId/adjust')
   @UseGuards(RolesGuard)
-  @Roles(Role.MANAGER, Role.ADMIN)
+  @Roles(Role.BROKER, Role.ADMIN)
   adjustBalance(
     @Param('userId', ParseUUIDPipe) userId: string,
     @Body() dto: AdjustBalanceDto,

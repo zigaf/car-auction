@@ -1,718 +1,837 @@
 <div class="lot-detail">
   <div class="container">
     @if (loading) {
-      <div class="lot-detail__loading">Загрузка...</div>
+    <div class="lot-detail__loading">Загрузка...</div>
     }
 
     @if (!loading && !lot) {
-      <div class="lot-detail__not-found">
-        <span class="material-symbols-rounded">error_outline</span>
-        <h2>Лот не найден</h2>
-        <a routerLink="/catalog">Вернуться в каталог</a>
-      </div>
+    <div class="lot-detail__not-found">
+      <span class="material-symbols-rounded">error_outline</span>
+      <h2>Лот не найден</h2>
+      <a routerLink="/catalog">Вернуться в каталог</a>
+    </div>
     }
 
     @if (lot) {
-      <!-- Breadcrumb -->
-      <nav class="breadcrumb">
-        <a routerLink="/">Главная</a>
-        <span class="material-symbols-rounded">chevron_right</span>
-        <a routerLink="/catalog">Каталог</a>
-        <span class="material-symbols-rounded">chevron_right</span>
-        <span>{{ lot.title }}</span>
-      </nav>
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+      <a routerLink="/">Главная</a>
+      <span class="material-symbols-rounded">chevron_right</span>
+      <a routerLink="/catalog">Каталог</a>
+      <span class="material-symbols-rounded">chevron_right</span>
+      <span>{{ lot.title }}</span>
+    </nav>
 
-      <div class="lot-detail__grid">
-        <!-- Left Column -->
-        <div class="lot-detail__left">
-          <!-- Gallery -->
-          <div class="gallery">
-            <!-- Main image -->
-            <div class="gallery__viewer">
-              @if (currentImage) {
-                <img [src]="currentImage" [alt]="lot.title" class="gallery__img" (click)="toggleFullscreen()">
-              } @else {
-                <div class="gallery__empty">
-                  <span class="material-symbols-rounded">directions_car</span>
-                  <span>Нет фото</span>
-                </div>
-              }
-
-              @if (filteredImages.length > 1) {
-                <button class="gallery__nav gallery__nav--prev" (click)="prevImage()">
-                  <span class="material-symbols-rounded">chevron_left</span>
-                </button>
-                <button class="gallery__nav gallery__nav--next" (click)="nextImage()">
-                  <span class="material-symbols-rounded">chevron_right</span>
-                </button>
-                <span class="gallery__count">{{ imageCounter }}</span>
-              }
-            </div>
-
-            <!-- Tabs -->
-            <div class="gallery__tabs">
-              <button [class.active]="activeGalleryTab === 'all'" (click)="setGalleryTab('all')">Все фото</button>
-              <button [class.active]="activeGalleryTab === 'exterior'" (click)="setGalleryTab('exterior')">Экстерьер</button>
-              <button [class.active]="activeGalleryTab === 'interior'" (click)="setGalleryTab('interior')">Интерьер</button>
-              <button [class.active]="activeGalleryTab === 'damage'" (click)="setGalleryTab('damage')">Повреждения</button>
-            </div>
-
-            <!-- Scrollable thumbnails -->
-            @if (filteredImages.length > 0) {
-              <div class="gallery__strip">
-                @for (img of filteredImages; track img.url; let i = $index) {
-                  <div class="gallery__thumb" [class.gallery__thumb--active]="selectedImageIndex === i" (click)="selectImage(i)">
-                    <img [src]="getImageUrl(img.url)" [alt]="'Фото ' + (i + 1)">
-                  </div>
-                }
-              </div>
-            }
-          </div>
-
-          <!-- Specs -->
-          <div class="specs-section">
-            <h2 class="section-title">Характеристики</h2>
-            @if (hasSpecs) {
-              <div class="specs-grid">
-                @if (lot.enginePowerPs || lot.enginePowerKw) {
-                  <div class="spec-item">
-                    <span class="material-symbols-rounded spec-item__icon">speed</span>
-                    <div class="spec-item__content">
-                      <span class="spec-item__label">Мощность</span>
-                      <span class="spec-item__value">
-                        @if (lot.enginePowerPs) { {{ lot.enginePowerPs }} л.с. }
-                        @if (lot.enginePowerKw) { ({{ lot.enginePowerKw }} кВт) }
-                      </span>
-                    </div>
-                  </div>
-                }
-                @if (lot.fuelType) {
-                  <div class="spec-item">
-                    <span class="material-symbols-rounded spec-item__icon">local_gas_station</span>
-                    <div class="spec-item__content">
-                      <span class="spec-item__label">Топливо</span>
-                      <span class="spec-item__value">{{ getFuelLabel(lot.fuelType) }}</span>
-                    </div>
-                  </div>
-                }
-                @if (lot.mileage) {
-                  <div class="spec-item">
-                    <span class="material-symbols-rounded spec-item__icon">speed</span>
-                    <div class="spec-item__content">
-                      <span class="spec-item__label">Пробег</span>
-                      <span class="spec-item__value">{{ lot.mileage | number }} км</span>
-                    </div>
-                  </div>
-                }
-                @if (lot.year) {
-                  <div class="spec-item">
-                    <span class="material-symbols-rounded spec-item__icon">calendar_month</span>
-                    <div class="spec-item__content">
-                      <span class="spec-item__label">Год</span>
-                      <span class="spec-item__value">{{ lot.year }}</span>
-                    </div>
-                  </div>
-                }
-                @if (lot.transmission) {
-                  <div class="spec-item">
-                    <span class="material-symbols-rounded spec-item__icon">settings</span>
-                    <div class="spec-item__content">
-                      <span class="spec-item__label">КПП</span>
-                      <span class="spec-item__value">{{ lot.transmission }}</span>
-                    </div>
-                  </div>
-                }
-                @if (lot.exteriorColor) {
-                  <div class="spec-item">
-                    <span class="material-symbols-rounded spec-item__icon">palette</span>
-                    <div class="spec-item__content">
-                      <span class="spec-item__label">Цвет</span>
-                      <span class="spec-item__value">{{ lot.exteriorColor }}</span>
-                    </div>
-                  </div>
-                }
-                @if (lot.vehicleType) {
-                  <div class="spec-item">
-                    <span class="material-symbols-rounded spec-item__icon">directions_car</span>
-                    <div class="spec-item__content">
-                      <span class="spec-item__label">Тип</span>
-                      <span class="spec-item__value">{{ lot.vehicleType }}</span>
-                    </div>
-                  </div>
-                }
-                @if (lot.numberOfOwners) {
-                  <div class="spec-item">
-                    <span class="material-symbols-rounded spec-item__icon">person</span>
-                    <div class="spec-item__content">
-                      <span class="spec-item__label">Владельцев</span>
-                      <span class="spec-item__value">{{ lot.numberOfOwners }}</span>
-                    </div>
-                  </div>
-                }
-                @if (lot.numberOfKeys) {
-                  <div class="spec-item">
-                    <span class="material-symbols-rounded spec-item__icon">key</span>
-                    <div class="spec-item__content">
-                      <span class="spec-item__label">Ключей</span>
-                      <span class="spec-item__value">{{ lot.numberOfKeys }}</span>
-                    </div>
-                  </div>
-                }
-              </div>
+    <div class="lot-detail__grid">
+      <!-- Left Column -->
+      <div class="lot-detail__left">
+        <!-- Gallery -->
+        <div class="gallery">
+          <!-- Main image -->
+          <div class="gallery__viewer">
+            @if (currentImage) {
+            <img [src]="currentImage" [alt]="lot.title" class="gallery__img" (click)="toggleFullscreen()">
             } @else {
-              <div class="placeholder-stub">
-                <span class="material-symbols-rounded">hourglass_top</span>
-                <span>Лот осматривается экспертами, информация появится позже</span>
-              </div>
+            <div class="gallery__empty">
+              <span class="material-symbols-rounded">directions_car</span>
+              <span>Нет фото</span>
+            </div>
             }
 
-            @if (lot.vin) {
-              <div class="vin-block">
-                <span class="vin-block__label">VIN:</span>
-                <code class="vin-block__value mono">{{ lot.vin }}</code>
-              </div>
+            @if (filteredImages.length > 1) {
+            <button class="gallery__nav gallery__nav--prev" (click)="prevImage()">
+              <span class="material-symbols-rounded">chevron_left</span>
+            </button>
+            <button class="gallery__nav gallery__nav--next" (click)="nextImage()">
+              <span class="material-symbols-rounded">chevron_right</span>
+            </button>
+            <span class="gallery__count">{{ imageCounter }}</span>
             }
           </div>
 
-          <!-- Equipment -->
-          @if (lot.equipment && lot.equipment.length > 0) {
-            <div class="info-section">
-              <h2 class="section-title">
-                <span class="material-symbols-rounded section-title__icon">checklist</span>
-                Комплектация
-              </h2>
-              <ul class="equipment-list">
-                @for (item of visibleEquipment; track item) {
-                  <li class="equipment-list__item">
-                    <span class="material-symbols-rounded equipment-list__check">check_circle</span>
-                    {{ item }}
-                  </li>
-                }
-              </ul>
-              @if (lot.equipment.length > 10) {
-                <button class="show-more-btn" (click)="toggleEquipment()">
-                  {{ equipmentExpanded ? 'Скрыть' : 'Показать все (' + lot.equipment.length + ')' }}
-                  <span class="material-symbols-rounded">{{ equipmentExpanded ? 'expand_less' : 'expand_more' }}</span>
-                </button>
-              }
-            </div>
-          } @else {
-            <div class="info-section">
-              <h2 class="section-title">
-                <span class="material-symbols-rounded section-title__icon">checklist</span>
-                Комплектация
-              </h2>
-              <div class="placeholder-stub">
-                <span class="material-symbols-rounded">hourglass_top</span>
-                <span>Лот осматривается экспертами, информация появится позже</span>
-              </div>
-            </div>
-          }
-
-          <!-- Accident Info -->
-          @if (accidentInfo) {
-            <div class="info-section info-section--warning">
-              <h2 class="section-title">
-                <span class="material-symbols-rounded section-title__icon section-title__icon--warning">warning</span>
-                Авария / Повреждения
-              </h2>
-              <p class="info-text">{{ accidentInfo }}</p>
-
-              <!-- Damage photos in accident section -->
-              @if (damageImages.length > 0) {
-                <div class="damage-photos">
-                  <h3 class="damage-photos__title">Фото повреждений</h3>
-                  <div class="damage-photos__grid">
-                    @for (img of damageImages; track img.url) {
-                      <div class="damage-photos__item" (click)="goToImageInAllPhotos(img)">
-                        <img [src]="getImageUrl(img.url)" [alt]="'Повреждение'">
-                        <div class="damage-photos__overlay">
-                          <span class="material-symbols-rounded">zoom_in</span>
-                        </div>
-                      </div>
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          }
-
-          <!-- Body Condition -->
-          @if (bodyCondition.length > 0) {
-            <div class="info-section">
-              <h2 class="section-title">
-                <span class="material-symbols-rounded section-title__icon">directions_car</span>
-                Кузов
-              </h2>
-              <div class="condition-table">
-                @for (item of bodyCondition; track item.part) {
-                  <div class="condition-row">
-                    <span class="condition-row__part">{{ item.part }}</span>
-                    @if (item.issues.length > 0) {
-                      <div class="condition-row__issues">
-                        @for (issue of item.issues; track issue) {
-                          <span class="condition-tag condition-tag--damage">{{ issue }}</span>
-                        }
-                      </div>
-                    } @else {
-                      <span class="condition-tag condition-tag--ok">OK</span>
-                    }
-                  </div>
-                }
-              </div>
-
-              <!-- Damage photos in body section (if no accident section is shown) -->
-              @if (!accidentInfo && damageImages.length > 0) {
-                <div class="damage-photos">
-                  <h3 class="damage-photos__title">Фото повреждений</h3>
-                  <div class="damage-photos__grid">
-                    @for (img of damageImages; track img.url) {
-                      <div class="damage-photos__item" (click)="goToImageInAllPhotos(img)">
-                        <img [src]="getImageUrl(img.url)" [alt]="'Повреждение'">
-                        <div class="damage-photos__overlay">
-                          <span class="material-symbols-rounded">zoom_in</span>
-                        </div>
-                      </div>
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          }
-
-          <!-- Interior Condition -->
-          @if (interiorCondition.length > 0) {
-            <div class="info-section">
-              <h2 class="section-title">
-                <span class="material-symbols-rounded section-title__icon">airline_seat_recline_normal</span>
-                Салон
-              </h2>
-              <div class="condition-table">
-                @for (item of interiorCondition; track item.part) {
-                  <div class="condition-row">
-                    <span class="condition-row__part">{{ item.part }}</span>
-                    @if (item.issues.length > 0) {
-                      <div class="condition-row__issues">
-                        @for (issue of item.issues; track issue) {
-                          <span class="condition-tag condition-tag--damage">{{ issue }}</span>
-                        }
-                      </div>
-                    } @else {
-                      <span class="condition-tag condition-tag--ok">OK</span>
-                    }
-                  </div>
-                }
-              </div>
-            </div>
-          }
-
-          <!-- Tires -->
-          @if (tires.length > 0) {
-            <div class="info-section">
-              <h2 class="section-title">
-                <span class="material-symbols-rounded section-title__icon">tire_repair</span>
-                Шины / Колесные диски
-              </h2>
-              <div class="tires-table">
-                <div class="tires-table__header">
-                  <span>Позиция</span>
-                  <span>Глубина протектора</span>
-                  <span>Размер</span>
-                </div>
-                @for (tire of tires; track tire.position) {
-                  <div class="tires-table__row">
-                    <span class="tires-table__position">{{ tire.position }}</span>
-                    <span class="tires-table__depth">{{ tire.treadDepth || '-' }}</span>
-                    <span class="tires-table__size">{{ tire.size || '-' }}</span>
-                  </div>
-                }
-              </div>
-            </div>
-          }
-
-          <!-- Stone Chips -->
-          @if (stoneChips.length > 0) {
-            <div class="info-section">
-              <h2 class="section-title">
-                <span class="material-symbols-rounded section-title__icon">grain</span>
-                Сколы / Ветровое стекло
-              </h2>
-              <div class="condition-table">
-                @for (item of stoneChips; track item.part) {
-                  <div class="condition-row">
-                    <span class="condition-row__part">{{ item.part }}</span>
-                    @if (item.issues.length > 0) {
-                      <div class="condition-row__issues">
-                        @for (issue of item.issues; track issue) {
-                          <span class="condition-tag condition-tag--damage">{{ issue }}</span>
-                        }
-                      </div>
-                    } @else {
-                      <span class="condition-tag condition-tag--ok">OK</span>
-                    }
-                  </div>
-                }
-              </div>
-            </div>
-          }
-
-          <!-- Seats -->
-          @if (seatsInfo) {
-            <div class="info-section">
-              <h2 class="section-title">
-                <span class="material-symbols-rounded section-title__icon">event_seat</span>
-                Сиденья
-              </h2>
-              <p class="info-text">{{ seatsInfo }}</p>
-            </div>
-          }
-
-          <!-- General Info -->
-          @if (generalInfo) {
-            <div class="info-section">
-              <h2 class="section-title">
-                <span class="material-symbols-rounded section-title__icon">info</span>
-                Общая информация
-              </h2>
-              <p class="info-text">{{ generalInfo }}</p>
-            </div>
-          }
-
-          <!-- Parking Fee -->
-          @if (parkingFee) {
-            <div class="info-section">
-              <h2 class="section-title">
-                <span class="material-symbols-rounded section-title__icon">local_parking</span>
-                Стоянка
-              </h2>
-              <p class="info-text">{{ parkingFee }}</p>
-            </div>
-          }
-
-          <!-- Condition stub when no body/interior/accident data -->
-          @if (bodyCondition.length === 0 && interiorCondition.length === 0 && !accidentInfo) {
-            <div class="info-section">
-              <h2 class="section-title">
-                <span class="material-symbols-rounded section-title__icon">fact_check</span>
-                Состояние
-              </h2>
-              <div class="placeholder-stub">
-                <span class="material-symbols-rounded">hourglass_top</span>
-                <span>Лот осматривается экспертами, информация появится позже</span>
-              </div>
-            </div>
-          }
-
-          <!-- Status badges -->
-          <div class="status-section">
-            <div class="status-badges">
-              @if (lot.cosmeticGrade && lot.cosmeticGrade !== '-') {
-                <span class="status-badge status-badge--docs">
-                  <span class="material-symbols-rounded">star</span>
-                  Cosmetic: {{ lot.cosmeticGrade }}
-                </span>
-              }
-              @if (lot.mechanicalGrade && lot.mechanicalGrade !== '-' && lot.mechanicalGrade !== 'z') {
-                <span class="status-badge status-badge--condition">
-                  <span class="material-symbols-rounded">build</span>
-                  Mechanical: {{ lot.mechanicalGrade }}
-                </span>
-              }
-              @if (lot.saleCountry) {
-                <span class="status-badge status-badge--docs">
-                  <span class="material-symbols-rounded">public</span>
-                  {{ lot.saleCountry }}
-                </span>
-              }
-            </div>
+          <!-- Tabs -->
+          <div class="gallery__tabs">
+            <button [class.active]="activeGalleryTab === 'all'" (click)="setGalleryTab('all')">Все фото</button>
+            <button [class.active]="activeGalleryTab === 'exterior'"
+              (click)="setGalleryTab('exterior')">Экстерьер</button>
+            <button [class.active]="activeGalleryTab === 'interior'"
+              (click)="setGalleryTab('interior')">Интерьер</button>
+            <button [class.active]="activeGalleryTab === 'damage'"
+              (click)="setGalleryTab('damage')">Повреждения</button>
           </div>
+
+          <!-- Scrollable thumbnails -->
+          @if (filteredImages.length > 0) {
+          <div class="gallery__strip">
+            @for (img of filteredImages; track img.url; let i = $index) {
+            <div class="gallery__thumb" [class.gallery__thumb--active]="selectedImageIndex === i"
+              (click)="selectImage(i)">
+              <img [src]="getImageUrl(img.url)" [alt]="'Фото ' + (i + 1)">
+            </div>
+            }
+          </div>
+          }
         </div>
 
-        <!-- Right Column: Info Panel -->
-        <div class="lot-detail__right">
-          <div class="auction-panel">
-            <!-- Title + Favorite -->
-            <div class="auction-panel__top">
-              <div class="auction-panel__header">
-                <h1 class="auction-panel__title">{{ lot.title }}</h1>
-                @if (lot.derivative) {
-                  <span class="auction-panel__trim">{{ lot.derivative }}</span>
-                }
-              </div>
-              <button class="auction-panel__fav" [class.auction-panel__fav--active]="isFavorite" [disabled]="favoriteLoading" (click)="toggleFavorite()">
-                <span class="material-symbols-rounded">{{ favoriteLoading ? 'progress_activity' : (isFavorite ? 'favorite' : 'favorite_border') }}</span>
-                <span class="auction-panel__fav-label">{{ isFavorite ? 'В избранном' : 'В избранное' }}</span>
-              </button>
-            </div>
-
-            <!-- Starting price -->
-            <div class="auction-panel__price-row">
-              <div class="auction-panel__price">
-                @if (lot.startingBid) {
-                  <span class="auction-panel__price-label">Стартовая цена</span>
-                  <span class="auction-panel__price-value mono">{{ lot.startingBid | number }} {{ lot.originalCurrency || 'EUR' }}</span>
-                } @else {
-                  <span class="auction-panel__price-label">Стартовая цена</span>
-                  <span class="auction-panel__price-value auction-panel__price-value--pending">Ожидается</span>
-                }
+        <!-- Specs -->
+        <div class="specs-section">
+          <h2 class="section-title">Характеристики</h2>
+          @if (hasSpecs) {
+          <div class="specs-grid">
+            @if (lot.enginePowerPs || lot.enginePowerKw) {
+            <div class="spec-item">
+              <span class="material-symbols-rounded spec-item__icon">speed</span>
+              <div class="spec-item__content">
+                <span class="spec-item__label">Мощность</span>
+                <span class="spec-item__value">
+                  @if (lot.enginePowerPs) { {{ lot.enginePowerPs }} л.с. }
+                  @if (lot.enginePowerKw) { ({{ lot.enginePowerKw }} кВт) }
+                </span>
               </div>
             </div>
+            }
+            @if (lot.fuelType) {
+            <div class="spec-item">
+              <span class="material-symbols-rounded spec-item__icon">local_gas_station</span>
+              <div class="spec-item__content">
+                <span class="spec-item__label">Топливо</span>
+                <span class="spec-item__value">{{ getFuelLabel(lot.fuelType) }}</span>
+              </div>
+            </div>
+            }
+            @if (lot.mileage) {
+            <div class="spec-item">
+              <span class="material-symbols-rounded spec-item__icon">speed</span>
+              <div class="spec-item__content">
+                <span class="spec-item__label">Пробег</span>
+                <span class="spec-item__value">{{ lot.mileage | number }} км</span>
+              </div>
+            </div>
+            }
+            @if (lot.year) {
+            <div class="spec-item">
+              <span class="material-symbols-rounded spec-item__icon">calendar_month</span>
+              <div class="spec-item__content">
+                <span class="spec-item__label">Год</span>
+                <span class="spec-item__value">{{ lot.year }}</span>
+              </div>
+            </div>
+            }
+            @if (lot.transmission) {
+            <div class="spec-item">
+              <span class="material-symbols-rounded spec-item__icon">settings</span>
+              <div class="spec-item__content">
+                <span class="spec-item__label">КПП</span>
+                <span class="spec-item__value">{{ lot.transmission }}</span>
+              </div>
+            </div>
+            }
+            @if (lot.exteriorColor) {
+            <div class="spec-item">
+              <span class="material-symbols-rounded spec-item__icon">palette</span>
+              <div class="spec-item__content">
+                <span class="spec-item__label">Цвет</span>
+                <span class="spec-item__value">{{ lot.exteriorColor }}</span>
+              </div>
+            </div>
+            }
+            @if (lot.vehicleType) {
+            <div class="spec-item">
+              <span class="material-symbols-rounded spec-item__icon">directions_car</span>
+              <div class="spec-item__content">
+                <span class="spec-item__label">Тип</span>
+                <span class="spec-item__value">{{ lot.vehicleType }}</span>
+              </div>
+            </div>
+            }
+            @if (lot.numberOfDoors) {
+            <div class="spec-item">
+              <span class="material-symbols-rounded spec-item__icon">meeting_room</span>
+              <div class="spec-item__content">
+                <span class="spec-item__label">Двери</span>
+                <span class="spec-item__value">{{ lot.numberOfDoors }}</span>
+              </div>
+            </div>
+            }
+            @if (lot.numberOfSeats) {
+            <div class="spec-item">
+              <span class="material-symbols-rounded spec-item__icon">airline_seat_recline_normal</span>
+              <div class="spec-item__content">
+                <span class="spec-item__label">Места</span>
+                <span class="spec-item__value">{{ lot.numberOfSeats }}</span>
+              </div>
+            </div>
+            }
+            @if (lot.numberOfGears) {
+            <div class="spec-item">
+              <span class="material-symbols-rounded spec-item__icon">account_tree</span>
+              <div class="spec-item__content">
+                <span class="spec-item__label">Передачи</span>
+                <span class="spec-item__value">{{ lot.numberOfGears }}</span>
+              </div>
+            </div>
+            }
+            @if (lot.engineCapacityCc) {
+            <div class="spec-item">
+              <span class="material-symbols-rounded spec-item__icon">local_gas_station</span>
+              <div class="spec-item__content">
+                <span class="spec-item__label">Объем</span>
+                <span class="spec-item__value">{{ lot.engineCapacityCc }} CC</span>
+              </div>
+            </div>
+            }
+            @if (lot.emissionClass) {
+            <div class="spec-item">
+              <span class="material-symbols-rounded spec-item__icon">eco</span>
+              <div class="spec-item__content">
+                <span class="spec-item__label">Эмиссия</span>
+                <span class="spec-item__value">{{ lot.emissionClass }}</span>
+              </div>
+            </div>
+            }
+            @if (lot.co2Emissions) {
+            <div class="spec-item">
+              <span class="material-symbols-rounded spec-item__icon">cloud</span>
+              <div class="spec-item__content">
+                <span class="spec-item__label">CO2</span>
+                <span class="spec-item__value">{{ lot.co2Emissions }}</span>
+              </div>
+            </div>
+            }
+            @if (lot.numberOfOwners) {
+            <div class="spec-item">
+              <span class="material-symbols-rounded spec-item__icon">person</span>
+              <div class="spec-item__content">
+                <span class="spec-item__label">Владельцев</span>
+                <span class="spec-item__value">{{ lot.numberOfOwners }}</span>
+              </div>
+            </div>
+            }
+            @if (lot.numberOfKeys) {
+            <div class="spec-item">
+              <span class="material-symbols-rounded spec-item__icon">key</span>
+              <div class="spec-item__content">
+                <span class="spec-item__label">Ключей</span>
+                <span class="spec-item__value">{{ lot.numberOfKeys }}</span>
+              </div>
+            </div>
+            }
+          </div>
+          } @else {
+          <div class="placeholder-stub">
+            <span class="material-symbols-rounded">hourglass_top</span>
+            <span>Лот осматривается экспертами, информация появится позже</span>
+          </div>
+          }
 
-            <!-- Buy Now -->
-            <div class="auction-panel__buynow">
-              @if (lot.buyNowPrice) {
-                <span class="auction-panel__price-label">Цена выкупа</span>
-                <span class="auction-panel__price-value mono">{{ lot.buyNowPrice | number }} {{ lot.originalCurrency || 'EUR' }}</span>
+          @if (lot.vin) {
+          <div class="vin-block">
+            <span class="vin-block__label">VIN:</span>
+            <code class="vin-block__value mono">{{ lot.vin }}</code>
+          </div>
+          }
+        </div>
+
+        <!-- Equipment -->
+        @if (lot.equipment && lot.equipment.length > 0) {
+        <div class="info-section">
+          <h2 class="section-title">
+            <span class="material-symbols-rounded section-title__icon">checklist</span>
+            Комплектация
+          </h2>
+          <ul class="equipment-list">
+            @for (item of visibleEquipment; track item) {
+            <li class="equipment-list__item">
+              <span class="material-symbols-rounded equipment-list__check">check_circle</span>
+              {{ item }}
+            </li>
+            }
+          </ul>
+          @if (lot.equipment.length > 10) {
+          <button class="show-more-btn" (click)="toggleEquipment()">
+            {{ equipmentExpanded ? 'Скрыть' : 'Показать все (' + lot.equipment.length + ')' }}
+            <span class="material-symbols-rounded">{{ equipmentExpanded ? 'expand_less' : 'expand_more' }}</span>
+          </button>
+          }
+        </div>
+        } @else {
+        <div class="info-section">
+          <h2 class="section-title">
+            <span class="material-symbols-rounded section-title__icon">checklist</span>
+            Комплектация
+          </h2>
+          <div class="placeholder-stub">
+            <span class="material-symbols-rounded">hourglass_top</span>
+            <span>Лот осматривается экспертами, информация появится позже</span>
+          </div>
+        </div>
+        }
+
+        <!-- Service History -->
+        @if (lot.serviceHistory && lot.serviceHistory.length > 0) {
+        <div class="info-section">
+          <h2 class="section-title">
+            <span class="material-symbols-rounded section-title__icon">history</span>
+            История обслуживания
+          </h2>
+          <div class="tires-table"> <!-- Reuse tires-table styles for history -->
+            <div class="tires-table__header">
+              <span>Дата</span>
+              <span>Пробег</span>
+              <span>Описание</span>
+              <span>Компания</span>
+            </div>
+            @for (record of lot.serviceHistory; track record) {
+            <div class="tires-table__row">
+              <span class="tires-table__position">{{ record['date'] || '-' }}</span>
+              <span class="tires-table__depth">{{ record['mileage'] || '-' }}</span>
+              <span class="tires-table__size">{{ record['description'] || '-' }}</span>
+              <span class="tires-table__size" style="opacity:0.7;font-size:0.8em;text-align:right;">{{
+                record['company'] || '-' }}</span>
+            </div>
+            }
+          </div>
+        </div>
+        }
+
+        <!-- Accident Info -->
+        @if (accidentInfo) {
+        <div class="info-section info-section--warning">
+          <h2 class="section-title">
+            <span class="material-symbols-rounded section-title__icon section-title__icon--warning">warning</span>
+            Авария / Повреждения
+          </h2>
+          <p class="info-text">{{ accidentInfo }}</p>
+
+          <!-- Damage photos in accident section -->
+          @if (damageImages.length > 0) {
+          <div class="damage-photos">
+            <h3 class="damage-photos__title">Фото повреждений</h3>
+            <div class="damage-photos__grid">
+              @for (img of damageImages; track img.url) {
+              <div class="damage-photos__item" (click)="goToImageInAllPhotos(img)">
+                <img [src]="getImageUrl(img.url)" [alt]="'Повреждение'">
+                <div class="damage-photos__overlay">
+                  <span class="material-symbols-rounded">zoom_in</span>
+                </div>
+              </div>
+              }
+            </div>
+          </div>
+          }
+        </div>
+        }
+
+        <!-- Body Condition -->
+        @if (bodyCondition.length > 0) {
+        <div class="info-section">
+          <h2 class="section-title">
+            <span class="material-symbols-rounded section-title__icon">directions_car</span>
+            Кузов
+          </h2>
+          <div class="condition-table">
+            @for (item of bodyCondition; track item.part) {
+            <div class="condition-row">
+              <span class="condition-row__part">{{ item.part }}</span>
+              @if (item.issues.length > 0) {
+              <div class="condition-row__issues">
+                @for (issue of item.issues; track issue) {
+                <span class="condition-tag condition-tag--damage">{{ issue }}</span>
+                }
+              </div>
               } @else {
-                <span class="auction-panel__price-label">Цена выкупа</span>
-                <span class="auction-panel__buynow-na">Не запрошена продавцом</span>
+              <span class="condition-tag condition-tag--ok">OK</span>
               }
             </div>
-
-            <!-- ═══ LIVE AUCTION PANEL (trading status only) ═══ -->
-            @if (isTrading) {
-              <div class="live-panel">
-
-                <!-- Current price + timer -->
-                <div class="live-panel__header">
-                  <div class="live-panel__price-block">
-                    <span class="live-panel__badge">LIVE</span>
-                    <span class="live-panel__price-label">Текущая ставка</span>
-                    <span class="live-panel__price-value mono">{{ getCurrentPrice(lot) | number }} {{ lot.originalCurrency || 'EUR' }}</span>
-                  </div>
-                  <div class="live-panel__timer-block" [class]="getTimerClass(lot.auctionEndAt)">
-                    <span class="material-symbols-rounded">timer</span>
-                    <span class="live-panel__timer mono">{{ getTimeLeft(lot.auctionEndAt) }}</span>
-                  </div>
-                </div>
-
-                <!-- Watchers -->
-                @if (watcherCount > 0) {
-                  <div class="live-panel__meta">
-                    <span class="material-symbols-rounded">visibility</span>
-                    <span>{{ watcherCount }} наблюдают</span>
-                  </div>
-                }
-
-                <!-- Auction ended -->
-                @if (auctionEnded) {
-                  <div class="live-panel__ended">
-                    <span class="material-symbols-rounded">gavel</span>
-                    Торги завершены
-                  </div>
-                }
-
-                <!-- Winning / outbid banners -->
-                @if (!auctionEnded && isWinning) {
-                  <div class="live-panel__status live-panel__status--winning">
-                    <span class="material-symbols-rounded">emoji_events</span>
-                    Вы лидируете!
-                  </div>
-                }
-                @if (!auctionEnded && isOutbid) {
-                  <div class="live-panel__status live-panel__status--outbid">
-                    <span class="material-symbols-rounded">trending_up</span>
-                    Ваша ставка перебита
-                  </div>
-                }
-
-                <!-- Active auto-bid indicator -->
-                @if (activeAutoBidMax && activeAutoBidLotId === lot.id) {
-                  <div class="live-panel__autobid">
-                    <span class="material-symbols-rounded">smart_toy</span>
-                    Авто-ставка до {{ activeAutoBidMax | number }} {{ lot.originalCurrency || 'EUR' }}
-                    <button class="live-panel__autobid-clear" (click)="clearAutoBid()">✕</button>
-                  </div>
-                }
-
-                <!-- Bid success / error -->
-                @if (bidSuccess) {
-                  <div class="live-panel__msg live-panel__msg--success">
-                    <span class="material-symbols-rounded">check_circle</span>
-                    Ставка принята!
-                  </div>
-                }
-                @if (bidError) {
-                  <div class="live-panel__msg live-panel__msg--error">
-                    <span class="material-symbols-rounded">error</span>
-                    {{ bidError }}
-                  </div>
-                }
-
-                <!-- Bid form -->
-                @if (isAuthenticated && !auctionEnded) {
-                  <div class="live-panel__bid-form">
-                    <div class="live-panel__quick-bids">
-                      @for (inc of getQuickBidIncrements(); track inc) {
-                        <button class="live-panel__quick-btn" [disabled]="bidding" (click)="quickBid(inc)">
-                          +{{ inc | number }}
-                        </button>
-                      }
-                    </div>
-                    <div class="live-panel__custom-bid">
-                      <input
-                        type="number"
-                        [(ngModel)]="customBidAmount"
-                        [placeholder]="'Мин. ' + (getMinBid(lot) | number)"
-                        class="live-panel__bid-input mono"
-                        [disabled]="bidding"
-                      />
-                      <button
-                        class="live-panel__bid-btn"
-                        [disabled]="bidding || !customBidAmount"
-                        (click)="placeBid()"
-                      >
-                        @if (bidding) {
-                          <span class="material-symbols-rounded spinning">progress_activity</span>
-                          Обработка...
-                        } @else {
-                          <span class="material-symbols-rounded">gavel</span>
-                          Сделать ставку
-                        }
-                      </button>
-                    </div>
-
-                    <!-- Auto-bid -->
-                    <details class="live-panel__prebid">
-                      <summary class="live-panel__prebid-toggle">
-                        <span class="material-symbols-rounded">smart_toy</span>
-                        Авто-ставка (Pre-bid)
-                      </summary>
-                      <div class="live-panel__prebid-body">
-                        <p class="live-panel__prebid-hint">
-                          Система автоматически перебивает конкурентов до указанного лимита.
-                        </p>
-                        <div class="live-panel__custom-bid">
-                          <input
-                            type="number"
-                            [(ngModel)]="maxAutoBidAmount"
-                            [placeholder]="'Лимит от ' + (getMinBid(lot) | number)"
-                            class="live-panel__bid-input mono"
-                            [disabled]="bidding"
-                          />
-                          <button
-                            class="live-panel__prebid-btn"
-                            [disabled]="bidding || !maxAutoBidAmount"
-                            (click)="placePreBid()"
-                          >
-                            Установить
-                          </button>
-                        </div>
-                      </div>
-                    </details>
-                  </div>
-                }
-
-                @if (!isAuthenticated && !auctionEnded) {
-                  <div class="live-panel__auth-prompt">
-                    <span class="material-symbols-rounded">lock</span>
-                    <a routerLink="/auth/login">Войдите</a>, чтобы сделать ставку
-                  </div>
-                }
-
-                <!-- Recent bid history -->
-                @if (bidHistory.length > 0) {
-                  <div class="live-panel__history">
-                    <h4 class="live-panel__history-title">Последние ставки</h4>
-                    <div class="live-panel__history-list">
-                      @for (bid of bidHistory; track bid.createdAt) {
-                        <div class="live-panel__history-row" [class.live-panel__history-row--mine]="isMyBid(bid)">
-                          <span class="live-panel__bidder mono">{{ bid.bidderFlag || 'bidder-????' }}</span>
-                          @if (bid.isPreBid) {
-                            <span class="material-symbols-rounded" title="Авто-ставка" style="font-size:14px">smart_toy</span>
-                          }
-                          <span class="live-panel__bid-amount mono">{{ bid.amount | number }} {{ lot.originalCurrency || 'EUR' }}</span>
-                        </div>
-                      }
-                    </div>
-                  </div>
-                }
-              </div>
             }
-            <!-- ═══ END LIVE AUCTION PANEL ═══ -->
+          </div>
 
-            <!-- Min payment -->
-            @if (minPayment) {
-              <div class="auction-panel__min-payment">
-                <span class="material-symbols-rounded">payments</span>
-                <div>
-                  <span class="auction-panel__min-label">Минимальный платёж</span>
-                  <span class="auction-panel__min-value mono">{{ minPayment | number }} {{ lot.originalCurrency || 'EUR' }}</span>
+          <!-- Damage photos in body section (if no accident section is shown) -->
+          @if (!accidentInfo && damageImages.length > 0) {
+          <div class="damage-photos">
+            <h3 class="damage-photos__title">Фото повреждений</h3>
+            <div class="damage-photos__grid">
+              @for (img of damageImages; track img.url) {
+              <div class="damage-photos__item" (click)="goToImageInAllPhotos(img)">
+                <img [src]="getImageUrl(img.url)" [alt]="'Повреждение'">
+                <div class="damage-photos__overlay">
+                  <span class="material-symbols-rounded">zoom_in</span>
                 </div>
               </div>
-            }
-
-            <!-- Reserve bids from partners -->
-            @if (reserveBid) {
-              <div class="auction-panel__reserve">
-                <span class="material-symbols-rounded">groups</span>
-                <div>
-                  <span class="auction-panel__reserve-label">Резервная ставка партнёров</span>
-                  <span class="auction-panel__reserve-value mono">{{ reserveBid | number }} {{ lot.originalCurrency || 'EUR' }}</span>
-                </div>
-                <p class="auction-panel__reserve-hint">Если ставки не превысят эту сумму, автомобиль уйдёт партнёрам</p>
-              </div>
-            }
-
-            <!-- Info rows -->
-            <div class="auction-panel__info-rows">
-              @if (lot.vehicleLocation) {
-                <div class="auction-panel__info-row">
-                  <span class="material-symbols-rounded">location_on</span>
-                  <span>{{ lot.vehicleLocation }}</span>
-                </div>
-              }
-              @if (lot.saleLocation) {
-                <div class="auction-panel__info-row">
-                  <span class="material-symbols-rounded">storefront</span>
-                  <span>{{ lot.saleLocation }}</span>
-                </div>
-              }
-              @if (lot.saleDate) {
-                <div class="auction-panel__info-row">
-                  <span class="material-symbols-rounded">event</span>
-                  <span>{{ lot.saleDate }}</span>
-                </div>
-              }
-              @if (lot.vatTypeCode) {
-                <div class="auction-panel__info-row">
-                  <span class="material-symbols-rounded">receipt</span>
-                  <span>VAT: {{ lot.vatTypeCode }}</span>
-                </div>
-              }
-              @if (lot.lotNumber) {
-                <div class="auction-panel__info-row">
-                  <span class="material-symbols-rounded">tag</span>
-                  <span>Lot #{{ lot.lotNumber }}</span>
-                </div>
               }
             </div>
+          </div>
+          }
+        </div>
+        }
+
+        <!-- Interior Condition -->
+        @if (interiorCondition.length > 0) {
+        <div class="info-section">
+          <h2 class="section-title">
+            <span class="material-symbols-rounded section-title__icon">airline_seat_recline_normal</span>
+            Салон
+          </h2>
+          <div class="condition-table">
+            @for (item of interiorCondition; track item.part) {
+            <div class="condition-row">
+              <span class="condition-row__part">{{ item.part }}</span>
+              @if (item.issues.length > 0) {
+              <div class="condition-row__issues">
+                @for (issue of item.issues; track issue) {
+                <span class="condition-tag condition-tag--damage">{{ issue }}</span>
+                }
+              </div>
+              } @else {
+              <span class="condition-tag condition-tag--ok">OK</span>
+              }
+            </div>
+            }
+          </div>
+        </div>
+        }
+
+        <!-- Tires -->
+        @if (tires.length > 0) {
+        <div class="info-section">
+          <h2 class="section-title">
+            <span class="material-symbols-rounded section-title__icon">tire_repair</span>
+            Шины / Колесные диски
+          </h2>
+          <div class="tires-table">
+            <div class="tires-table__header">
+              <span>Позиция</span>
+              <span>Глубина протектора</span>
+              <span>Размер</span>
+            </div>
+            @for (tire of tires; track tire.position) {
+            <div class="tires-table__row">
+              <span class="tires-table__position">{{ tire.position }}</span>
+              <span class="tires-table__depth">{{ tire.treadDepth || '-' }}</span>
+              <span class="tires-table__size">{{ tire.size || '-' }}</span>
+            </div>
+            }
+          </div>
+        </div>
+        }
+
+        <!-- Stone Chips -->
+        @if (stoneChips.length > 0) {
+        <div class="info-section">
+          <h2 class="section-title">
+            <span class="material-symbols-rounded section-title__icon">grain</span>
+            Сколы / Ветровое стекло
+          </h2>
+          <div class="condition-table">
+            @for (item of stoneChips; track item.part) {
+            <div class="condition-row">
+              <span class="condition-row__part">{{ item.part }}</span>
+              @if (item.issues.length > 0) {
+              <div class="condition-row__issues">
+                @for (issue of item.issues; track issue) {
+                <span class="condition-tag condition-tag--damage">{{ issue }}</span>
+                }
+              </div>
+              } @else {
+              <span class="condition-tag condition-tag--ok">OK</span>
+              }
+            </div>
+            }
+          </div>
+        </div>
+        }
+
+        <!-- Seats -->
+        @if (seatsInfo) {
+        <div class="info-section">
+          <h2 class="section-title">
+            <span class="material-symbols-rounded section-title__icon">event_seat</span>
+            Сиденья
+          </h2>
+          <p class="info-text">{{ seatsInfo }}</p>
+        </div>
+        }
+
+        <!-- General Info -->
+        @if (generalInfo) {
+        <div class="info-section">
+          <h2 class="section-title">
+            <span class="material-symbols-rounded section-title__icon">info</span>
+            Общая информация
+          </h2>
+          <p class="info-text">{{ generalInfo }}</p>
+        </div>
+        }
+
+        <!-- Parking Fee -->
+        @if (parkingFee) {
+        <div class="info-section">
+          <h2 class="section-title">
+            <span class="material-symbols-rounded section-title__icon">local_parking</span>
+            Стоянка
+          </h2>
+          <p class="info-text">{{ parkingFee }}</p>
+        </div>
+        }
+
+        <!-- Condition stub when no body/interior/accident data -->
+        @if (bodyCondition.length === 0 && interiorCondition.length === 0 && !accidentInfo) {
+        <div class="info-section">
+          <h2 class="section-title">
+            <span class="material-symbols-rounded section-title__icon">fact_check</span>
+            Состояние
+          </h2>
+          <div class="placeholder-stub">
+            <span class="material-symbols-rounded">hourglass_top</span>
+            <span>Лот осматривается экспертами, информация появится позже</span>
+          </div>
+        </div>
+        }
+
+        <!-- Status badges -->
+        <div class="status-section">
+          <div class="status-badges">
+            @if (lot.cosmeticGrade && lot.cosmeticGrade !== '-') {
+            <span class="status-badge status-badge--docs">
+              <span class="material-symbols-rounded">star</span>
+              Cosmetic: {{ lot.cosmeticGrade }}
+            </span>
+            }
+            @if (lot.mechanicalGrade && lot.mechanicalGrade !== '-' && lot.mechanicalGrade !== 'z') {
+            <span class="status-badge status-badge--condition">
+              <span class="material-symbols-rounded">build</span>
+              Mechanical: {{ lot.mechanicalGrade }}
+            </span>
+            }
+            @if (lot.saleCountry) {
+            <span class="status-badge status-badge--docs">
+              <span class="material-symbols-rounded">public</span>
+              {{ lot.saleCountry }}
+            </span>
+            }
           </div>
         </div>
       </div>
+
+      <!-- Right Column: Info Panel -->
+      <div class="lot-detail__right">
+        <div class="auction-panel">
+          <!-- Title + Favorite -->
+          <div class="auction-panel__top">
+            <div class="auction-panel__header">
+              <h1 class="auction-panel__title">{{ lot.title }}</h1>
+              @if (lot.derivative) {
+              <span class="auction-panel__trim">{{ lot.derivative }}</span>
+              }
+            </div>
+            <button class="auction-panel__fav" [class.auction-panel__fav--active]="isFavorite"
+              [disabled]="favoriteLoading" (click)="toggleFavorite()">
+              <span class="material-symbols-rounded">{{ favoriteLoading ? 'progress_activity' : (isFavorite ?
+                'favorite' : 'favorite_border') }}</span>
+              <span class="auction-panel__fav-label">{{ isFavorite ? 'В избранном' : 'В избранное' }}</span>
+            </button>
+          </div>
+
+          <!-- Starting price -->
+          <div class="auction-panel__price-row">
+            <div class="auction-panel__price">
+              @if (lot.startingBid) {
+              <span class="auction-panel__price-label">Стартовая цена</span>
+              <span class="auction-panel__price-value mono">{{ lot.startingBid | number }} {{ lot.originalCurrency ||
+                'EUR' }}</span>
+              } @else {
+              <span class="auction-panel__price-label">Стартовая цена</span>
+              <span class="auction-panel__price-value auction-panel__price-value--pending">Ожидается</span>
+              }
+            </div>
+          </div>
+
+          <!-- Buy Now -->
+          <div class="auction-panel__buynow">
+            @if (lot.buyNowPrice) {
+            <span class="auction-panel__price-label">Цена выкупа</span>
+            <span class="auction-panel__price-value mono">{{ lot.buyNowPrice | number }} {{ lot.originalCurrency ||
+              'EUR' }}</span>
+            } @else {
+            <span class="auction-panel__price-label">Цена выкупа</span>
+            <span class="auction-panel__buynow-na">Не запрошена продавцом</span>
+            }
+          </div>
+
+          <!-- ═══ LIVE AUCTION PANEL (trading status only) ═══ -->
+          @if (isTrading) {
+          <div class="live-panel">
+
+            <!-- Current price + timer -->
+            <div class="live-panel__header">
+              <div class="live-panel__price-block">
+                <span class="live-panel__badge">LIVE</span>
+                <span class="live-panel__price-label">Текущая ставка</span>
+                <span class="live-panel__price-value mono">{{ getCurrentPrice(lot) | number }} {{ lot.originalCurrency
+                  || 'EUR' }}</span>
+              </div>
+              <div class="live-panel__timer-block" [class]="getTimerClass(lot.auctionEndAt)">
+                <span class="material-symbols-rounded">timer</span>
+                <span class="live-panel__timer mono">{{ getTimeLeft(lot.auctionEndAt) }}</span>
+              </div>
+            </div>
+
+            <!-- Watchers -->
+            @if (watcherCount > 0) {
+            <div class="live-panel__meta">
+              <span class="material-symbols-rounded">visibility</span>
+              <span>{{ watcherCount }} наблюдают</span>
+            </div>
+            }
+
+            <!-- Auction ended -->
+            @if (auctionEnded) {
+            <div class="live-panel__ended">
+              <span class="material-symbols-rounded">gavel</span>
+              Торги завершены
+            </div>
+            }
+
+            <!-- Winning / outbid banners -->
+            @if (!auctionEnded && isWinning) {
+            <div class="live-panel__status live-panel__status--winning">
+              <span class="material-symbols-rounded">emoji_events</span>
+              Вы лидируете!
+            </div>
+            }
+            @if (!auctionEnded && isOutbid) {
+            <div class="live-panel__status live-panel__status--outbid">
+              <span class="material-symbols-rounded">trending_up</span>
+              Ваша ставка перебита
+            </div>
+            }
+
+            <!-- Active auto-bid indicator -->
+            @if (activeAutoBidMax && activeAutoBidLotId === lot.id) {
+            <div class="live-panel__autobid">
+              <span class="material-symbols-rounded">smart_toy</span>
+              Авто-ставка до {{ activeAutoBidMax | number }} {{ lot.originalCurrency || 'EUR' }}
+              <button class="live-panel__autobid-clear" (click)="clearAutoBid()">✕</button>
+            </div>
+            }
+
+            <!-- Bid success / error -->
+            @if (bidSuccess) {
+            <div class="live-panel__msg live-panel__msg--success">
+              <span class="material-symbols-rounded">check_circle</span>
+              Ставка принята!
+            </div>
+            }
+            @if (bidError) {
+            <div class="live-panel__msg live-panel__msg--error">
+              <span class="material-symbols-rounded">error</span>
+              {{ bidError }}
+            </div>
+            }
+
+            <!-- CLIENT: wishlist-only notice -->
+            @if (isAuthenticated && isClient && !auctionEnded) {
+            <div class="live-panel__client-notice">
+              <span class="material-symbols-rounded">info</span>
+              <p>Торги ведёт ваш брокер. Добавьте лот в избранное — брокер сделает ставку.</p>
+            </div>
+            }
+
+            <!-- BROKER: trader picker + bid form -->
+            @if (isAuthenticated && canBid && !auctionEnded) {
+            <div class="live-panel__bid-form">
+
+              <!-- Trader picker (brokers only) -->
+              @if (isBroker) {
+              <div class="live-panel__trader-picker">
+                <label class="live-panel__trader-label">Торгую за:</label>
+                <select class="live-panel__trader-select" [(ngModel)]="selectedTraderId">
+                  <option [ngValue]="null">— Выберите клиента —</option>
+                  @for (trader of traders; track trader.id) {
+                  <option [ngValue]="trader.id">{{ trader.firstName }} {{ trader.lastName }} ({{ trader.email }})
+                  </option>
+                  }
+                </select>
+              </div>
+              }
+
+              <div class="live-panel__quick-bids">
+                @for (inc of getQuickBidIncrements(); track inc) {
+                <button class="live-panel__quick-btn" [disabled]="bidding" (click)="quickBid(inc)">
+                  +{{ inc | number }}
+                </button>
+                }
+              </div>
+              <div class="live-panel__custom-bid">
+                <input type="number" [(ngModel)]="customBidAmount" [placeholder]="'Мин. ' + (getMinBid(lot) | number)"
+                  class="live-panel__bid-input mono" [disabled]="bidding" />
+                <button class="live-panel__bid-btn"
+                  [disabled]="bidding || !customBidAmount || (isBroker && !selectedTraderId)"
+                  (click)="placeBid()">
+                  @if (bidding) {
+                  <span class="material-symbols-rounded spinning">progress_activity</span>
+                  Обработка...
+                  } @else {
+                  <span class="material-symbols-rounded">gavel</span>
+                  @if (selectedTrader) {
+                  Ставка за {{ selectedTrader.firstName }}
+                  } @else {
+                  Сделать ставку
+                  }
+                  }
+                </button>
+              </div>
+
+              <!-- Auto-bid -->
+              <details class="live-panel__prebid">
+                <summary class="live-panel__prebid-toggle">
+                  <span class="material-symbols-rounded">smart_toy</span>
+                  Авто-ставка (Pre-bid)
+                </summary>
+                <div class="live-panel__prebid-body">
+                  <p class="live-panel__prebid-hint">
+                    Система автоматически перебивает конкурентов до указанного лимита.
+                  </p>
+                  <div class="live-panel__custom-bid">
+                    <input type="number" [(ngModel)]="maxAutoBidAmount"
+                      [placeholder]="'Лимит от ' + (getMinBid(lot) | number)" class="live-panel__bid-input mono"
+                      [disabled]="bidding" />
+                    <button class="live-panel__prebid-btn"
+                      [disabled]="bidding || !maxAutoBidAmount || (isBroker && !selectedTraderId)"
+                      (click)="placePreBid()">
+                      Установить
+                    </button>
+                  </div>
+                </div>
+              </details>
+            </div>
+            }
+
+            @if (!isAuthenticated && !auctionEnded) {
+            <div class="live-panel__auth-prompt">
+              <span class="material-symbols-rounded">lock</span>
+              <a routerLink="/auth/login">Войдите</a>, чтобы сделать ставку
+            </div>
+            }
+
+            <!-- Recent bid history -->
+            @if (bidHistory.length > 0) {
+            <div class="live-panel__history">
+              <h4 class="live-panel__history-title">Последние ставки</h4>
+              <div class="live-panel__history-list">
+                @for (bid of bidHistory; track bid.createdAt) {
+                <div class="live-panel__history-row" [class.live-panel__history-row--mine]="isMyBid(bid)">
+                  <span class="live-panel__bidder mono">{{ bid.bidderFlag || 'bidder-????' }}</span>
+                  @if (bid.isPreBid) {
+                  <span class="material-symbols-rounded" title="Авто-ставка" style="font-size:14px">smart_toy</span>
+                  }
+                  <span class="live-panel__bid-amount mono">{{ bid.amount | number }} {{ lot.originalCurrency || 'EUR'
+                    }}</span>
+                </div>
+                }
+              </div>
+            </div>
+            }
+          </div>
+          }
+          <!-- ═══ END LIVE AUCTION PANEL ═══ -->
+
+          <!-- Min payment -->
+          @if (minPayment) {
+          <div class="auction-panel__min-payment">
+            <span class="material-symbols-rounded">payments</span>
+            <div>
+              <span class="auction-panel__min-label">Минимальный платёж</span>
+              <span class="auction-panel__min-value mono">{{ minPayment | number }} {{ lot.originalCurrency || 'EUR'
+                }}</span>
+            </div>
+          </div>
+          }
+
+          <!-- Reserve bids from partners -->
+          @if (reserveBid) {
+          <div class="auction-panel__reserve">
+            <span class="material-symbols-rounded">groups</span>
+            <div>
+              <span class="auction-panel__reserve-label">Резервная ставка партнёров</span>
+              <span class="auction-panel__reserve-value mono">{{ reserveBid | number }} {{ lot.originalCurrency ||
+                'EUR' }}</span>
+            </div>
+            <p class="auction-panel__reserve-hint">Если ставки не превысят эту сумму, автомобиль уйдёт партнёрам</p>
+          </div>
+          }
+
+          <!-- Info rows -->
+          <div class="auction-panel__info-rows">
+            @if (lot.vehicleLocation) {
+            <div class="auction-panel__info-row">
+              <span class="material-symbols-rounded">location_on</span>
+              <span>{{ lot.vehicleLocation }}</span>
+            </div>
+            }
+            @if (lot.saleLocation) {
+            <div class="auction-panel__info-row">
+              <span class="material-symbols-rounded">storefront</span>
+              <span>{{ lot.saleLocation }}</span>
+            </div>
+            }
+            @if (lot.saleDate) {
+            <div class="auction-panel__info-row">
+              <span class="material-symbols-rounded">event</span>
+              <span>{{ lot.saleDate }}</span>
+            </div>
+            }
+            @if (lot.originCountry) {
+            <div class="auction-panel__info-row">
+              <span class="material-symbols-rounded">public</span>
+              <span>Производство: {{ lot.originCountry }}</span>
+            </div>
+            }
+            @if (lot.sellerName) {
+            <div class="auction-panel__info-row">
+              <span class="material-symbols-rounded">storefront</span>
+              <span>Продавец: {{ lot.sellerName }}</span>
+            </div>
+            }
+            @if (lot.vatTypeCode) {
+            <div class="auction-panel__info-row">
+              <span class="material-symbols-rounded">receipt</span>
+              <span>VAT: {{ lot.vatTypeCode }}</span>
+            </div>
+            }
+            @if (lot.lotNumber) {
+            <div class="auction-panel__info-row">
+              <span class="material-symbols-rounded">tag</span>
+              <span>Lot #{{ lot.lotNumber }}</span>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
     }
   </div>
 </div>
 
 <!-- Fullscreen overlay -->
 @if (fullscreenOpen && currentImage) {
-  <div class="fullscreen-overlay" (click)="toggleFullscreen()">
-    <div class="fullscreen-overlay__content" (click)="$event.stopPropagation()">
-      <img [src]="currentImage" [alt]="lot?.title || ''" class="fullscreen-overlay__img">
+<div class="fullscreen-overlay" (click)="toggleFullscreen()">
+  <div class="fullscreen-overlay__content" (click)="$event.stopPropagation()">
+    <img [src]="currentImage" [alt]="lot?.title || ''" class="fullscreen-overlay__img">
 
-      @if (filteredImages.length > 1) {
-        <button class="fullscreen-overlay__arrow fullscreen-overlay__arrow--prev" (click)="prevImage()">
-          <span class="material-symbols-rounded">chevron_left</span>
-        </button>
-        <button class="fullscreen-overlay__arrow fullscreen-overlay__arrow--next" (click)="nextImage()">
-          <span class="material-symbols-rounded">chevron_right</span>
-        </button>
-        <span class="fullscreen-overlay__counter">{{ imageCounter }}</span>
-      }
+    @if (filteredImages.length > 1) {
+    <button class="fullscreen-overlay__arrow fullscreen-overlay__arrow--prev" (click)="prevImage()">
+      <span class="material-symbols-rounded">chevron_left</span>
+    </button>
+    <button class="fullscreen-overlay__arrow fullscreen-overlay__arrow--next" (click)="nextImage()">
+      <span class="material-symbols-rounded">chevron_right</span>
+    </button>
+    <span class="fullscreen-overlay__counter">{{ imageCounter }}</span>
+    }
 
-      <button class="fullscreen-overlay__close" (click)="toggleFullscreen()">
-        <span class="material-symbols-rounded">close</span>
-      </button>
-    </div>
+    <button class="fullscreen-overlay__close" (click)="toggleFullscreen()">
+      <span class="material-symbols-rounded">close</span>
+    </button>
   </div>
+</div>
 }

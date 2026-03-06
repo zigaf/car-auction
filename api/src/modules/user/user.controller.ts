@@ -21,6 +21,7 @@ import { User } from '../../db/entities/user.entity';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateUserManagerDto } from './dto/update-user-manager.dto';
 import { SendEmailDto } from './dto/send-email.dto';
+import { AssignBrokerDto } from './dto/assign-broker.dto';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -45,7 +46,7 @@ export class UserController {
 
   @Get()
   @UseGuards(RolesGuard)
-  @Roles(Role.MANAGER, Role.ADMIN)
+  @Roles(Role.BROKER, Role.ADMIN)
   findAll(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -64,28 +65,28 @@ export class UserController {
 
   @Get(':id')
   @UseGuards(RolesGuard)
-  @Roles(Role.MANAGER, Role.ADMIN)
+  @Roles(Role.BROKER, Role.ADMIN)
   findById(@Param('id') id: string) {
     return this.userService.findByIdFull(id);
   }
 
   @Patch(':id/activate')
   @UseGuards(RolesGuard)
-  @Roles(Role.MANAGER, Role.ADMIN)
+  @Roles(Role.BROKER, Role.ADMIN)
   activate(@Param('id') id: string) {
     return this.userService.activate(id);
   }
 
   @Patch(':id/block')
   @UseGuards(RolesGuard)
-  @Roles(Role.MANAGER, Role.ADMIN)
+  @Roles(Role.BROKER, Role.ADMIN)
   block(@Param('id') id: string) {
     return this.userService.block(id);
   }
 
   @Patch(':id/manager-update')
   @UseGuards(RolesGuard)
-  @Roles(Role.MANAGER, Role.ADMIN)
+  @Roles(Role.BROKER, Role.ADMIN)
   managerUpdate(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateUserManagerDto,
@@ -96,12 +97,22 @@ export class UserController {
 
   @Post(':id/send-email')
   @UseGuards(RolesGuard)
-  @Roles(Role.MANAGER, Role.ADMIN)
+  @Roles(Role.BROKER, Role.ADMIN)
   async sendEmail(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: SendEmailDto,
   ) {
     await this.notificationService.sendCustomEmail(id, dto.subject, dto.message);
     return { message: 'Email sent' };
+  }
+
+  @Patch(':id/broker')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  assignBroker(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: AssignBrokerDto,
+  ) {
+    return this.userService.assignBroker(id, dto.brokerId);
   }
 }

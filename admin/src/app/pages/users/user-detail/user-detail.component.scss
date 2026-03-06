@@ -204,3 +204,30 @@
   &--negative { color: var(--red); }
 }
 
+// ─── Broker assignment section ────────────────────────────────────────────────
+.broker-section {
+  margin-top: v.$space-xl;
+  padding-top: v.$space-xl;
+  border-top: 1px solid var(--border);
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: v.$space-xs;
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: v.$space-md;
+
+    .material-symbols-rounded { color: var(--accent); }
+  }
+}
+
+.state-loading-sm {
+  display: flex;
+  align-items: center;
+  gap: v.$space-xs;
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+}
+

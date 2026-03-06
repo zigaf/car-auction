@@ -56,6 +56,7 @@ export class AuctionService {
     lotId: string,
     amount: number,
     idempotencyKey: string,
+    traderId?: string,
   ): Promise<PlaceBidResult> {
     // Check idempotency first (outside transaction for fast rejection)
     const existingBid = await this.bidRepository.findOne({
@@ -87,8 +88,18 @@ export class AuctionService {
       const bidder = await manager.findOne(User, { where: { id: userId } });
       const isBotUser = bidder?.role === Role.BOT;
 
-      // Prevent self-bidding
-      if (userId === lot.createdBy) {
+      // If broker is trading on behalf of a trader, validate the assignment
+      if (traderId) {
+        const trader = await manager.findOne(User, { where: { id: traderId } });
+        if (!trader) throw new NotFoundException('Trader not found');
+        if (trader.brokerId !== userId) {
+          throw new ForbiddenException('User is not assigned to your brokerage');
+        }
+      }
+      const effectiveUserId = traderId ?? userId;
+
+      // Prevent self-bidding (use effectiveUserId: trader cannot bid on a lot they own, even via broker)
+      if (effectiveUserId === lot.createdBy) {
         throw new ForbiddenException('Cannot bid on your own lot');
       }
 
@@ -114,11 +125,12 @@ export class AuctionService {
 
       // Check user balance INSIDE the transaction with row-level locking
       // Bots bypass all balance checks — they have no real balance
-      if (!isBotUser) {
+      // Broker-placed bids (traderId provided) also skip the hard check — trader may go negative
+      if (!isBotUser && !traderId) {
         const balanceResult = await manager
           .createQueryBuilder(BalanceTransaction, 'tx')
           .select('COALESCE(SUM(tx.amount), 0)', 'balance')
-          .where('tx.user_id = :userId', { userId })
+          .where('tx.user_id = :effectiveUserId', { effectiveUserId })
           .getRawOne();
 
         let availableBalance = parseFloat(balanceResult?.balance || '0');
@@ -127,7 +139,7 @@ export class AuctionService {
         // will be released, so add it back to the available balance for the check
         const existingLock = await manager
           .createQueryBuilder(BalanceTransaction, 'tx')
-          .where('tx.user_id = :userId', { userId })
+          .where('tx.user_id = :effectiveUserId', { effectiveUserId })
           .andWhere('tx.lot_id = :lotId', { lotId })
           .andWhere('tx.type = :lockType', {
             lockType: BalanceTransactionType.BID_LOCK,
@@ -139,7 +151,7 @@ export class AuctionService {
           // Check this lock hasn't already been unlocked
           const alreadyUnlocked = await manager
             .createQueryBuilder(BalanceTransaction, 'tx')
-            .where('tx.user_id = :userId', { userId })
+            .where('tx.user_id = :effectiveUserId', { effectiveUserId })
             .andWhere('tx.lot_id = :lotId', { lotId })
             .andWhere('tx.type = :unlockType', {
               unlockType: BalanceTransactionType.BID_UNLOCK,
@@ -155,6 +167,10 @@ export class AuctionService {
         if (availableBalance < amount) {
           throw new BadRequestException('Insufficient balance');
         }
+      } else if (!isBotUser && traderId) {
+        this.logger.log(
+          `Broker ${userId} placing bid on behalf of trader ${traderId} — balance check skipped`,
+        );
       }
 
       // Double-check idempotency inside transaction
@@ -169,6 +185,7 @@ export class AuctionService {
       const bid = manager.create(Bid, {
         lotId,
         userId,
+        traderId: traderId ?? null,
         amount,
         idempotencyKey,
         isPreBid: false,
@@ -186,13 +203,15 @@ export class AuctionService {
         .getOne();
 
       if (previousHighBid) {
-        if (previousHighBid.userId !== userId) {
-          outbidUserId = previousHighBid.userId;
+        // The "effective" previous bidder is the trader (if broker-placed) or the direct user
+        const prevEffectiveUserId = previousHighBid.traderId ?? previousHighBid.userId;
+        if (prevEffectiveUserId !== effectiveUserId) {
+          outbidUserId = prevEffectiveUserId;
         }
         // Unlock the previous leader's balance (could be same user raising bid)
         await this.balanceService.unlockBalanceForBid(
           manager,
-          previousHighBid.userId,
+          prevEffectiveUserId,
           lotId,
         );
       }
@@ -201,7 +220,7 @@ export class AuctionService {
       if (!isBotUser) {
         await this.balanceService.lockBalanceForBid(
           manager,
-          userId,
+          effectiveUserId,
           lotId,
           savedBid.id,
           amount,
@@ -228,7 +247,7 @@ export class AuctionService {
       await manager.save(Lot, lot);
 
       // Trigger auto-bids from any existing pre-bids that can counter this bid
-      const autoBids = await this.resolveAutoBids(manager, lot, savedBid.id, userId);
+      const autoBids = await this.resolveAutoBids(manager, lot, savedBid.id, effectiveUserId);
 
       // Reload bid with lot relation only (no user relation to avoid data exposure)
       const fullBid = await manager.findOne(Bid, {
@@ -267,6 +286,7 @@ export class AuctionService {
   async buyNow(
     userId: string,
     lotId: string,
+    traderId?: string,
   ): Promise<{ bid: Bid; lot: Lot }> {
     return this.dataSource.transaction(async (manager) => {
       // Lock the lot row
@@ -293,48 +313,66 @@ export class AuctionService {
       const commission = Math.round(buyNowPrice * commissionRate * 100) / 100;
       const totalCost = buyNowPrice + commission;
 
-      // Check user balance INSIDE the transaction
-      const balanceResult = await manager
-        .createQueryBuilder(BalanceTransaction, 'tx')
-        .select('COALESCE(SUM(tx.amount), 0)', 'balance')
-        .where('tx.user_id = :userId', { userId })
-        .getRawOne();
-
-      let availableBalance = parseFloat(balanceResult?.balance || '0');
-
-      // If buyer already has a BID_LOCK on this lot, it will be released
-      const buyerExistingLock = await manager
-        .createQueryBuilder(BalanceTransaction, 'tx')
-        .where('tx.user_id = :userId', { userId })
-        .andWhere('tx.lot_id = :lotId', { lotId })
-        .andWhere('tx.type = :lockType', {
-          lockType: BalanceTransactionType.BID_LOCK,
-        })
-        .orderBy('tx.created_at', 'DESC')
-        .getOne();
-
-      if (buyerExistingLock) {
-        const alreadyUnlocked = await manager
-          .createQueryBuilder(BalanceTransaction, 'tx')
-          .where('tx.bid_id = :bidId', { bidId: buyerExistingLock.bidId })
-          .andWhere('tx.type = :unlockType', {
-            unlockType: BalanceTransactionType.BID_UNLOCK,
-          })
-          .getOne();
-
-        if (!alreadyUnlocked) {
-          availableBalance += Math.abs(buyerExistingLock.amount);
+      // Validate broker-trader relation if traderId provided
+      if (traderId) {
+        const trader = await manager.findOne(User, { where: { id: traderId } });
+        if (!trader) throw new NotFoundException('Trader not found');
+        if (trader.brokerId !== userId) {
+          throw new ForbiddenException('User is not assigned to your brokerage');
         }
       }
+      const effectiveUserId = traderId ?? userId;
 
-      if (availableBalance < totalCost) {
-        throw new BadRequestException('Insufficient balance');
+      // Check user balance INSIDE the transaction
+      // Broker-placed buy-now skips the balance check — trader may go negative
+      if (!traderId) {
+        const balanceResult = await manager
+          .createQueryBuilder(BalanceTransaction, 'tx')
+          .select('COALESCE(SUM(tx.amount), 0)', 'balance')
+          .where('tx.user_id = :effectiveUserId', { effectiveUserId })
+          .getRawOne();
+
+        let availableBalance = parseFloat(balanceResult?.balance || '0');
+
+        // If buyer already has a BID_LOCK on this lot, it will be released
+        const buyerExistingLock = await manager
+          .createQueryBuilder(BalanceTransaction, 'tx')
+          .where('tx.user_id = :effectiveUserId', { effectiveUserId })
+          .andWhere('tx.lot_id = :lotId', { lotId })
+          .andWhere('tx.type = :lockType', {
+            lockType: BalanceTransactionType.BID_LOCK,
+          })
+          .orderBy('tx.created_at', 'DESC')
+          .getOne();
+
+        if (buyerExistingLock) {
+          const alreadyUnlocked = await manager
+            .createQueryBuilder(BalanceTransaction, 'tx')
+            .where('tx.bid_id = :bidId', { bidId: buyerExistingLock.bidId })
+            .andWhere('tx.type = :unlockType', {
+              unlockType: BalanceTransactionType.BID_UNLOCK,
+            })
+            .getOne();
+
+          if (!alreadyUnlocked) {
+            availableBalance += Math.abs(buyerExistingLock.amount);
+          }
+        }
+
+        if (availableBalance < totalCost) {
+          throw new BadRequestException('Insufficient balance');
+        }
+      } else {
+        this.logger.log(
+          `Broker ${userId} buy-now on behalf of trader ${traderId} — balance check skipped`,
+        );
       }
 
       // Create bid record for the buy-now
       const bid = manager.create(Bid, {
         lotId,
         userId,
+        traderId: traderId ?? null,
         amount: buyNowPrice,
         idempotencyKey: `buy-now:${lotId}:${userId}:${Date.now()}`,
         isPreBid: false,
@@ -342,9 +380,9 @@ export class AuctionService {
       });
       const savedBid = await manager.save(Bid, bid);
 
-      // Update lot: mark as sold, set winner
+      // Update lot: mark as sold, set winner (effective user — trader when broker-placed)
       lot.status = LotStatus.SOLD;
-      lot.winnerId = userId;
+      lot.winnerId = effectiveUserId;
       lot.currentPrice = buyNowPrice;
       const updatedLot = await manager.save(Lot, lot);
 
@@ -369,18 +407,18 @@ export class AuctionService {
         }
       }
 
-      // --- Deduct car price and commission from buyer ---
+      // --- Deduct car price and commission from buyer (effective user — trader when broker-placed) ---
       const afterRefundBalance = await manager
         .createQueryBuilder(BalanceTransaction, 'tx')
         .select('COALESCE(SUM(tx.amount), 0)', 'balance')
-        .where('tx.user_id = :userId', { userId })
+        .where('tx.user_id = :effectiveUserId', { effectiveUserId })
         .getRawOne();
 
       let currentBalance = parseFloat(afterRefundBalance?.balance || '0');
 
       currentBalance -= buyNowPrice;
       const carPaymentTx = manager.create(BalanceTransaction, {
-        userId,
+        userId: effectiveUserId,
         type: BalanceTransactionType.CAR_PAYMENT,
         amount: -buyNowPrice,
         balanceAfter: currentBalance,
@@ -393,7 +431,7 @@ export class AuctionService {
 
       currentBalance -= commission;
       const commissionTx = manager.create(BalanceTransaction, {
-        userId,
+        userId: effectiveUserId,
         type: BalanceTransactionType.COMMISSION,
         amount: -commission,
         balanceAfter: currentBalance,
@@ -405,22 +443,26 @@ export class AuctionService {
       await manager.save(BalanceTransaction, commissionTx);
 
       // --- Create order ---
+      // If placed by broker on behalf of a trader, use AWAITING_PAYMENT status
+      const orderStatus = traderId ? OrderStatus.AWAITING_PAYMENT : OrderStatus.PENDING;
       const order = manager.create(Order, {
         lotId,
-        userId,
+        userId: effectiveUserId,
         carPrice: buyNowPrice,
         commission,
         deliveryCost: 0,
         customsCost: 0,
         total: totalCost,
-        status: OrderStatus.PENDING,
+        status: orderStatus,
       });
       const savedOrder = await manager.save(Order, order);
 
       const history = manager.create(OrderStatusHistory, {
         orderId: savedOrder.id,
-        status: OrderStatus.PENDING,
-        comment: 'Order created via Buy Now',
+        status: orderStatus,
+        comment: traderId
+          ? 'Order created via Buy Now (broker on behalf of trader)'
+          : 'Order created via Buy Now',
         changedBy: null,
       });
       await manager.save(OrderStatusHistory, history);
@@ -575,6 +617,7 @@ export class AuctionService {
     lotId: string,
     maxAutoBid: number,
     idempotencyKey: string,
+    traderId?: string,
   ): Promise<PlaceBidResult> {
     const existingBid = await this.bidRepository.findOne({
       where: { idempotencyKey },
@@ -596,11 +639,23 @@ export class AuctionService {
       if (lot.status !== LotStatus.TRADING) {
         throw new BadRequestException('Lot is not currently in trading');
       }
-      if (userId === lot.createdBy) {
-        throw new ForbiddenException('Cannot bid on your own lot');
-      }
       if (lot.auctionEndAt && new Date() > lot.auctionEndAt) {
         throw new BadRequestException('Auction has ended');
+      }
+
+      // If broker is trading on behalf of a trader, validate the assignment
+      if (traderId) {
+        const trader = await manager.findOne(User, { where: { id: traderId } });
+        if (!trader) throw new NotFoundException('Trader not found');
+        if (trader.brokerId !== userId) {
+          throw new ForbiddenException('User is not assigned to your brokerage');
+        }
+      }
+      const effectiveUserId = traderId ?? userId;
+
+      // Prevent self-bidding (use effectiveUserId: trader cannot pre-bid on their own lot)
+      if (effectiveUserId === lot.createdBy) {
+        throw new ForbiddenException('Cannot bid on your own lot');
       }
 
       const currentPrice = lot.currentPrice
@@ -618,41 +673,48 @@ export class AuctionService {
       }
 
       // Check balance for the full maxAutoBid amount
-      const balanceResult = await manager
-        .createQueryBuilder(BalanceTransaction, 'tx')
-        .select('COALESCE(SUM(tx.amount), 0)', 'balance')
-        .where('tx.user_id = :userId', { userId })
-        .getRawOne();
-
-      let availableBalance = parseFloat(balanceResult?.balance || '0');
-
-      // Account for existing lock on this lot
-      const existingLock = await manager
-        .createQueryBuilder(BalanceTransaction, 'tx')
-        .where('tx.user_id = :userId', { userId })
-        .andWhere('tx.lot_id = :lotId', { lotId })
-        .andWhere('tx.type = :lockType', {
-          lockType: BalanceTransactionType.BID_LOCK,
-        })
-        .orderBy('tx.created_at', 'DESC')
-        .getOne();
-
-      if (existingLock) {
-        const alreadyUnlocked = await manager
+      // Broker-placed bids skip the hard check — trader may go negative
+      if (!traderId) {
+        const balanceResult = await manager
           .createQueryBuilder(BalanceTransaction, 'tx')
-          .where('tx.bid_id = :bidId', { bidId: existingLock.bidId })
-          .andWhere('tx.type = :unlockType', {
-            unlockType: BalanceTransactionType.BID_UNLOCK,
+          .select('COALESCE(SUM(tx.amount), 0)', 'balance')
+          .where('tx.user_id = :effectiveUserId', { effectiveUserId })
+          .getRawOne();
+
+        let availableBalance = parseFloat(balanceResult?.balance || '0');
+
+        // Account for existing lock on this lot
+        const existingLock = await manager
+          .createQueryBuilder(BalanceTransaction, 'tx')
+          .where('tx.user_id = :effectiveUserId', { effectiveUserId })
+          .andWhere('tx.lot_id = :lotId', { lotId })
+          .andWhere('tx.type = :lockType', {
+            lockType: BalanceTransactionType.BID_LOCK,
           })
+          .orderBy('tx.created_at', 'DESC')
           .getOne();
 
-        if (!alreadyUnlocked) {
-          availableBalance += Math.abs(existingLock.amount);
-        }
-      }
+        if (existingLock) {
+          const alreadyUnlocked = await manager
+            .createQueryBuilder(BalanceTransaction, 'tx')
+            .where('tx.bid_id = :bidId', { bidId: existingLock.bidId })
+            .andWhere('tx.type = :unlockType', {
+              unlockType: BalanceTransactionType.BID_UNLOCK,
+            })
+            .getOne();
 
-      if (availableBalance < maxAutoBid) {
-        throw new BadRequestException('Insufficient balance for max auto-bid');
+          if (!alreadyUnlocked) {
+            availableBalance += Math.abs(existingLock.amount);
+          }
+        }
+
+        if (availableBalance < maxAutoBid) {
+          throw new BadRequestException('Insufficient balance for max auto-bid');
+        }
+      } else {
+        this.logger.log(
+          `Broker ${userId} placing pre-bid on behalf of trader ${traderId} — balance check skipped`,
+        );
       }
 
       // Idempotency double-check
@@ -669,6 +731,7 @@ export class AuctionService {
       const bid = manager.create(Bid, {
         lotId,
         userId,
+        traderId: traderId ?? null,
         amount: initialAmount,
         idempotencyKey,
         isPreBid: true,
@@ -685,12 +748,13 @@ export class AuctionService {
         .getOne();
 
       if (previousHighBid) {
-        if (previousHighBid.userId !== userId) {
-          preOutbidUserId = previousHighBid.userId;
+        const prevEffectiveUserId = previousHighBid.traderId ?? previousHighBid.userId;
+        if (prevEffectiveUserId !== effectiveUserId) {
+          preOutbidUserId = prevEffectiveUserId;
         }
         await this.balanceService.unlockBalanceForBid(
           manager,
-          previousHighBid.userId,
+          prevEffectiveUserId,
           lotId,
         );
       }
@@ -698,7 +762,7 @@ export class AuctionService {
       // Lock balance for the full maxAutoBid amount
       await this.balanceService.lockBalanceForBid(
         manager,
-        userId,
+        effectiveUserId,
         lotId,
         savedBid.id,
         maxAutoBid,
@@ -724,7 +788,7 @@ export class AuctionService {
       await manager.save(Lot, lot);
 
       // Resolve auto-bids (in case another pre-bid exists)
-      const autoBids = await this.resolveAutoBids(manager, lot, savedBid.id, userId);
+      const autoBids = await this.resolveAutoBids(manager, lot, savedBid.id, effectiveUserId);
 
       const fullBid = await manager.findOne(Bid, {
         where: { id: savedBid.id },
@@ -821,7 +885,7 @@ export class AuctionService {
     manager: ReturnType<DataSource['createQueryRunner']>['manager'],
     lot: Lot,
     excludeBidId: string,
-    currentBidderId: string,
+    currentEffectiveUserId: string,
     depth: number = 0,
   ): Promise<Bid[]> {
     if (depth >= 50) return [];
@@ -830,7 +894,7 @@ export class AuctionService {
     const bidStep = parseFloat(String(lot.bidStep)) || 100;
     const nextBidAmount = currentPrice + bidStep;
 
-    // Find active pre-bids that can still auto-bid
+    // Find active pre-bids that can still auto-bid (exclude current effective bidder)
     const preBids = await manager
       .createQueryBuilder(Bid, 'bid')
       .where('bid.lot_id = :lotId', { lotId: lot.id })
@@ -838,7 +902,10 @@ export class AuctionService {
       .andWhere('bid.max_auto_bid >= :nextAmount', {
         nextAmount: nextBidAmount,
       })
-      .andWhere('bid.user_id != :currentBidderId', { currentBidderId })
+      .andWhere(
+        '(bid.user_id != :currentEffectiveUserId AND (bid.trader_id IS NULL OR bid.trader_id != :currentEffectiveUserId))',
+        { currentEffectiveUserId },
+      )
       .orderBy('bid.max_auto_bid', 'DESC')
       .addOrderBy('bid.created_at', 'ASC')
       .getMany();
@@ -856,7 +923,10 @@ export class AuctionService {
       .createQueryBuilder(Bid, 'bid')
       .where('bid.lot_id = :lotId', { lotId: lot.id })
       .andWhere('bid.is_pre_bid = true')
-      .andWhere('bid.user_id = :currentBidderId', { currentBidderId })
+      .andWhere(
+        '(bid.user_id = :currentEffectiveUserId OR bid.trader_id = :currentEffectiveUserId)',
+        { currentEffectiveUserId },
+      )
       .andWhere('bid.max_auto_bid >= :nextAmount', {
         nextAmount: nextBidAmount,
       })
@@ -875,10 +945,14 @@ export class AuctionService {
     // Cap at the pre-bidder's max
     autoBidAmount = Math.min(autoBidAmount, topMaxBid);
 
-    // Create the auto-bid
+    // The effective user for balance ops is the trader (if broker-placed) or the direct bidder
+    const topPreBidEffectiveUserId = topPreBid.traderId ?? topPreBid.userId;
+
+    // Create the auto-bid (propagate traderId from the original pre-bid)
     const autoBid = manager.create(Bid, {
       lotId: lot.id,
       userId: topPreBid.userId,
+      traderId: topPreBid.traderId ?? null,
       amount: autoBidAmount,
       idempotencyKey: `auto:${lot.id}:${topPreBid.userId}:${Date.now()}:${depth}`,
       isPreBid: true,
@@ -886,16 +960,15 @@ export class AuctionService {
     });
     const savedAutoBid = await manager.save(Bid, autoBid);
 
-    // Unlock previous leader's balance, lock auto-bidder's
-    // The previous leader was currentBidderId
+    // Unlock previous leader's balance (the effective balance holder), lock auto-bidder's
     await this.balanceService.unlockBalanceForBid(
       manager,
-      currentBidderId,
+      currentEffectiveUserId,
       lot.id,
     );
     await this.balanceService.lockBalanceForBid(
       manager,
-      topPreBid.userId,
+      topPreBidEffectiveUserId,
       lot.id,
       savedAutoBid.id,
       autoBidAmount,
@@ -910,7 +983,7 @@ export class AuctionService {
       manager,
       lot,
       savedAutoBid.id,
-      topPreBid.userId,
+      topPreBidEffectiveUserId,
       depth + 1,
     );
     return [savedAutoBid, ...nestedAutoBids];

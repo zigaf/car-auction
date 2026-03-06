@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, Repository } from 'typeorm';
 import { User } from '../../db/entities/user.entity';
@@ -119,6 +119,24 @@ export class UserService {
     return this.authService.toUserResponse(user);
   }
 
+  async assignBroker(targetId: string, brokerId: string | null) {
+    const target = await this.userRepository.findOneBy({ id: targetId });
+    if (!target) throw new NotFoundException('User not found');
+    if (target.role !== Role.CLIENT) {
+      throw new BadRequestException('Only CLIENT users can be assigned a broker');
+    }
+    if (brokerId !== null) {
+      const broker = await this.userRepository.findOneBy({ id: brokerId });
+      if (!broker) throw new NotFoundException('Broker not found');
+      if (broker.role !== Role.BROKER) {
+        throw new BadRequestException('Assigned user must have BROKER role');
+      }
+    }
+    target.brokerId = brokerId;
+    await this.userRepository.save(target);
+    return this.authService.toUserResponse(target);
+  }
+
   async managerUpdateUser(
     id: string,
     dto: UpdateUserManagerDto,
@@ -127,7 +145,7 @@ export class UserService {
     const user = await this.userRepository.findOneBy({ id });
     if (!user) throw new NotFoundException('User not found');
 
-    // MANAGER cannot elevate users to ADMIN
+    // BROKER cannot elevate users to ADMIN
     if (dto.role === Role.ADMIN && callerRole !== Role.ADMIN) {
       throw new ForbiddenException('Only admins can assign the ADMIN role');
     }

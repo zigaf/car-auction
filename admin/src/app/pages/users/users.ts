@@ -12,7 +12,7 @@ const STATUS_LABELS: Record<string, string | undefined> = {
 
 const ROLE_LABELS: Record<string, string> = {
   client: 'Клиент',
-  manager: 'Менеджер',
+  broker: 'Брокер',
   admin: 'Администратор',
 };
 
@@ -35,7 +35,7 @@ export class UsersPage implements OnInit {
 
   /**
    * 'clients' → role=client
-   * 'team'    → role=manager by default; user can switch to admin via teamRoleFilter
+   * 'team'    → role=broker by default; user can switch to admin via teamRoleFilter
    */
   activeTab: 'clients' | 'team' = 'clients';
 
@@ -43,13 +43,13 @@ export class UsersPage implements OnInit {
   filterStatus = '';
 
   /** Used only when activeTab === 'team' */
-  teamRoleFilter: 'manager' | 'admin' | '' = '';
+  teamRoleFilter: 'broker' | 'admin' | '' = '';
 
   readonly roleLabels = ROLE_LABELS;
   readonly statusLabels = STATUS_LABELS;
   getStatusLabel(status: string): string { return STATUS_LABELS[status] ?? status; }
   readonly clientRoles = ['client'];
-  readonly teamRoles = ['manager', 'admin'];
+  readonly teamRoles = ['broker', 'admin'];
   readonly statuses = ['active', 'blocked', 'pending'];
 
   ngOnInit(): void {

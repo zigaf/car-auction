@@ -47,6 +47,10 @@ export class Bid {
   })
   maxAutoBid: number | null;
 
+  @Index()
+  @Column({ name: 'trader_id', type: 'uuid', nullable: true })
+  traderId: string | null;
+
   @Column({ name: 'idempotency_key', type: 'varchar', unique: true })
   idempotencyKey: string;
 

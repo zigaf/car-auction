@@ -22,8 +22,9 @@ export class FavoritesService {
     return this.api.get<{ isFavorite: boolean }>(`/favorites/${lotId}/check`);
   }
 
-  addFavorite(lotId: string): Observable<IFavorite> {
-    return this.api.post<IFavorite>(`/favorites/${lotId}`);
+  addFavorite(lotId: string, targetUserId?: string): Observable<IFavorite> {
+    const body = targetUserId ? { targetUserId } : undefined;
+    return this.api.post<IFavorite>(`/favorites/${lotId}`, body);
   }
 
   removeFavorite(lotId: string): Observable<void> {

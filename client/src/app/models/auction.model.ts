@@ -4,6 +4,7 @@ export interface IBid {
   id: string;
   lotId: string;
   userId?: string;
+  traderId?: string | null;
   amount: number;
   isPreBid: boolean;
   maxAutoBid: number | null;
