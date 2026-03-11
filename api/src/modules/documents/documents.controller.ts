@@ -7,8 +7,12 @@ import {
   Body,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
   ParseUUIDPipe,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { DocumentsService } from './documents.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -19,6 +23,7 @@ import { User } from '../../db/entities/user.entity';
 import { UploadDocumentDto } from './dto/upload-document.dto';
 import { UpdateDocumentStatusDto } from './dto/update-document-status.dto';
 import { GetDocumentsDto } from './dto/get-documents.dto';
+import { DocumentType } from '../../common/enums/document-type.enum';
 
 @Controller('documents')
 @UseGuards(JwtAuthGuard)
@@ -41,6 +46,35 @@ export class DocumentsController {
     @Body() dto: UploadDocumentDto,
   ) {
     return this.documentsService.uploadDocument(user.id, dto);
+  }
+
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file', {
+    limits: { fileSize: 10 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+      const allowed = [
+        'application/pdf',
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      ];
+      cb(null, allowed.includes(file.mimetype));
+    },
+  }))
+  uploadFile(
+    @CurrentUser() user: User,
+    @UploadedFile() file: Express.Multer.File,
+    @Body('type') type: string,
+  ) {
+    if (!file) {
+      throw new BadRequestException('Файл обязателен');
+    }
+    if (!type || !Object.values(DocumentType).includes(type as DocumentType)) {
+      throw new BadRequestException('Укажите тип документа');
+    }
+    return this.documentsService.uploadFile(user.id, file, type as DocumentType);
   }
 
   @Get(':id')

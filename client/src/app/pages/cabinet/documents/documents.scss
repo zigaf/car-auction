@@ -172,4 +172,179 @@
 
   .material-symbols-rounded { font-size: 48px; margin-bottom: $space-md; }
   p { margin: 0; font-size: $fs-base; }
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-sm;
+    margin-top: $space-lg;
+    padding: $space-md $space-lg;
+    background: $accent;
+    color: #fff;
+    border: none;
+    border-radius: $radius-base;
+    font-family: $font-ui;
+    font-size: $fs-sm;
+    font-weight: $fw-semibold;
+    cursor: pointer;
+    transition: background $transition-fast;
+
+    &:hover { background: $accent-hover; }
+
+    .material-symbols-rounded { font-size: 18px; }
+  }
+}
+
+// ─── Upload modal ──────────────────────────────────────────────────────
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: $z-modal-backdrop;
+}
+
+.upload-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 480px;
+  max-width: calc(100vw - $space-xl * 2);
+  max-height: calc(100vh - $space-xl * 2);
+  background: $bg-panel;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-xl;
+  z-index: $z-modal;
+  display: flex;
+  flex-direction: column;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $space-lg;
+    border-bottom: 1px solid $border-color;
+
+    h2 {
+      margin: 0;
+      font-size: $fs-lg;
+      font-weight: $fw-bold;
+      color: $text-primary;
+    }
+  }
+
+  &__body {
+    padding: $space-lg;
+    display: flex;
+    flex-direction: column;
+    gap: $space-lg;
+    overflow-y: auto;
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: $space-md;
+    padding: $space-lg;
+    border-top: 1px solid $border-color;
+  }
+}
+
+.upload-field {
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+
+  &__label {
+    font-size: $fs-sm;
+    font-weight: $fw-semibold;
+    color: $text-secondary;
+  }
+
+  &__select {
+    padding: $space-md $space-base;
+    background: $bg-input;
+    border: 1px solid $border-color;
+    border-radius: $radius-base;
+    font-family: $font-ui;
+    font-size: $fs-base;
+    color: $text-primary;
+    outline: none;
+    transition: border-color $transition-fast;
+
+    &:focus { border-color: $accent; }
+  }
+}
+
+.upload-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-xl $space-lg;
+  border: 2px dashed $border-color;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: $accent;
+    background: $accent-subtle;
+  }
+
+  &__input { display: none; }
+
+  &__icon {
+    font-size: 36px;
+    color: $text-tertiary;
+
+    &--done { color: $status-green; }
+  }
+
+  &__text {
+    font-size: $fs-base;
+    color: $text-primary;
+    font-weight: $fw-medium;
+  }
+
+  &__hint {
+    font-size: $fs-xs;
+    color: $text-tertiary;
+  }
+}
+
+.upload-error {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-md;
+  background: rgba(240, 112, 112, 0.08);
+  border-radius: $radius-base;
+  font-size: $fs-sm;
+  color: $status-red;
+
+  .material-symbols-rounded { font-size: 18px; }
+}
+
+// ─── Loading / Error states ────────────────────────────────────────────
+
+.loading-state,
+.error-state {
+  text-align: center;
+  padding: $space-3xl;
+  color: $text-tertiary;
+
+  .material-symbols-rounded { font-size: 48px; margin-bottom: $space-md; color: $status-red; }
+  p { margin: 0; font-size: $fs-base; }
+}
+
+// ─── Spin animation ────────────────────────────────────────────────────
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
 }
