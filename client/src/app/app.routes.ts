@@ -69,6 +69,10 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/cabinet/watchlist/watchlist').then((m) => m.WatchlistComponent),
       },
       {
+        path: 'calendar',
+        loadComponent: () => import('./pages/cabinet/calendar/calendar').then((m) => m.CalendarComponent),
+      },
+      {
         path: 'notifications',
         loadComponent: () => import('./pages/cabinet/notifications/notifications').then((m) => m.NotificationsComponent),
       },

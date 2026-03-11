@@ -35,11 +35,6 @@
         </div>
 
         <div class="filter-group">
-          <label class="filter-label">Поиск</label>
-          <input type="text" [(ngModel)]="filters.search" placeholder="Марка, модель, VIN..." class="filter-input">
-        </div>
-
-        <div class="filter-group">
           <label class="filter-label">Марка</label>
           <div class="filter-brands">
             <label class="filter-brands__item" [class.filter-brands__item--active]="filters.brand === ''">
@@ -57,6 +52,11 @@
             </label>
             }
           </div>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Модель</label>
+          <input type="text" [(ngModel)]="filters.model" placeholder="Например: 320d, A4..." class="filter-input">
         </div>
 
         <div class="filter-group">
@@ -88,11 +88,30 @@
         </div>
 
         <div class="filter-group">
+          <label class="filter-label">Коробка передач</label>
+          <select [(ngModel)]="filters.transmission" class="filter-select">
+            <option value="">Все</option>
+            @for (t of transmissions; track t) {
+            <option [value]="t">{{ transmissionLabels[t] }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="filter-group">
           <label class="filter-label">Пробег, км</label>
           <div class="filter-range">
             <input type="number" [(ngModel)]="filters.mileageFrom" placeholder="От" class="filter-input">
             <span class="filter-range__sep">--</span>
             <input type="number" [(ngModel)]="filters.mileageTo" placeholder="До" class="filter-input">
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Объём двигателя, см³</label>
+          <div class="filter-range">
+            <input type="number" [(ngModel)]="filters.engineCapacityFrom" placeholder="От" class="filter-input">
+            <span class="filter-range__sep">--</span>
+            <input type="number" [(ngModel)]="filters.engineCapacityTo" placeholder="До" class="filter-input">
           </div>
         </div>
 

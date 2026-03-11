@@ -37,14 +37,17 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
 
   filters = {
     brand: '',
+    model: '',
     yearFrom: null as number | null,
     yearTo: null as number | null,
     priceFrom: null as number | null,
     priceTo: null as number | null,
     fuelType: '',
+    transmission: '',
     mileageFrom: null as number | null,
     mileageTo: null as number | null,
-    search: '',
+    engineCapacityFrom: null as number | null,
+    engineCapacityTo: null as number | null,
   };
 
   sortOptions = [
@@ -60,6 +63,10 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
   fuelTypeLabels: Record<string, string> = {
     petrol: 'Бензин', diesel: 'Дизель', hybrid: 'Гибрид',
     electric: 'Электро', lpg: 'Газ', other: 'Другое',
+  };
+  transmissions = ['automatic', 'manual'];
+  transmissionLabels: Record<string, string> = {
+    automatic: 'Автомат', manual: 'Механика',
   };
 
   lots: ILot[] = [];
@@ -125,20 +132,7 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
   loadLots(): void {
     this.loading = true;
 
-    const filter: ILotFilter = {
-      page: this.currentPage,
-      limit: 20,
-      sort: this.sortBy || undefined,
-      brand: this.filters.brand || undefined,
-      fuelType: this.filters.fuelType || undefined,
-      yearFrom: this.filters.yearFrom ?? undefined,
-      yearTo: this.filters.yearTo ?? undefined,
-      priceFrom: this.filters.priceFrom ?? undefined,
-      priceTo: this.filters.priceTo ?? undefined,
-      mileageFrom: this.filters.mileageFrom ?? undefined,
-      mileageTo: this.filters.mileageTo ?? undefined,
-      search: this.filters.search || undefined,
-    };
+    const filter = this.buildFilter();
 
     this.lotService.getAll(filter).subscribe({
       next: (result) => {
@@ -161,20 +155,7 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
     this.loadingMore = true;
     this.currentPage++;
 
-    const filter: ILotFilter = {
-      page: this.currentPage,
-      limit: 20,
-      sort: this.sortBy || undefined,
-      brand: this.filters.brand || undefined,
-      fuelType: this.filters.fuelType || undefined,
-      yearFrom: this.filters.yearFrom ?? undefined,
-      yearTo: this.filters.yearTo ?? undefined,
-      priceFrom: this.filters.priceFrom ?? undefined,
-      priceTo: this.filters.priceTo ?? undefined,
-      mileageFrom: this.filters.mileageFrom ?? undefined,
-      mileageTo: this.filters.mileageTo ?? undefined,
-      search: this.filters.search || undefined,
-    };
+    const filter = this.buildFilter();
 
     this.lotService.getAll(filter).subscribe({
       next: (result) => {
@@ -219,12 +200,33 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
 
   resetFilters(): void {
     this.filters = {
-      brand: '', yearFrom: null, yearTo: null,
-      priceFrom: null, priceTo: null, fuelType: '',
-      mileageFrom: null, mileageTo: null, search: '',
+      brand: '', model: '', yearFrom: null, yearTo: null,
+      priceFrom: null, priceTo: null, fuelType: '', transmission: '',
+      mileageFrom: null, mileageTo: null,
+      engineCapacityFrom: null, engineCapacityTo: null,
     };
     this.currentPage = 1;
     this.loadLots();
+  }
+
+  private buildFilter(): ILotFilter {
+    return {
+      page: this.currentPage,
+      limit: 20,
+      sort: this.sortBy || undefined,
+      brand: this.filters.brand || undefined,
+      model: this.filters.model || undefined,
+      fuelType: this.filters.fuelType || undefined,
+      transmission: this.filters.transmission || undefined,
+      yearFrom: this.filters.yearFrom ?? undefined,
+      yearTo: this.filters.yearTo ?? undefined,
+      priceFrom: this.filters.priceFrom ?? undefined,
+      priceTo: this.filters.priceTo ?? undefined,
+      mileageFrom: this.filters.mileageFrom ?? undefined,
+      mileageTo: this.filters.mileageTo ?? undefined,
+      engineCapacityFrom: this.filters.engineCapacityFrom ?? undefined,
+      engineCapacityTo: this.filters.engineCapacityTo ?? undefined,
+    };
   }
 
   // ─── Real-time helpers ────────────────────────────────────────────────────

@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Not, IsNull } from 'typeorm';
 import { Favorite } from '../../db/entities/favorite.entity';
 import { User } from '../../db/entities/user.entity';
 import { Role } from '../../common/enums/role.enum';
@@ -39,6 +39,14 @@ export class FavoritesService {
     });
 
     return { data, total, page, limit };
+  }
+
+  async getCalendar(userId: string): Promise<Favorite[]> {
+    return this.favoriteRepository.find({
+      where: { userId, lot: { auctionStartAt: Not(IsNull()) } },
+      relations: ['lot', 'lot.images'],
+      order: { lot: { auctionStartAt: 'ASC' } },
+    });
   }
 
   async addFavorite(

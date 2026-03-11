@@ -1,0 +1,267 @@
+@use 'styles/variables' as *;
+@use 'styles/mixins' as *;
+
+.calendar__title {
+  @include heading($fs-xl);
+  margin: 0 0 $space-xl;
+}
+
+// --- Timeline ---
+
+.calendar__timeline {
+  position: relative;
+  padding-left: $space-xl;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 4px;
+    bottom: 4px;
+    width: 2px;
+    background: $border-color;
+  }
+}
+
+// --- Day group ---
+
+.calendar__day {
+  position: relative;
+  margin-bottom: $space-xl;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &--past {
+    opacity: 0.5;
+
+    .calendar__date-dot {
+      background: $text-tertiary;
+    }
+  }
+
+  &--today {
+    .calendar__date-dot {
+      background: $accent;
+      box-shadow: 0 0 12px rgba($accent, 0.4);
+      width: 14px;
+      height: 14px;
+      margin-left: -2px;
+    }
+
+    .calendar__date-text {
+      color: $accent;
+      font-weight: $fw-bold;
+    }
+  }
+}
+
+// --- Date header ---
+
+.calendar__date-header {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  margin-bottom: $space-md;
+  position: relative;
+}
+
+.calendar__date-dot {
+  position: absolute;
+  left: calc(-#{$space-xl} + 2px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: $radius-round;
+  background: $text-secondary;
+  border: 2px solid $bg-primary;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.calendar__date-info {
+  display: flex;
+  align-items: baseline;
+  gap: $space-sm;
+  flex-wrap: wrap;
+}
+
+.calendar__date-text {
+  font-size: $fs-lg;
+  font-weight: $fw-semibold;
+  color: $text-primary;
+}
+
+.calendar__date-weekday {
+  font-size: $fs-sm;
+  color: $text-tertiary;
+}
+
+.calendar__today-badge {
+  @include badge(rgba($accent, 0.12), $accent);
+}
+
+// --- Lot cards ---
+
+.calendar__lots {
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+}
+
+.calendar__lot-card {
+  @include card;
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+  padding: $space-md;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+
+  @include mobile {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.calendar__lot-image {
+  width: 80px;
+  height: 56px;
+  border-radius: $radius-sm;
+  background: $bg-elevated;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .material-symbols-rounded {
+    font-size: 28px;
+    color: $text-tertiary;
+  }
+
+  @include mobile {
+    width: 100%;
+    height: 120px;
+  }
+}
+
+.calendar__lot-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.calendar__lot-title {
+  display: block;
+  font-size: $fs-base;
+  font-weight: $fw-semibold;
+  color: $text-primary;
+  margin-bottom: $space-xs;
+  @include truncate;
+}
+
+.calendar__lot-meta {
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+  margin-bottom: $space-xs;
+}
+
+.calendar__lot-time {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-xs;
+  font-size: $fs-sm;
+  color: $text-secondary;
+
+  .material-symbols-rounded {
+    font-size: 14px;
+  }
+}
+
+.calendar__lot-price {
+  font-family: $font-mono;
+  font-size: $fs-sm;
+  font-weight: $fw-bold;
+  color: $accent;
+}
+
+.calendar__lot-spec {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-xs;
+  font-size: $fs-xs;
+  color: $text-tertiary;
+
+  .material-symbols-rounded {
+    font-size: 14px;
+  }
+}
+
+.calendar__lot-arrow {
+  font-size: 20px;
+  color: $text-tertiary;
+  flex-shrink: 0;
+  transition: color $transition-fast;
+
+  .calendar__lot-card:hover & {
+    color: $accent;
+  }
+
+  @include mobile {
+    display: none;
+  }
+}
+
+// --- States ---
+
+.calendar__state {
+  text-align: center;
+  padding: $space-3xl;
+  color: $text-tertiary;
+
+  .material-symbols-rounded {
+    font-size: 48px;
+    margin-bottom: $space-md;
+    display: block;
+  }
+
+  p {
+    margin: 0;
+    font-size: $fs-base;
+  }
+
+  &--error {
+    color: $status-red;
+
+    .material-symbols-rounded {
+      font-size: 32px;
+    }
+  }
+
+  &--loading {
+    padding: $space-3xl;
+  }
+}
+
+.calendar__browse-link {
+  display: inline-block;
+  margin-top: $space-md;
+  color: $accent;
+  font-size: $fs-sm;
+  font-weight: $fw-semibold;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

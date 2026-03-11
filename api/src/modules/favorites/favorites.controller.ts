@@ -31,6 +31,11 @@ export class FavoritesController {
     });
   }
 
+  @Get('calendar')
+  getCalendar(@CurrentUser() user: User) {
+    return this.favoritesService.getCalendar(user.id);
+  }
+
   @Get(':lotId/check')
   isFavorite(
     @CurrentUser() user: User,

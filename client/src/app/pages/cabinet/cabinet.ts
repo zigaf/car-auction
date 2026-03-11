@@ -35,6 +35,7 @@ export class CabinetComponent {
     { path: '/cabinet/documents', label: 'Документы', icon: 'description', exact: false },
     { path: '/cabinet/balance', label: 'Баланс', icon: 'account_balance_wallet', exact: false },
     { path: '/cabinet/watchlist', label: 'Отслеживаемые', icon: 'favorite', exact: false },
+    { path: '/cabinet/calendar', label: 'Календарь', icon: 'calendar_month', exact: false },
     { path: '/cabinet/notifications', label: 'Уведомления', icon: 'notifications', exact: false },
     { path: '/cabinet/calculator', label: 'Калькулятор', icon: 'calculate', exact: false },
     { path: '/cabinet/settings', label: 'Настройки', icon: 'settings', exact: false },

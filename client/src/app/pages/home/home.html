@@ -191,57 +191,61 @@
 </section>
 }
 
-<!-- Статистика платформы -->
-@if (stats.totalLots > 0) {
-<section class="platform-stats">
+<!-- CTA баннер -->
+<section class="cta-banner">
   <div class="container">
-    <h2 class="platform-stats__title">Автомобили с европейских аукционов</h2>
-    <p class="platform-stats__subtitle">Данные из BCA Europe — обновляются автоматически</p>
-    <div class="platform-stats__grid">
-      <div class="platform-stats__card">
-        <div class="platform-stats__icon" style="color: #4F46E5">
-          <span class="material-symbols-rounded">directions_car</span>
+    <div class="cta-banner__card">
+      <div class="cta-banner__content">
+        <h2 class="cta-banner__title">Готовы купить авто<br>с европейского аукциона?</h2>
+        <p class="cta-banner__desc">Зарегистрируйтесь, пополните баланс и начните торговаться уже сегодня. Мы возьмём на себя доставку и растаможку.</p>
+        <div class="cta-banner__actions">
+          <a routerLink="/register" class="cta-banner__btn cta-banner__btn--primary">
+            <span class="material-symbols-rounded">person_add</span>
+            Создать аккаунт
+          </a>
+          <a routerLink="/catalog" class="cta-banner__btn cta-banner__btn--secondary">
+            Смотреть каталог
+            <span class="material-symbols-rounded">arrow_forward</span>
+          </a>
         </div>
-        <div class="platform-stats__value">{{ stats.totalLots | number }}</div>
-        <div class="platform-stats__label">Автомобилей</div>
-        <div class="platform-stats__sublabel">в базе</div>
       </div>
-      <div class="platform-stats__card">
-        <div class="platform-stats__icon" style="color: #22C55E">
-          <span class="material-symbols-rounded">category</span>
+      <div class="cta-banner__visual">
+        <div class="cta-banner__icon-group">
+          <div class="cta-banner__icon-item">
+            <span class="material-symbols-rounded">directions_car</span>
+            <span>Проверенные авто</span>
+          </div>
+          <div class="cta-banner__icon-item">
+            <span class="material-symbols-rounded">verified_user</span>
+            <span>Гарантия сделки</span>
+          </div>
+          <div class="cta-banner__icon-item">
+            <span class="material-symbols-rounded">local_shipping</span>
+            <span>Доставка под ключ</span>
+          </div>
         </div>
-        <div class="platform-stats__value">{{ stats.totalBrands }}</div>
-        <div class="platform-stats__label">Марок</div>
-        <div class="platform-stats__sublabel">представлено</div>
-      </div>
-      <div class="platform-stats__card">
-        <div class="platform-stats__icon" style="color: #F59E0B">
-          <span class="material-symbols-rounded">public</span>
-        </div>
-        <div class="platform-stats__value">{{ stats.countries }}</div>
-        <div class="platform-stats__label">Стран</div>
-        <div class="platform-stats__sublabel">продаж</div>
-      </div>
-      <div class="platform-stats__card">
-        <div class="platform-stats__icon" style="color: #3B82F6">
-          <span class="material-symbols-rounded">photo_library</span>
-        </div>
-        <div class="platform-stats__value">{{ stats.withPhotos | number }}</div>
-        <div class="platform-stats__label">С фото</div>
-        <div class="platform-stats__sublabel">автомобилей</div>
       </div>
     </div>
   </div>
 </section>
-}
 
 <!-- Как это работает -->
 <section class="section section--gray">
   <div class="container">
     <h2 class="section__title">Как это работает</h2>
     <div class="steps">
+      <svg class="steps__connector" viewBox="0 0 700 140" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="steps-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+            <path d="M 0 0 L 10 4 L 0 8" fill="none" stroke="#C7D2FE" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          </marker>
+        </defs>
+        <path
+          d="M 50,20 C 100,20 100,120 150,120 C 200,120 200,20 250,20 C 300,20 300,120 350,120 C 400,120 400,20 450,20 C 500,20 500,120 550,120 C 600,120 600,20 650,20"
+          stroke="#C7D2FE" stroke-width="2.5" stroke-linecap="round" marker-end="url(#steps-arrow)"/>
+      </svg>
       @for (step of steps; track step.title; let i = $index) {
-      <div class="step">
+      <div class="step" [class.step--down]="i % 2 !== 0">
         <div class="step__number">{{ i + 1 }}</div>
         <h3 class="step__title">{{ step.title }}</h3>
         <p class="step__desc">{{ step.desc }}</p>

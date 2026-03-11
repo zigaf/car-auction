@@ -111,8 +111,11 @@ export interface ILotFilter {
   priceFrom?: number;
   priceTo?: number;
   fuelType?: string;
+  transmission?: string;
   mileageFrom?: number;
   mileageTo?: number;
+  engineCapacityFrom?: number;
+  engineCapacityTo?: number;
   country?: string;
   search?: string;
   sort?: string;

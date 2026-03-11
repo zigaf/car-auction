@@ -1,0 +1,75 @@
+<div class="calendar">
+  <h1 class="calendar__title">Календарь аукционов</h1>
+
+  @if (error) {
+    <div class="calendar__state calendar__state--error">
+      <span class="material-symbols-rounded">error</span>
+      <p>{{ error }}</p>
+    </div>
+  }
+
+  @if (loading) {
+    <div class="calendar__state calendar__state--loading">
+      <p>Загрузка...</p>
+    </div>
+  }
+
+  @if (!loading && !error && groups.length === 0) {
+    <div class="calendar__state calendar__state--empty">
+      <span class="material-symbols-rounded">calendar_month</span>
+      <p>Нет избранных лотов с запланированным аукционом</p>
+      <a routerLink="/catalog" class="calendar__browse-link">Перейти в каталог</a>
+    </div>
+  }
+
+  @if (!loading && !error && groups.length > 0) {
+    <div class="calendar__timeline">
+      @for (group of groups; track group.dateKey) {
+        <div class="calendar__day" [class.calendar__day--past]="group.isPast" [class.calendar__day--today]="group.isToday">
+          <div class="calendar__date-header">
+            <div class="calendar__date-dot"></div>
+            <div class="calendar__date-info">
+              <span class="calendar__date-text">{{ group.displayDate }}</span>
+              <span class="calendar__date-weekday">{{ group.dayOfWeek }}</span>
+              @if (group.isToday) {
+                <span class="calendar__today-badge">Сегодня</span>
+              }
+            </div>
+          </div>
+          <div class="calendar__lots">
+            @for (fav of group.favorites; track fav.lotId) {
+              <a [routerLink]="['/catalog', fav.lot.id]" class="calendar__lot-card">
+                <div class="calendar__lot-image">
+                  @if (fav.lot.images && fav.lot.images.length > 0) {
+                    <img [src]="fav.lot.images[0].url" [alt]="getLotTitle(fav)" />
+                  } @else {
+                    <span class="material-symbols-rounded">directions_car</span>
+                  }
+                </div>
+                <div class="calendar__lot-body">
+                  <span class="calendar__lot-title">{{ getLotTitle(fav) }}</span>
+                  <div class="calendar__lot-meta">
+                    <span class="calendar__lot-time">
+                      <span class="material-symbols-rounded">schedule</span>
+                      {{ getAuctionTime(fav) }}
+                    </span>
+                    @if (fav.lot.startingBid) {
+                      <span class="calendar__lot-price">{{ fav.lot.startingBid | number }} EUR</span>
+                    }
+                  </div>
+                  @if (fav.lot.mileage) {
+                    <span class="calendar__lot-spec">
+                      <span class="material-symbols-rounded">speed</span>
+                      {{ fav.lot.mileage | number }} км
+                    </span>
+                  }
+                </div>
+                <span class="material-symbols-rounded calendar__lot-arrow">chevron_right</span>
+              </a>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

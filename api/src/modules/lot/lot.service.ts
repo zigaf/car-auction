@@ -32,6 +32,10 @@ export class LotService {
     mileageFrom?: number;
     mileageTo?: number;
     country?: string;
+    model?: string;
+    transmission?: string;
+    engineCapacityFrom?: number;
+    engineCapacityTo?: number;
     sort?: string;
     search?: string;
     status?: string;
@@ -92,6 +96,22 @@ export class LotService {
 
     if (query.country) {
       qb.andWhere('lot.saleCountry = :country', { country: query.country });
+    }
+
+    if (query.model) {
+      qb.andWhere('LOWER(lot.model) LIKE LOWER(:model)', { model: `%${query.model}%` });
+    }
+
+    if (query.transmission) {
+      qb.andWhere('LOWER(lot.transmission) = LOWER(:transmission)', { transmission: query.transmission });
+    }
+
+    if (query.engineCapacityFrom) {
+      qb.andWhere('lot.engineCapacityCc >= :engineCapacityFrom', { engineCapacityFrom: query.engineCapacityFrom });
+    }
+
+    if (query.engineCapacityTo) {
+      qb.andWhere('lot.engineCapacityCc <= :engineCapacityTo', { engineCapacityTo: query.engineCapacityTo });
     }
 
     if (query.search) {

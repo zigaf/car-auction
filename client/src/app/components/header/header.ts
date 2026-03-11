@@ -5,6 +5,7 @@ import { Subject } from 'rxjs';
 import { takeUntil, filter, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { StateService } from '../../core/services/state.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { ToastService } from '../../core/services/toast.service';
 import { AppButtonComponent } from '../../shared/components/button/button.component';
 
 @Component({
@@ -19,6 +20,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   private readonly stateService = inject(StateService);
   private readonly notificationService = inject(NotificationService);
+  private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
   private readonly destroy$ = new Subject<void>();
 
@@ -38,6 +40,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  onFavoritesClick(): void {
+    if (this.stateService.snapshot.isAuthenticated) {
+      this.router.navigate(['/cabinet/watchlist']);
+    } else {
+      this.toastService.info('Войдите в аккаунт, чтобы увидеть избранное');
+    }
   }
 
   toggleMenu(): void {

@@ -18,6 +18,10 @@ export class FavoritesService {
     });
   }
 
+  getCalendarFavorites(): Observable<IFavorite[]> {
+    return this.api.get<IFavorite[]>('/favorites/calendar');
+  }
+
   checkFavorite(lotId: string, targetUserId?: string | null): Observable<{ isFavorite: boolean }> {
     const params = targetUserId ? { targetUserId } : undefined;
     return this.api.get<{ isFavorite: boolean }>(`/favorites/${lotId}/check`, params);
