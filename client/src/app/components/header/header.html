@@ -61,6 +61,10 @@
 <div class="drawer-backdrop" [class.drawer-backdrop--open]="menuOpen()" (click)="toggleMenu()"></div>
 <aside class="drawer" [class.drawer--open]="menuOpen()">
   <nav class="drawer__nav">
+    <a routerLink="/" [routerLinkActiveOptions]="{ exact: true }" routerLinkActive="active" class="drawer__link" (click)="menuOpen.set(false)">
+      <span class="material-symbols-rounded">home</span>
+      Главная
+    </a>
     <a routerLink="/catalog" routerLinkActive="active" class="drawer__link" (click)="menuOpen.set(false)">
       <span class="material-symbols-rounded">directions_car</span>
       Каталог
