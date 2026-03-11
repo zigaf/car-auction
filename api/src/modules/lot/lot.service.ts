@@ -135,6 +135,9 @@ export class LotService {
       case 'mileage_asc':
         qb.orderBy('lot.mileage', 'ASC', 'NULLS LAST');
         break;
+      case 'auction_asc':
+        qb.orderBy('lot.auctionStartAt', 'ASC', 'NULLS LAST');
+        break;
       default:
         qb.orderBy('lot.createdAt', 'DESC');
     }

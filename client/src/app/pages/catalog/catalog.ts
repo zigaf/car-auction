@@ -52,6 +52,7 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
 
   sortOptions = [
     { value: 'date_desc', label: 'Новые' },
+    { value: 'auction_asc', label: 'Ближайшие аукционы' },
     { value: 'price_asc', label: 'Цена ↑' },
     { value: 'price_desc', label: 'Цена ↓' },
     { value: 'year_desc', label: 'Год ↓' },
