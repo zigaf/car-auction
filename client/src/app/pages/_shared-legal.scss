@@ -1,0 +1,188 @@
+@use 'styles/variables' as *;
+@use 'styles/mixins' as *;
+
+// ─── Legal pages (privacy, terms, cookies) ─────────────────────────────────
+
+.legal {
+  min-height: calc(100vh - #{$header-height});
+  padding: $space-2xl 0 $space-3xl;
+
+  @include mobile {
+    padding: $space-lg 0 $space-2xl;
+  }
+}
+
+.legal__hero {
+  max-width: 680px;
+  margin-bottom: $space-2xl;
+}
+
+.legal__badge {
+  @include badge;
+  margin-bottom: $space-lg;
+}
+
+.legal__hero h1 {
+  @include heading($fs-2xl);
+  margin: 0 0 $space-sm;
+  line-height: 1.15;
+
+  @include mobile { font-size: $fs-xl; }
+}
+
+.legal__hero p {
+  color: $text-secondary;
+  font-size: $fs-sm;
+  margin: 0;
+}
+
+// ─── Content ───────────────────────────────────────────────────────────────
+
+.legal__content {
+  max-width: 780px;
+}
+
+.legal__section {
+  margin-bottom: $space-xl;
+
+  h2 {
+    @include heading($fs-lg);
+    margin: 0 0 $space-md;
+
+    @include mobile { font-size: $fs-base; }
+  }
+
+  h3 {
+    font-size: $fs-base;
+    font-weight: $fw-semibold;
+    margin: $space-lg 0 $space-sm;
+    color: $text-primary;
+  }
+
+  p {
+    color: $text-secondary;
+    font-size: $fs-sm;
+    line-height: 1.7;
+    margin: 0 0 $space-sm;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 $space-md;
+
+    li {
+      position: relative;
+      padding-left: 20px;
+      color: $text-secondary;
+      font-size: $fs-sm;
+      line-height: 1.7;
+      margin-bottom: $space-xs;
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 10px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: $accent;
+      }
+    }
+
+    strong {
+      color: $text-primary;
+      font-weight: $fw-semibold;
+    }
+  }
+
+  a {
+    color: $accent;
+    text-decoration: none;
+    font-weight: $fw-medium;
+
+    &:hover { text-decoration: underline; }
+  }
+}
+
+// ─── Table ─────────────────────────────────────────────────────────────────
+
+.legal__table-wrap {
+  overflow-x: auto;
+  margin: $space-md 0;
+  border-radius: $radius-base;
+  border: 1px solid $border-color;
+}
+
+.legal__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $fs-sm;
+
+  th, td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid $border-color;
+  }
+
+  th {
+    background: $bg-elevated;
+    font-weight: $fw-semibold;
+    color: $text-primary;
+    white-space: nowrap;
+  }
+
+  td {
+    color: $text-secondary;
+  }
+
+  code {
+    font-family: $font-mono;
+    font-size: $fs-xs;
+    background: $bg-elevated;
+    padding: 2px 6px;
+    border-radius: $radius-sm;
+    color: $accent;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+// ─── Nav links ─────────────────────────────────────────────────────────────
+
+.legal__nav {
+  display: flex;
+  gap: $space-md;
+  margin-top: $space-2xl;
+  padding-top: $space-xl;
+  border-top: 1px solid $border-color;
+  flex-wrap: wrap;
+}
+
+.legal__nav-link {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: 12px 20px;
+  background: $bg-elevated;
+  border: 1px solid $border-color;
+  border-radius: $radius-base;
+  color: $text-primary;
+  font-size: $fs-sm;
+  font-weight: $fw-medium;
+  text-decoration: none;
+  transition: border-color 0.2s, background 0.2s;
+
+  .material-symbols-rounded {
+    font-size: 20px;
+    color: $accent;
+  }
+
+  &:hover {
+    border-color: $accent;
+    background: $accent-muted;
+  }
+}
