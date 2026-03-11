@@ -1,6 +1,5 @@
-import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { environment } from '../../../../environments/environment';
 import { UserService } from '../../../core/services/user.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AppButtonComponent } from '../../../shared/components/button/button.component';
@@ -19,7 +18,6 @@ const RESTRICTED_FLAGS = ['🇷🇺', '🇧🇾'];
 export class SettingsComponent implements OnInit {
   private readonly userService = inject(UserService);
   private readonly toastService = inject(ToastService);
-  private readonly cdr = inject(ChangeDetectorRef);
 
   profileLoading = true;
   profileSaving = false;
@@ -77,21 +75,6 @@ export class SettingsComponent implements OnInit {
   selectedCountry = '🇺🇦';
   selectedLanguage = 'ru';
   selectedCurrency = 'EUR';
-
-  notificationSettings = [
-    { label: 'Ставка перебита', email: true, push: true },
-    { label: 'Аукцион завершён', email: true, push: false },
-    { label: 'Статус заказа', email: true, push: true },
-    { label: 'Документы', email: false, push: true },
-    { label: 'Новые аукционы', email: false, push: false },
-  ];
-
-  // Scraper state
-  scraperLoading = false;
-  scraperStatus: 'idle' | 'running' | 'success' | 'error' = 'idle';
-  scraperMessage = '';
-  scraperRun: any = null;
-  scraperMaxPages = 1;
 
   get isRestrictedCountry(): boolean {
     return RESTRICTED_FLAGS.some((f) => this.selectedCountry.includes(f));
@@ -166,71 +149,5 @@ export class SettingsComponent implements OnInit {
         this.toastService.error('Ошибка сохранения');
       },
     });
-  }
-
-  toggleNotification(index: number, channel: 'email' | 'push'): void {
-    this.notificationSettings[index][channel] = !this.notificationSettings[index][channel];
-  }
-
-  async startScraper(): Promise<void> {
-    this.scraperLoading = true;
-    this.scraperStatus = 'running';
-    this.scraperMessage = 'Запуск парсера...';
-    this.scraperRun = null;
-
-    try {
-      const token = typeof localStorage !== 'undefined' ? localStorage.getItem('accessToken') : null;
-      const response = await fetch(`${environment.apiUrl}/scraper/run`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ maxPages: this.scraperMaxPages }),
-      });
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => null);
-        throw new Error(err?.message || `HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-      this.scraperRun = data;
-      this.scraperStatus = 'success';
-      this.scraperMessage = `Готово! Создано: ${data.lotsCreated}, обновлено: ${data.lotsUpdated}, фото: ${data.imagesDownloaded}, ошибок: ${data.errorsCount}`;
-    } catch (error: any) {
-      this.scraperStatus = 'error';
-      this.scraperMessage = `Ошибка: ${error.message}`;
-    } finally {
-      this.scraperLoading = false;
-      this.cdr.detectChanges();
-    }
-  }
-
-  async checkScraperStatus(): Promise<void> {
-    try {
-      const token = typeof localStorage !== 'undefined' ? localStorage.getItem('accessToken') : null;
-      const response = await fetch(`${environment.apiUrl}/scraper/status`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-      const data = await response.json();
-      this.scraperRun = data.latestRun;
-      if (data.isRunning) {
-        this.scraperStatus = 'running';
-        this.scraperMessage = data.latestRun
-          ? `Парсинг... Страница ${data.latestRun.pagesScraped}/${data.latestRun.totalPages}`
-          : 'Парсинг запущен...';
-      } else if (data.latestRun) {
-        this.scraperStatus = data.latestRun.status === 'completed' ? 'success' : 'error';
-        this.scraperMessage = `Последний запуск: ${data.latestRun.status} | Создано: ${data.latestRun.lotsCreated}, обновлено: ${data.latestRun.lotsUpdated}`;
-      }
-      this.cdr.detectChanges();
-    } catch (error: any) {
-      this.scraperMessage = `Не удалось получить статус: ${error.message}`;
-      this.cdr.detectChanges();
-    }
   }
 }
