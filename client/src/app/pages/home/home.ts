@@ -97,6 +97,18 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     el.scrollTo({ left: index * cardWidth, behavior: 'smooth' });
   }
 
+  scrollRecentPrev(): void {
+    if (this.activeRecentDot > 0) {
+      this.scrollToRecentDot(this.activeRecentDot - 1);
+    }
+  }
+
+  scrollRecentNext(): void {
+    if (this.activeRecentDot < this.recentDotCount - 1) {
+      this.scrollToRecentDot(this.activeRecentDot + 1);
+    }
+  }
+
   loadData(): void {
     this.loading = true;
 

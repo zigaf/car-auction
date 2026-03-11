@@ -130,35 +130,47 @@
         <span class="material-symbols-rounded">arrow_forward</span>
       </a>
     </div>
-    <div class="ending-soon__track" #recentTrack>
-      @for (lot of recentLots; track lot.id) {
-      <div class="ending-soon__card">
-        <a [routerLink]="['/catalog', lot.id]" class="ending-soon__image-wrap">
-          @if (getMainImage(lot)) {
-          <img [src]="getMainImage(lot)" [alt]="lot.title">
-          } @else {
-          <div class="ending-soon__placeholder">
-            <span class="material-symbols-rounded">directions_car</span>
-          </div>
-          }
-        </a>
-        <div class="ending-soon__info">
-          <div class="ending-soon__car-name">{{ lot.title }}</div>
-          <div class="ending-soon__bottom">
-            <div class="ending-soon__price">
-              @if (lot.startingBid) {
-              <span class="ending-soon__price-label">Стартовая цена</span>
-              <span class="ending-soon__price-value">{{ lot.startingBid | number }} {{ lot.originalCurrency || 'EUR'
-                }}</span>
-              } @else {
-              <span class="ending-soon__price-label">{{ lot.saleChannel || 'Аукцион' }}</span>
-              }
+    <div class="ending-soon__carousel">
+      @if (recentDotCount > 1 && activeRecentDot > 0) {
+        <button class="ending-soon__arrow ending-soon__arrow--left" (click)="scrollRecentPrev()">
+          <span class="material-symbols-rounded">chevron_left</span>
+        </button>
+      }
+      @if (recentDotCount > 1 && activeRecentDot < recentDotCount - 1) {
+        <button class="ending-soon__arrow ending-soon__arrow--right" (click)="scrollRecentNext()">
+          <span class="material-symbols-rounded">chevron_right</span>
+        </button>
+      }
+      <div class="ending-soon__track" #recentTrack>
+        @for (lot of recentLots; track lot.id) {
+        <div class="ending-soon__card">
+          <a [routerLink]="['/catalog', lot.id]" class="ending-soon__image-wrap">
+            @if (getMainImage(lot)) {
+            <img [src]="getMainImage(lot)" [alt]="lot.title">
+            } @else {
+            <div class="ending-soon__placeholder">
+              <span class="material-symbols-rounded">directions_car</span>
             </div>
-            <a [routerLink]="['/catalog', lot.id]" class="ending-soon__bid-btn">Подробнее</a>
+            }
+          </a>
+          <div class="ending-soon__info">
+            <div class="ending-soon__car-name">{{ lot.title }}</div>
+            <div class="ending-soon__bottom">
+              <div class="ending-soon__price">
+                @if (lot.startingBid) {
+                <span class="ending-soon__price-label">Стартовая цена</span>
+                <span class="ending-soon__price-value">{{ lot.startingBid | number }} {{ lot.originalCurrency || 'EUR'
+                  }}</span>
+                } @else {
+                <span class="ending-soon__price-label">{{ lot.saleChannel || 'Аукцион' }}</span>
+                }
+              </div>
+              <a [routerLink]="['/catalog', lot.id]" class="ending-soon__bid-btn">Подробнее</a>
+            </div>
           </div>
         </div>
+        }
       </div>
-      }
     </div>
     @if (recentDotCount > 1) {
     <div class="ending-soon__dots">
