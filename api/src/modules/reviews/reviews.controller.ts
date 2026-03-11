@@ -38,7 +38,9 @@ export class ReviewsController {
     @CurrentUser() user: User,
     @Body() dto: CreateReviewDto,
   ) {
-    const authorName = `${user.firstName} ${user.lastName}`.trim() || 'Анонимный пользователь';
+    const authorName = dto.authorName?.trim()
+      || `${user.firstName} ${user.lastName}`.trim()
+      || 'Анонимный пользователь';
     return this.reviewsService.create(user.id, authorName, dto);
   }
 }

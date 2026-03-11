@@ -18,7 +18,7 @@ export class ReviewsService {
     return this.api.get('/reviews/stats');
   }
 
-  createReview(body: { rating: number; text: string }): Observable<IReview> {
+  createReview(body: { rating: number; text: string; authorName?: string }): Observable<IReview> {
     return this.api.post('/reviews', body);
   }
 }

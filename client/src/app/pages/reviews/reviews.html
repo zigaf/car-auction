@@ -156,6 +156,16 @@
                 </div>
               </div>
               <div class="review-modal__field">
+                <label class="review-modal__label">Ваше имя</label>
+                <input
+                  type="text"
+                  class="review-modal__input"
+                  [(ngModel)]="modalAuthor"
+                  placeholder="Как вас подписать? (необязательно)"
+                  maxlength="100"
+                >
+              </div>
+              <div class="review-modal__field">
                 <label class="review-modal__label">Ваш отзыв</label>
                 <textarea
                   class="review-modal__textarea"

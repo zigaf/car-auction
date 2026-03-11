@@ -444,6 +444,12 @@
   margin-bottom: $space-sm;
 }
 
+.review-modal__input {
+  @include input-base;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .review-modal__textarea {
   @include input-base;
   width: 100%;

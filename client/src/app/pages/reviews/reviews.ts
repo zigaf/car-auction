@@ -31,6 +31,7 @@ export class ReviewsComponent implements OnInit {
   modalRating = 0;
   modalHoverRating = 0;
   modalText = '';
+  modalAuthor = '';
   submitting = false;
   submitSuccess = false;
 
@@ -100,6 +101,7 @@ export class ReviewsComponent implements OnInit {
     this.modalRating = 0;
     this.modalHoverRating = 0;
     this.modalText = '';
+    this.modalAuthor = '';
     this.submitting = false;
     this.submitSuccess = false;
   }
@@ -123,6 +125,7 @@ export class ReviewsComponent implements OnInit {
     this.reviewsService.createReview({
       rating: this.modalRating,
       text: this.modalText.trim(),
+      authorName: this.modalAuthor.trim() || undefined,
     }).subscribe({
       next: (review) => {
         this.reviews = [review, ...this.reviews];
