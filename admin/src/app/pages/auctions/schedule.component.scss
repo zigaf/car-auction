@@ -435,3 +435,17 @@
   gap: $space-sm;
   flex-wrap: wrap;
 }
+
+// ─── Load More ──────────────────────────────────────────────────────────────
+
+.load-more-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-md;
+  padding: 16px 0;
+}
+
+.load-more-count {
+  font-size: $fs-xs;
+}

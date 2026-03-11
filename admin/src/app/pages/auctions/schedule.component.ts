@@ -13,6 +13,8 @@ interface CalendarCell {
   isToday: boolean;
 }
 
+const PAGE_SIZE = 20;
+
 @Component({
   selector: 'app-schedule',
   standalone: true,
@@ -25,11 +27,26 @@ export class SchedulePage implements OnInit {
 
   activeTab: Tab = 'upcoming';
 
-  // ─── Auction lists ─────────────────────────────────────────────────────────
+  // ─── Auction lists (per-tab pagination) ───────────────────────────────────
   upcomingLots: ILot[] = [];
+  upcomingTotal = 0;
+  upcomingPage = 1;
+  upcomingLoading = false;
+  upcomingLoadingMore = false;
+
   currentLots: ILot[] = [];
+  currentTotal = 0;
+  currentPage = 1;
+  currentLoading = false;
+  currentLoadingMore = false;
+
   pastLots: ILot[] = [];
-  listsLoading = false;
+  pastTotal = 0;
+  pastPage = 1;
+  pastLoading = false;
+  pastLoadingMore = false;
+
+  calendarLoading = false;
 
   // ─── Lot picker for planning ────────────────────────────────────────────────
   planLots: ILot[] = [];
@@ -96,8 +113,15 @@ export class SchedulePage implements OnInit {
   fillMonthErrors = 0;
   availableBrands: string[] = [];
 
+  // ─── Pagination getters ───────────────────────────────────────────────────
+  get hasMoreUpcoming(): boolean { return this.upcomingPage * PAGE_SIZE < this.upcomingTotal; }
+  get hasMoreCurrent(): boolean { return this.currentPage * PAGE_SIZE < this.currentTotal; }
+  get hasMorePast(): boolean { return this.pastPage * PAGE_SIZE < this.pastTotal; }
+
   ngOnInit(): void {
-    this.loadAuctionLists();
+    this.loadUpcoming(true);
+    this.loadCurrent(true);
+    this.loadPast(true);
   }
 
   setTab(tab: Tab): void {
@@ -108,45 +132,135 @@ export class SchedulePage implements OnInit {
       if (this.planLots.length === 0 && !this.planLotsLoading) {
         this.loadPlanLots();
       }
-    } else if (!this.listsLoading) {
-      this.loadAuctionLists();
+    } else if (tab === 'upcoming') {
+      if (!this.upcomingLoading) this.loadUpcoming(true);
+    } else if (tab === 'current') {
+      if (!this.currentLoading) this.loadCurrent(true);
+    } else if (tab === 'past') {
+      if (!this.pastLoading) this.loadPast(true);
     }
   }
 
-  loadAuctionLists(): void {
-    this.listsLoading = true;
-    let loaded = 0;
-    const done = () => {
-      if (++loaded === 3) {
-        this.listsLoading = false;
-        if (this.activeTab === 'calendar') {
-          this.buildCalendar();
-        }
-      }
-    };
+  // ─── Per-tab loading ──────────────────────────────────────────────────────
 
-    this.lotService.getLots({ limit: 50, status: 'active' }).subscribe({
+  loadUpcoming(reset = false): void {
+    if (reset) {
+      this.upcomingPage = 1;
+      this.upcomingLoading = true;
+    } else {
+      this.upcomingPage++;
+      this.upcomingLoadingMore = true;
+    }
+
+    this.lotService.getLots({ page: this.upcomingPage, limit: PAGE_SIZE, status: 'active' }).subscribe({
       next: (res) => {
         const now = Date.now();
-        this.upcomingLots = res.data.filter(l => {
+        const incoming = res.data.filter(l => {
           const start = l.auctionStartAt || l.auctionStart;
           return start && new Date(start).getTime() > now;
         });
-        done();
+        this.upcomingLots = reset ? incoming : [...this.upcomingLots, ...incoming];
+        this.upcomingTotal = res.total;
+        this.sortUpcoming();
+        this.upcomingLoading = false;
+        this.upcomingLoadingMore = false;
       },
-      error: done,
-    });
-
-    this.lotService.getLots({ limit: 50, status: 'trading' }).subscribe({
-      next: (res) => { this.currentLots = res.data; done(); },
-      error: done,
-    });
-
-    this.lotService.getLots({ limit: 50, status: 'sold' }).subscribe({
-      next: (res) => { this.pastLots = res.data; done(); },
-      error: done,
+      error: () => {
+        if (!reset) this.upcomingPage--;
+        this.upcomingLoading = false;
+        this.upcomingLoadingMore = false;
+      },
     });
   }
+
+  loadCurrent(reset = false): void {
+    if (reset) {
+      this.currentPage = 1;
+      this.currentLoading = true;
+    } else {
+      this.currentPage++;
+      this.currentLoadingMore = true;
+    }
+
+    this.lotService.getLots({ page: this.currentPage, limit: PAGE_SIZE, status: 'trading' }).subscribe({
+      next: (res) => {
+        this.currentLots = reset ? res.data : [...this.currentLots, ...res.data];
+        this.currentTotal = res.total;
+        this.sortCurrent();
+        this.currentLoading = false;
+        this.currentLoadingMore = false;
+      },
+      error: () => {
+        if (!reset) this.currentPage--;
+        this.currentLoading = false;
+        this.currentLoadingMore = false;
+      },
+    });
+  }
+
+  loadPast(reset = false): void {
+    if (reset) {
+      this.pastPage = 1;
+      this.pastLoading = true;
+    } else {
+      this.pastPage++;
+      this.pastLoadingMore = true;
+    }
+
+    this.lotService.getLots({ page: this.pastPage, limit: PAGE_SIZE, status: 'sold' }).subscribe({
+      next: (res) => {
+        this.pastLots = reset ? res.data : [...this.pastLots, ...res.data];
+        this.pastTotal = res.total;
+        this.sortPast();
+        this.pastLoading = false;
+        this.pastLoadingMore = false;
+      },
+      error: () => {
+        if (!reset) this.pastPage--;
+        this.pastLoading = false;
+        this.pastLoadingMore = false;
+      },
+    });
+  }
+
+  loadMoreUpcoming(): void {
+    if (!this.upcomingLoadingMore && this.hasMoreUpcoming) this.loadUpcoming(false);
+  }
+
+  loadMoreCurrent(): void {
+    if (!this.currentLoadingMore && this.hasMoreCurrent) this.loadCurrent(false);
+  }
+
+  loadMorePast(): void {
+    if (!this.pastLoadingMore && this.hasMorePast) this.loadPast(false);
+  }
+
+  private sortUpcoming(): void {
+    const now = Date.now();
+    this.upcomingLots.sort((a, b) => {
+      const aStart = new Date(a.auctionStartAt || a.auctionStart || 0).getTime();
+      const bStart = new Date(b.auctionStartAt || b.auctionStart || 0).getTime();
+      return Math.abs(aStart - now) - Math.abs(bStart - now);
+    });
+  }
+
+  private sortCurrent(): void {
+    this.currentLots.sort((a, b) => {
+      const aEnd = new Date(a.auctionEndAt || a.auctionEnd || 0).getTime();
+      const bEnd = new Date(b.auctionEndAt || b.auctionEnd || 0).getTime();
+      return aEnd - bEnd;
+    });
+  }
+
+  private sortPast(): void {
+    this.pastLots.sort((a, b) => {
+      const aEnd = new Date(a.auctionEndAt || a.auctionEnd || 0).getTime();
+      const bEnd = new Date(b.auctionEndAt || b.auctionEnd || 0).getTime();
+      return bEnd - aEnd;
+    });
+  }
+
+  // ─── Calendar ─────────────────────────────────────────────────────────────
 
   loadCalendarData(): void {
     const year = this.calendarYear;
@@ -154,19 +268,17 @@ export class SchedulePage implements OnInit {
     const dateFrom = new Date(year, month, 1).toISOString();
     const dateTo = new Date(year, month + 1, 1).toISOString();
 
-    this.listsLoading = true;
-    // Single query — fetch all lots with auctionStartAt in this month regardless of status,
-    // then classify client-side. Avoids missing lots that end up in unexpected statuses.
+    this.calendarLoading = true;
     this.lotService.getLots({ limit: 500, dateFrom, dateTo }).subscribe({
       next: (res) => {
         this.upcomingLots = res.data.filter(l => l.status === 'active');
         this.currentLots = res.data.filter(l => l.status === 'trading');
         this.pastLots = res.data.filter(l => !['active', 'trading'].includes(l.status));
-        this.listsLoading = false;
+        this.calendarLoading = false;
         this.buildCalendar();
       },
       error: () => {
-        this.listsLoading = false;
+        this.calendarLoading = false;
         this.buildCalendar();
       },
     });

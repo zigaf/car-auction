@@ -8,16 +8,17 @@
     <button class="tab-btn" [class.tab-btn--active]="activeTab === 'upcoming'" (click)="setTab('upcoming')">
       <span class="material-symbols-rounded">event_upcoming</span>
       Предстоящие
-      @if (upcomingLots.length > 0) { <span class="tab-badge">{{ upcomingLots.length }}</span> }
+      @if (upcomingTotal > 0) { <span class="tab-badge">{{ upcomingTotal }}</span> }
     </button>
     <button class="tab-btn" [class.tab-btn--active]="activeTab === 'current'" (click)="setTab('current')">
       <span class="material-symbols-rounded">live_tv</span>
       Текущие
-      @if (currentLots.length > 0) { <span class="tab-badge tab-badge--green">{{ currentLots.length }}</span> }
+      @if (currentTotal > 0) { <span class="tab-badge tab-badge--green">{{ currentTotal }}</span> }
     </button>
     <button class="tab-btn" [class.tab-btn--active]="activeTab === 'past'" (click)="setTab('past')">
       <span class="material-symbols-rounded">history</span>
       Прошедшие
+      @if (pastTotal > 0) { <span class="tab-badge">{{ pastTotal }}</span> }
     </button>
     <button class="tab-btn" [class.tab-btn--active]="activeTab === 'calendar'" (click)="setTab('calendar')">
       <span class="material-symbols-rounded">calendar_month</span>
@@ -29,16 +30,13 @@
     </button>
   </div>
 
-  <!-- Loading -->
-  @if (listsLoading && activeTab !== 'plan' && activeTab !== 'calendar') {
-    <div class="state-loading">
-      <span class="material-symbols-rounded spin">progress_activity</span>
-    </div>
-  }
-
   <!-- ── Upcoming ── -->
-  @if (activeTab === 'upcoming' && !listsLoading) {
-    @if (upcomingLots.length === 0) {
+  @if (activeTab === 'upcoming') {
+    @if (upcomingLoading) {
+      <div class="state-loading">
+        <span class="material-symbols-rounded spin">progress_activity</span>
+      </div>
+    } @else if (upcomingLots.length === 0) {
       <div class="empty-state">
         <span class="material-symbols-rounded">event_upcoming</span>
         <p>Нет запланированных аукционов</p>
@@ -86,12 +84,29 @@
           </tbody>
         </table>
       </div>
+      @if (hasMoreUpcoming) {
+        <div class="load-more-row">
+          <button class="btn btn--secondary" (click)="loadMoreUpcoming()" [disabled]="upcomingLoadingMore">
+            @if (upcomingLoadingMore) {
+              <span class="material-symbols-rounded spin">progress_activity</span>
+              Загрузка...
+            } @else {
+              Показать ещё
+            }
+          </button>
+          <span class="text-muted load-more-count">{{ upcomingLots.length }} из {{ upcomingTotal }}</span>
+        </div>
+      }
     }
   }
 
   <!-- ── Current ── -->
-  @if (activeTab === 'current' && !listsLoading) {
-    @if (currentLots.length === 0) {
+  @if (activeTab === 'current') {
+    @if (currentLoading) {
+      <div class="state-loading">
+        <span class="material-symbols-rounded spin">progress_activity</span>
+      </div>
+    } @else if (currentLots.length === 0) {
       <div class="empty-state">
         <span class="material-symbols-rounded">live_tv</span>
         <p>Нет активных торгов</p>
@@ -137,12 +152,29 @@
           </tbody>
         </table>
       </div>
+      @if (hasMoreCurrent) {
+        <div class="load-more-row">
+          <button class="btn btn--secondary" (click)="loadMoreCurrent()" [disabled]="currentLoadingMore">
+            @if (currentLoadingMore) {
+              <span class="material-symbols-rounded spin">progress_activity</span>
+              Загрузка...
+            } @else {
+              Показать ещё
+            }
+          </button>
+          <span class="text-muted load-more-count">{{ currentLots.length }} из {{ currentTotal }}</span>
+        </div>
+      }
     }
   }
 
   <!-- ── Past ── -->
-  @if (activeTab === 'past' && !listsLoading) {
-    @if (pastLots.length === 0) {
+  @if (activeTab === 'past') {
+    @if (pastLoading) {
+      <div class="state-loading">
+        <span class="material-symbols-rounded spin">progress_activity</span>
+      </div>
+    } @else if (pastLots.length === 0) {
       <div class="empty-state">
         <span class="material-symbols-rounded">history</span>
         <p>Нет завершённых аукционов</p>
@@ -186,6 +218,19 @@
           </tbody>
         </table>
       </div>
+      @if (hasMorePast) {
+        <div class="load-more-row">
+          <button class="btn btn--secondary" (click)="loadMorePast()" [disabled]="pastLoadingMore">
+            @if (pastLoadingMore) {
+              <span class="material-symbols-rounded spin">progress_activity</span>
+              Загрузка...
+            } @else {
+              Показать ещё
+            }
+          </button>
+          <span class="text-muted load-more-count">{{ pastLots.length }} из {{ pastTotal }}</span>
+        </div>
+      }
     }
   }
 
@@ -373,7 +418,7 @@
       }
 
       <!-- Calendar grid -->
-      @if (listsLoading) {
+      @if (calendarLoading) {
         <div class="state-loading">
           <span class="material-symbols-rounded spin">progress_activity</span>
         </div>
