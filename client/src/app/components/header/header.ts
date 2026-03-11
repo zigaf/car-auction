@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { CommonModule, AsyncPipe } from '@angular/common';
 import { Subject } from 'rxjs';
 import { takeUntil, filter, distinctUntilChanged, switchMap } from 'rxjs/operators';
@@ -26,6 +26,19 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   appState$ = this.stateService.appState$;
 
+  cabinetNavItems = [
+    { path: '/cabinet', label: 'Обзор', icon: 'dashboard', exact: true },
+    { path: '/cabinet/bids', label: 'Мои ставки', icon: 'gavel', exact: false },
+    { path: '/cabinet/orders', label: 'Заказы', icon: 'local_shipping', exact: false },
+    { path: '/cabinet/documents', label: 'Документы', icon: 'description', exact: false },
+    { path: '/cabinet/balance', label: 'Баланс', icon: 'account_balance_wallet', exact: false },
+    { path: '/cabinet/watchlist', label: 'Отслеживаемые', icon: 'favorite', exact: false },
+    { path: '/cabinet/calendar', label: 'Календарь', icon: 'calendar_month', exact: false },
+    { path: '/cabinet/notifications', label: 'Уведомления', icon: 'notifications', exact: false },
+    { path: '/cabinet/calculator', label: 'Калькулятор', icon: 'calculate', exact: false },
+    { path: '/cabinet/settings', label: 'Настройки', icon: 'settings', exact: false },
+  ];
+
   ngOnInit(): void {
     this.appState$
       .pipe(
@@ -35,6 +48,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
         switchMap(() => this.notificationService.getUnreadCount()),
       )
       .subscribe();
+
+    // Close drawer on route navigation
+    this.router.events
+      .pipe(
+        takeUntil(this.destroy$),
+        filter((e) => e instanceof NavigationEnd),
+      )
+      .subscribe(() => this.menuOpen.set(false));
   }
 
   ngOnDestroy(): void {
