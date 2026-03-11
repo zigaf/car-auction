@@ -104,11 +104,23 @@
 
 .lot-card__image {
   width: 100%;
-  height: 140px;
+  aspect-ratio: 16 / 10;
   background: $bg-elevated;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform $transition-base;
+  }
+
+  &:hover img {
+    transform: scale(1.05);
+  }
 
   .material-symbols-rounded { font-size: 40px; color: $text-tertiary; }
 }
@@ -165,19 +177,14 @@
   color: $text-primary;
 }
 
-.lot-card__meta {
-  text-align: right;
-}
-
-.lot-card__timer {
-  display: block;
-  font-size: $fs-sm;
-  color: $status-green;
-}
-
-.lot-card__bids {
+.lot-card__watchers {
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
   font-size: $fs-xs;
   color: $text-tertiary;
+
+  .material-symbols-rounded { font-size: 14px; }
 }
 
 .empty-state {

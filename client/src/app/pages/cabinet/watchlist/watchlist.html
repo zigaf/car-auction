@@ -119,6 +119,10 @@
                       <span class="lot-card__bid-value mono">{{ fav.lot.startingBid | number }} EUR</span>
                     </div>
                   }
+                  <span class="lot-card__watchers">
+                    <span class="material-symbols-rounded">visibility</span>
+                    {{ getWatcherCount(fav.lotId) }} отслеживают
+                  </span>
                 </div>
               </div>
             </div>
@@ -159,6 +163,12 @@
                       {{ item.lot!.fuelType }}
                     </span>
                   }
+                </div>
+                <div class="lot-card__footer">
+                  <span class="lot-card__watchers">
+                    <span class="material-symbols-rounded">visibility</span>
+                    {{ getWatcherCount(item.lot!.id) }} отслеживают
+                  </span>
                 </div>
               </div>
             </div>

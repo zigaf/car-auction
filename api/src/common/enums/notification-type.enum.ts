@@ -8,4 +8,5 @@ export enum NotificationType {
   BALANCE_CHANGED = 'balance_changed',
   ACTION_REQUIRED = 'action_required',
   CUSTOM_EMAIL = 'custom_email',
+  NEW_REVIEW = 'new_review',
 }

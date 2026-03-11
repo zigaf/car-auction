@@ -39,6 +39,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/contacts/contacts').then((m) => m.ContactsComponent),
   },
   {
+    path: 'reviews',
+    loadComponent: () => import('./pages/reviews/reviews').then((m) => m.ReviewsComponent),
+  },
+  {
     path: 'cabinet',
     loadComponent: () => import('./pages/cabinet/cabinet').then((m) => m.CabinetComponent),
     canActivate: [authGuard],

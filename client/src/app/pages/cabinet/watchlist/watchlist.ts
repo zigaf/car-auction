@@ -25,6 +25,9 @@ export class WatchlistComponent implements OnInit {
   loading = true;
   error = '';
 
+  // Watchers count per lot (random 3-51, adjusts on toggle)
+  private watcherCounts = new Map<string, number>();
+
   // Brand modal
   showBrandModal = false;
   brandSearch = '';
@@ -121,7 +124,17 @@ export class WatchlistComponent implements OnInit {
     });
   }
 
+  getWatcherCount(lotId: string): number {
+    if (!this.watcherCounts.has(lotId)) {
+      this.watcherCounts.set(lotId, Math.floor(Math.random() * 49) + 3);
+    }
+    return this.watcherCounts.get(lotId)!;
+  }
+
   removeFavorite(lotId: string): void {
+    const count = this.getWatcherCount(lotId);
+    this.watcherCounts.set(lotId, Math.max(1, count - 1));
+
     this.favoritesService.removeFavorite(lotId).subscribe({
       next: () => {
         this.favorites = this.favorites.filter(f => f.lotId !== lotId);

@@ -1,0 +1,190 @@
+<div class="reviews">
+  <div class="container">
+    <!-- Hero -->
+    <section class="reviews__hero">
+      <span class="reviews__badge">Отзывы клиентов</span>
+      <h1>Что говорят <span class="accent-text">наши клиенты</span></h1>
+      <p>Реальные отзывы покупателей, которые приобрели автомобили через нашу платформу. Мы ценим каждое мнение.</p>
+    </section>
+
+    <!-- Promo banner -->
+    <section class="reviews__promo">
+      <div class="promo-banner">
+        <div class="promo-banner__icon">
+          <span class="material-symbols-rounded">videocam</span>
+        </div>
+        <div class="promo-banner__content">
+          <h3 class="promo-banner__title">Акция: видео-отзыв = 100 USDT</h3>
+          <p class="promo-banner__text">Запиши видео-отзыв со своим авто, купленным через AutoBid, в апреле 2026 и получи кешбек <strong>100 USDT</strong> на баланс.</p>
+        </div>
+        <a routerLink="/contacts" class="promo-banner__btn">Подробнее</a>
+      </div>
+    </section>
+
+    @if (error) {
+      <div class="reviews__error">
+        <span class="material-symbols-rounded">error</span>
+        <p>{{ error }}</p>
+      </div>
+    }
+
+    @if (loading) {
+      <div class="reviews__loading">
+        <span class="material-symbols-rounded spin">progress_activity</span>
+        <p>Загрузка отзывов...</p>
+      </div>
+    }
+
+    @if (!loading && !error) {
+      <!-- Stats -->
+      @if (stats) {
+        <section class="reviews__stats-section">
+          <div class="reviews__stats-card">
+            <div class="reviews__avg">
+              <span class="reviews__avg-value mono">{{ stats.average }}</span>
+              <div class="reviews__avg-stars">
+                @for (s of getStars(5); track s) {
+                  <span class="material-symbols-rounded" [class.star--filled]="s <= stats.average" [class.star--half]="s > stats.average && s < stats.average + 1">star</span>
+                }
+              </div>
+              <span class="reviews__avg-count">{{ stats.total }} отзывов</span>
+            </div>
+            <div class="reviews__distribution">
+              @for (star of [5, 4, 3, 2, 1]; track star) {
+                <div class="reviews__dist-row">
+                  <span class="reviews__dist-label">{{ star }}</span>
+                  <span class="material-symbols-rounded reviews__dist-star">star</span>
+                  <div class="reviews__dist-bar">
+                    <div class="reviews__dist-fill" [style.width.%]="getPercentage(stats.distribution[star])"></div>
+                  </div>
+                  <span class="reviews__dist-count mono">{{ stats.distribution[star] }}</span>
+                </div>
+              }
+            </div>
+          </div>
+          <div class="reviews__stats-action">
+            @if (isAuthenticated) {
+              <button class="reviews__write-btn" (click)="openModal()">
+                <span class="material-symbols-rounded">edit</span>
+                Оставить отзыв
+              </button>
+            } @else {
+              <a routerLink="/login" class="reviews__write-btn">
+                <span class="material-symbols-rounded">login</span>
+                Войдите, чтобы оставить отзыв
+              </a>
+            }
+          </div>
+        </section>
+      }
+
+      <!-- Reviews list -->
+      <section class="reviews__list">
+        @for (review of reviews; track review.id) {
+          <div class="review-card">
+            <div class="review-card__header">
+              <div class="review-card__avatar">{{ getInitial(review.authorName) }}</div>
+              <div class="review-card__meta">
+                <span class="review-card__name">{{ review.authorName }}</span>
+                <span class="review-card__date">{{ formatDate(review.createdAt) }}</span>
+              </div>
+              <div class="review-card__stars">
+                @for (s of getStars(5); track s) {
+                  <span class="material-symbols-rounded" [class.star--filled]="s <= review.rating">star</span>
+                }
+              </div>
+            </div>
+            <p class="review-card__text">{{ review.text }}</p>
+          </div>
+        }
+      </section>
+
+      <!-- Load more -->
+      @if (hasMore) {
+        <div class="reviews__load-more">
+          <button class="reviews__more-btn" (click)="loadMore()" [disabled]="loadingMore">
+            @if (loadingMore) {
+              <span class="material-symbols-rounded spin">progress_activity</span>
+              Загрузка...
+            } @else {
+              Показать ещё
+            }
+          </button>
+        </div>
+      }
+
+      @if (reviews.length === 0) {
+        <div class="reviews__empty">
+          <span class="material-symbols-rounded">rate_review</span>
+          <p>Отзывов пока нет. Будьте первым!</p>
+        </div>
+      }
+    }
+
+    <!-- Review modal -->
+    @if (showModal) {
+      <div class="review-modal-overlay" (click)="closeModal()">
+        <div class="review-modal" (click)="$event.stopPropagation()">
+          @if (submitSuccess) {
+            <div class="review-modal__success">
+              <span class="material-symbols-rounded">check_circle</span>
+              <h3>Спасибо за отзыв!</h3>
+              <p>Ваш отзыв успешно опубликован.</p>
+            </div>
+          } @else {
+            <div class="review-modal__header">
+              <h3 class="review-modal__title">Оставить отзыв</h3>
+              <button class="review-modal__close" (click)="closeModal()">
+                <span class="material-symbols-rounded">close</span>
+              </button>
+            </div>
+            <div class="review-modal__body">
+              <div class="review-modal__rating">
+                <span class="review-modal__rating-label">Ваша оценка</span>
+                <div class="review-modal__stars">
+                  @for (s of getStars(5); track s) {
+                    <button
+                      class="review-modal__star-btn"
+                      [class.star--filled]="s <= (modalHoverRating || modalRating)"
+                      (click)="setRating(s)"
+                      (mouseenter)="setHoverRating(s)"
+                      (mouseleave)="setHoverRating(0)"
+                    >
+                      <span class="material-symbols-rounded">star</span>
+                    </button>
+                  }
+                </div>
+              </div>
+              <div class="review-modal__field">
+                <label class="review-modal__label">Ваш отзыв</label>
+                <textarea
+                  class="review-modal__textarea"
+                  [(ngModel)]="modalText"
+                  placeholder="Расскажите о вашем опыте покупки автомобиля через AutoBid..."
+                  rows="5"
+                  maxlength="2000"
+                ></textarea>
+                <span class="review-modal__counter">{{ modalText.length }} / 2000</span>
+              </div>
+            </div>
+            <div class="review-modal__footer">
+              <button class="review-modal__cancel" (click)="closeModal()">Отмена</button>
+              <button
+                class="review-modal__submit"
+                (click)="submitReview()"
+                [disabled]="submitting || modalRating === 0 || !modalText.trim()"
+              >
+                @if (submitting) {
+                  <span class="material-symbols-rounded spin">progress_activity</span>
+                  Отправка...
+                } @else {
+                  Опубликовать
+                }
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

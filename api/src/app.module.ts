@@ -18,6 +18,7 @@ import { TaskModule } from './modules/task/task.module';
 import { BotModule } from './modules/bot/bot.module';
 import { SystemModule } from './modules/system/system.module';
 import { BrokerModule } from './modules/broker/broker.module';
+import { ReviewsModule } from './modules/reviews/reviews.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { BrokerModule } from './modules/broker/broker.module';
     BotModule,
     SystemModule,
     BrokerModule,
+    ReviewsModule,
   ],
 })
 export class AppModule {}
