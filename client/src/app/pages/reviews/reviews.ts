@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -13,9 +13,10 @@ import { IReview, IReviewStats } from '../../models/review.model';
   templateUrl: './reviews.html',
   styleUrl: './reviews.scss',
 })
-export class ReviewsComponent implements OnInit {
+export class ReviewsComponent implements OnInit, OnDestroy {
   private readonly reviewsService = inject(ReviewsService);
   private readonly stateService = inject(StateService);
+  private countdownInterval: ReturnType<typeof setInterval> | null = null;
 
   reviews: IReview[] = [];
   stats: IReviewStats | null = null;
@@ -25,6 +26,12 @@ export class ReviewsComponent implements OnInit {
   page = 1;
   limit = 20;
   total = 0;
+
+  // Countdown to promo start (April 1, 2026)
+  promoDays = 0;
+  promoHours = 0;
+  promoMinutes = 0;
+  promoSeconds = 0;
 
   // Modal state
   showModal = false;
@@ -52,6 +59,25 @@ export class ReviewsComponent implements OnInit {
   ngOnInit(): void {
     this.loadReviews();
     this.loadStats();
+    this.updateCountdown();
+    this.countdownInterval = setInterval(() => this.updateCountdown(), 1000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
+    }
+  }
+
+  private updateCountdown(): void {
+    const target = new Date('2026-04-01T00:00:00').getTime();
+    const now = Date.now();
+    const diff = Math.max(0, target - now);
+
+    this.promoDays = Math.floor(diff / (1000 * 60 * 60 * 24));
+    this.promoHours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    this.promoMinutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    this.promoSeconds = Math.floor((diff % (1000 * 60)) / 1000);
   }
 
   private loadReviews(): void {

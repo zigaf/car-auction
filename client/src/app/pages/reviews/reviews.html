@@ -16,6 +16,30 @@
         <div class="promo-banner__content">
           <h3 class="promo-banner__title">Акция: видео-отзыв = 100 USDT</h3>
           <p class="promo-banner__text">Запиши видео-отзыв со своим авто, купленным через AutoBid, в апреле 2026 и получи кешбек <strong>100 USDT</strong> на баланс.</p>
+          <div class="promo-banner__countdown">
+            <span class="promo-banner__countdown-label">До старта акции:</span>
+            <div class="promo-banner__timer">
+              <div class="promo-banner__timer-cell">
+                <span class="promo-banner__timer-value">{{ promoDays }}</span>
+                <span class="promo-banner__timer-unit">дн</span>
+              </div>
+              <span class="promo-banner__timer-sep">:</span>
+              <div class="promo-banner__timer-cell">
+                <span class="promo-banner__timer-value">{{ promoHours.toString().padStart(2, '0') }}</span>
+                <span class="promo-banner__timer-unit">ч</span>
+              </div>
+              <span class="promo-banner__timer-sep">:</span>
+              <div class="promo-banner__timer-cell">
+                <span class="promo-banner__timer-value">{{ promoMinutes.toString().padStart(2, '0') }}</span>
+                <span class="promo-banner__timer-unit">мин</span>
+              </div>
+              <span class="promo-banner__timer-sep">:</span>
+              <div class="promo-banner__timer-cell">
+                <span class="promo-banner__timer-value">{{ promoSeconds.toString().padStart(2, '0') }}</span>
+                <span class="promo-banner__timer-unit">сек</span>
+              </div>
+            </div>
+          </div>
         </div>
         <a routerLink="/contacts" class="promo-banner__btn">Подробнее</a>
       </div>
