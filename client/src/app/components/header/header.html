@@ -5,8 +5,8 @@
     </a>
 
     <nav class="header__nav">
-      <a routerLink="/catalog" routerLinkActive="active" class="header__nav-link">Аукционы</a>
-      <a routerLink="/live" routerLinkActive="active" class="header__nav-link">Результаты</a>
+      <a routerLink="/catalog" routerLinkActive="active" class="header__nav-link">Каталог</a>
+      <a routerLink="/auctions" routerLinkActive="active" class="header__nav-link">Аукционы</a>
       <a routerLink="/about" routerLinkActive="active" class="header__nav-link">О нас</a>
       <a routerLink="/reviews" routerLinkActive="active" class="header__nav-link">Отзывы</a>
     </nav>
@@ -63,11 +63,11 @@
   <nav class="drawer__nav">
     <a routerLink="/catalog" routerLinkActive="active" class="drawer__link" (click)="menuOpen.set(false)">
       <span class="material-symbols-rounded">directions_car</span>
-      Аукционы
+      Каталог
     </a>
-    <a routerLink="/live" routerLinkActive="active" class="drawer__link" (click)="menuOpen.set(false)">
-      <span class="material-symbols-rounded">live_tv</span>
-      Результаты
+    <a routerLink="/auctions" routerLinkActive="active" class="drawer__link" (click)="menuOpen.set(false)">
+      <span class="material-symbols-rounded">gavel</span>
+      Аукционы
     </a>
     <a routerLink="/about" routerLinkActive="active" class="drawer__link" (click)="menuOpen.set(false)">
       <span class="material-symbols-rounded">info</span>

@@ -121,6 +121,9 @@ export interface ILotFilter {
   sort?: string;
   page?: number;
   limit?: number;
+  status?: string;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 export interface IPaginatedResponse<T> {
