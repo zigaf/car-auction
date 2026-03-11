@@ -70,7 +70,6 @@
 // --- Search ---
 .header__search {
   flex: 1;
-  max-width: 320px;
   position: relative;
   display: flex;
   align-items: center;
@@ -332,7 +331,7 @@
   }
 
   .header__search {
-    max-width: 200px;
+    flex: 1;
   }
 
   .drawer-backdrop,
