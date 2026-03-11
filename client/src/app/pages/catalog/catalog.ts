@@ -7,7 +7,10 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { LotService } from '../../core/services/lot.service';
+import { FavoritesService } from '../../core/services/favorites.service';
 import { AuctionStateService } from '../../core/services/auction-state.service';
+import { StateService } from '../../core/services/state.service';
+import { ToastService } from '../../core/services/toast.service';
 import { ILot, ILotFilter, LotStatus } from '../../models/lot.model';
 import { AppBrandIconComponent } from '../../shared/components/brand-icon/brand-icon.component';
 
@@ -20,10 +23,15 @@ import { AppBrandIconComponent } from '../../shared/components/brand-icon/brand-
 })
 export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly lotService = inject(LotService);
+  private readonly favoritesService = inject(FavoritesService);
   private readonly auctionState = inject(AuctionStateService);
+  private readonly stateService = inject(StateService);
+  private readonly toastService = inject(ToastService);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly destroy$ = new Subject<void>();
   private observer: IntersectionObserver | null = null;
+
+  favoriteIds = new Set<string>();
 
   @ViewChild('scrollAnchor') scrollAnchor!: ElementRef<HTMLDivElement>;
 
@@ -79,6 +87,7 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit(): void {
     this.loadBrands();
     this.loadLots();
+    this.loadFavorites();
 
     // Reactively patch lot prices when WebSocket bid events arrive
     this.auctionState.priceUpdate$
@@ -228,6 +237,36 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
       engineCapacityFrom: this.filters.engineCapacityFrom ?? undefined,
       engineCapacityTo: this.filters.engineCapacityTo ?? undefined,
     };
+  }
+
+  // ─── Favorites ──────────────────────────────────────────────────────────
+
+  private loadFavorites(): void {
+    if (!this.stateService.snapshot.isAuthenticated) return;
+    this.favoritesService.getFavorites(1, 200).subscribe({
+      next: (res) => {
+        this.favoriteIds = new Set(res.data.map((f) => f.lot.id));
+      },
+    });
+  }
+
+  isFavorite(lotId: string): boolean {
+    return this.favoriteIds.has(lotId);
+  }
+
+  toggleFavorite(lot: ILot): void {
+    if (!this.stateService.snapshot.isAuthenticated) {
+      this.toastService.info('Войдите в аккаунт, чтобы добавить в избранное');
+      return;
+    }
+
+    if (this.favoriteIds.has(lot.id)) {
+      this.favoriteIds.delete(lot.id);
+      this.favoritesService.removeFavorite(lot.id).subscribe();
+    } else {
+      this.favoriteIds.add(lot.id);
+      this.favoritesService.addFavorite(lot.id).subscribe();
+    }
   }
 
   // ─── Real-time helpers ────────────────────────────────────────────────────

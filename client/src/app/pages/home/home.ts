@@ -1,4 +1,5 @@
-import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, AfterViewInit, OnDestroy, ChangeDetectorRef, ViewChild, ElementRef, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { forkJoin } from 'rxjs';
@@ -14,9 +15,15 @@ import { AppBrandIconComponent } from '../../shared/components/brand-icon/brand-
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly lotService = inject(LotService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly platformId = inject(PLATFORM_ID);
+
+  @ViewChild('recentTrack') recentTrack!: ElementRef<HTMLDivElement>;
+  activeRecentDot = 0;
+  recentDotCount = 0;
+  private scrollHandler: (() => void) | null = null;
 
   loading = true;
   lots: ILot[] = [];
@@ -40,6 +47,56 @@ export class HomeComponent implements OnInit {
     this.loadData();
   }
 
+  ngAfterViewInit(): void {
+    this.setupRecentDots();
+  }
+
+  ngOnDestroy(): void {
+    if (this.scrollHandler && this.recentTrack?.nativeElement) {
+      this.recentTrack.nativeElement.removeEventListener('scroll', this.scrollHandler);
+    }
+  }
+
+  private setupRecentDots(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    setTimeout(() => {
+      const el = this.recentTrack?.nativeElement;
+      if (!el) return;
+      this.updateDotCount(el);
+      this.scrollHandler = () => this.onRecentScroll(el);
+      el.addEventListener('scroll', this.scrollHandler, { passive: true });
+    });
+  }
+
+  private updateDotCount(el: HTMLElement): void {
+    const card = el.querySelector('.ending-soon__card') as HTMLElement;
+    if (!card) return;
+    const cardWidth = card.offsetWidth + parseInt(getComputedStyle(el).gap || '0', 10);
+    const visibleCards = Math.floor(el.clientWidth / cardWidth) || 1;
+    const totalCards = el.children.length;
+    this.recentDotCount = Math.max(1, totalCards - visibleCards + 1);
+  }
+
+  private onRecentScroll(el: HTMLElement): void {
+    const card = el.querySelector('.ending-soon__card') as HTMLElement;
+    if (!card) return;
+    const cardWidth = card.offsetWidth + parseInt(getComputedStyle(el).gap || '0', 10);
+    const index = Math.round(el.scrollLeft / cardWidth);
+    if (index !== this.activeRecentDot) {
+      this.activeRecentDot = index;
+      this.cdr.detectChanges();
+    }
+  }
+
+  scrollToRecentDot(index: number): void {
+    const el = this.recentTrack?.nativeElement;
+    if (!el) return;
+    const card = el.querySelector('.ending-soon__card') as HTMLElement;
+    if (!card) return;
+    const cardWidth = card.offsetWidth + parseInt(getComputedStyle(el).gap || '0', 10);
+    el.scrollTo({ left: index * cardWidth, behavior: 'smooth' });
+  }
+
   loadData(): void {
     this.loading = true;
 
@@ -55,6 +112,8 @@ export class HomeComponent implements OnInit {
         this.brands = result.brands || [];
         this.stats = result.stats;
         this.loading = false;
+        this.cdr.detectChanges();
+        this.setupRecentDots();
       },
       error: () => {
         this.loading = false;

@@ -33,6 +33,10 @@
   height: 44px;
   width: auto;
   display: block;
+
+  @media (max-width: $bp-mobile) {
+    height: 36px;
+  }
 }
 
 // --- Navigation ---

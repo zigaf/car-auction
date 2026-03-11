@@ -674,11 +674,37 @@
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: $space-md;
-  @include custom-scrollbar;
+  scrollbar-width: none;
 
   &::-webkit-scrollbar {
-    height: 4px;
+    display: none;
+  }
+}
+
+.ending-soon__dots {
+  display: flex;
+  justify-content: center;
+  gap: $space-sm;
+  padding-top: $space-lg;
+}
+
+.ending-soon__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: $radius-round;
+  border: none;
+  padding: 0;
+  background: $border-color;
+  cursor: pointer;
+  transition: background $transition-fast, transform $transition-fast;
+
+  &:hover {
+    background: $text-tertiary;
+  }
+
+  &--active {
+    background: $accent;
+    transform: scale(1.3);
   }
 }
 
@@ -891,11 +917,17 @@
   @include tablet {
     justify-content: center;
   }
+
+  @include mobile {
+    flex-direction: column;
+    width: 100%;
+  }
 }
 
 .cta-banner__btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: $space-sm;
   padding: $space-md $space-lg;
   font-family: $font-ui;
@@ -909,6 +941,10 @@
   .material-symbols-rounded { font-size: 20px; }
 
   &:active { transform: scale(0.97); }
+
+  @include mobile {
+    width: 100%;
+  }
 
   &--primary {
     background: #FFFFFF;
@@ -976,6 +1012,11 @@
     font-weight: $fw-medium;
     white-space: nowrap;
   }
+
+  @include mobile {
+    justify-content: center;
+    width: 100%;
+  }
 }
 
 // --- Sections ---
@@ -1001,7 +1042,7 @@
 
   @include mobile {
     grid-template-columns: 1fr;
-    gap: $space-lg;
+    gap: 0;
   }
 }
 
@@ -1023,6 +1064,24 @@
   position: relative;
   z-index: 1;
   padding: 0 $space-xs;
+
+  @include mobile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: $space-lg 0;
+
+    &:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: $space-lg;
+      background: $border-color;
+    }
+  }
 }
 
 .step--down {

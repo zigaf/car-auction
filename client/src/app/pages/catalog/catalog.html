@@ -158,8 +158,9 @@
             @if (lot.buyNowPrice) {
             <span class="lot-card__buynow-tag">Buy Now</span>
             }
-            <button class="lot-card__like" (click)="$event.preventDefault(); $event.stopPropagation()">
-              <span class="material-symbols-rounded">favorite</span>
+            <button class="lot-card__like" [class.lot-card__like--active]="isFavorite(lot.id)"
+              (click)="$event.preventDefault(); $event.stopPropagation(); toggleFavorite(lot)">
+              <span class="material-symbols-rounded">{{ isFavorite(lot.id) ? 'favorite' : 'favorite_border' }}</span>
             </button>
           </div>
 

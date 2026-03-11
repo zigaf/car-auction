@@ -409,6 +409,22 @@
       color: $status-red;
     }
   }
+
+  &--active {
+    background: rgba($status-red, 0.85);
+
+    .material-symbols-rounded {
+      color: #FFFFFF;
+    }
+
+    &:hover {
+      background: rgba($status-red, 0.7);
+
+      .material-symbols-rounded {
+        color: #FFFFFF;
+      }
+    }
+  }
 }
 
 // --- Card Body ---

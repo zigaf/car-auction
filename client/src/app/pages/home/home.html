@@ -130,7 +130,7 @@
         <span class="material-symbols-rounded">arrow_forward</span>
       </a>
     </div>
-    <div class="ending-soon__track">
+    <div class="ending-soon__track" #recentTrack>
       @for (lot of recentLots; track lot.id) {
       <div class="ending-soon__card">
         <a [routerLink]="['/catalog', lot.id]" class="ending-soon__image-wrap">
@@ -160,6 +160,14 @@
       </div>
       }
     </div>
+    @if (recentDotCount > 1) {
+    <div class="ending-soon__dots">
+      @for (dot of [].constructor(recentDotCount); track $index) {
+      <button class="ending-soon__dot" [class.ending-soon__dot--active]="$index === activeRecentDot"
+        (click)="scrollToRecentDot($index)"></button>
+      }
+    </div>
+    }
   </div>
 </section>
 }
