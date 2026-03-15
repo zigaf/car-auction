@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { DocumentsService, IDocument } from '../../core/services/documents.service';
+import { environment } from '../../../environments/environment';
 
 const STATUS_LABELS: Record<string, string | undefined> = {
   pending: 'На проверке',
@@ -104,6 +105,10 @@ export class DocumentsPage implements OnInit {
   }
 
   openFile(url: string): void {
-    window.open(url, '_blank');
+    if (!url) return;
+    const fullUrl = url.startsWith('http')
+      ? url
+      : `${environment.apiUrl.replace('/api', '')}${url}`;
+    window.open(fullUrl, '_blank');
   }
 }

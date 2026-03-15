@@ -20,6 +20,43 @@
     </div>
   }
 
+  @if (!loading && !error) {
+    <div class="required-docs">
+      <h2 class="required-docs__title">
+        <span class="material-symbols-rounded">checklist</span>
+        Необходимые документы
+      </h2>
+      <div class="required-docs__list">
+        @for (req of requiredDocs; track req.type) {
+          <div class="req-doc" [class.req-doc--done]="getDocStatus(req.type) === 'approved'"
+               [class.req-doc--pending]="getDocStatus(req.type) === 'pending'"
+               [class.req-doc--rejected]="getDocStatus(req.type) === 'rejected'">
+            <span class="material-symbols-rounded req-doc__status-icon">{{ getDocStatusIcon(req.type) }}</span>
+            <div class="req-doc__info">
+              <span class="req-doc__label">{{ req.label }}</span>
+              <span class="req-doc__desc">{{ req.description }}</span>
+            </div>
+            @if (getDocStatus(req.type) === 'none') {
+              <button class="req-doc__action" (click)="uploadRequired(req.type)">
+                <span class="material-symbols-rounded">upload</span>
+                Загрузить
+              </button>
+            } @else if (getDocStatus(req.type) === 'rejected') {
+              <button class="req-doc__action req-doc__action--retry" (click)="uploadRequired(req.type)">
+                <span class="material-symbols-rounded">refresh</span>
+                Повторить
+              </button>
+            } @else if (getDocStatus(req.type) === 'pending') {
+              <span class="req-doc__badge req-doc__badge--pending">На проверке</span>
+            } @else {
+              <span class="req-doc__badge req-doc__badge--approved">Подтверждён</span>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+
   @if (!loading && !error && documents.length > 0) {
     <div class="documents__table-wrapper">
       <div class="documents__table">

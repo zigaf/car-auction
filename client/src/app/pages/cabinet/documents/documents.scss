@@ -35,6 +35,146 @@
   .material-symbols-rounded { font-size: 18px; }
 }
 
+// ─── Required documents checklist ───────────────────────────────────────
+
+.required-docs {
+  @include panel;
+  padding: $space-lg;
+  margin-bottom: $space-xl;
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: $space-sm;
+    margin: 0 0 $space-lg;
+    font-size: $fs-base;
+    font-weight: $fw-bold;
+    color: $text-primary;
+
+    .material-symbols-rounded {
+      font-size: 20px;
+      color: $accent;
+    }
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: $space-sm;
+  }
+}
+
+.req-doc {
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+  padding: $space-md;
+  border-radius: $radius-base;
+  border: 1px solid $border-color;
+  transition: all $transition-fast;
+
+  &:hover { background: $accent-subtle; }
+
+  &--done {
+    border-color: rgba(94, 237, 181, 0.3);
+    background: rgba(94, 237, 181, 0.04);
+  }
+
+  &--pending {
+    border-color: rgba(232, 192, 90, 0.3);
+    background: rgba(232, 192, 90, 0.04);
+  }
+
+  &--rejected {
+    border-color: rgba(240, 112, 112, 0.3);
+    background: rgba(240, 112, 112, 0.04);
+  }
+
+  &__status-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+    color: $text-tertiary;
+
+    .req-doc--done & { color: $status-green; }
+    .req-doc--pending & { color: $status-yellow; }
+    .req-doc--rejected & { color: $status-red; }
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__label {
+    font-size: $fs-sm;
+    font-weight: $fw-semibold;
+    color: $text-primary;
+  }
+
+  &__desc {
+    font-size: $fs-xs;
+    color: $text-tertiary;
+  }
+
+  &__action {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-xs;
+    padding: $space-xs $space-md;
+    background: $accent;
+    color: #fff;
+    border: none;
+    border-radius: $radius-chip;
+    font-family: $font-ui;
+    font-size: $fs-xs;
+    font-weight: $fw-semibold;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background $transition-fast;
+
+    &:hover { background: $accent-hover; }
+
+    .material-symbols-rounded { font-size: 16px; }
+
+    &--retry {
+      background: transparent;
+      color: $accent;
+      border: 1px solid $accent;
+
+      &:hover { background: $accent-subtle; }
+    }
+  }
+
+  &__badge {
+    padding: $space-xs $space-md;
+    border-radius: $radius-chip;
+    font-size: $fs-xs;
+    font-weight: $fw-semibold;
+    white-space: nowrap;
+
+    &--pending {
+      background: rgba(232, 192, 90, 0.12);
+      color: $status-yellow;
+    }
+
+    &--approved {
+      background: rgba(94, 237, 181, 0.12);
+      color: $status-green;
+    }
+  }
+
+  @include mobile {
+    flex-wrap: wrap;
+
+    &__info { flex-basis: calc(100% - 38px); }
+    &__action,
+    &__badge { margin-left: 38px; }
+  }
+}
+
 .documents__table-wrapper {
   @include panel;
   padding: $space-lg;

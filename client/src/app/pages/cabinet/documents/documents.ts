@@ -36,6 +36,34 @@ export class DocumentsComponent implements OnInit {
     { value: DocumentType.OTHER, label: 'Другое' },
   ];
 
+  readonly requiredDocs: { type: DocumentType; label: string; icon: string; description: string }[] = [
+    { type: DocumentType.PASSPORT, label: 'Паспорт / ID', icon: 'badge', description: 'Скан или фото основного разворота' },
+    { type: DocumentType.POWER_OF_ATTORNEY, label: 'Доверенность', icon: 'gavel', description: 'Если действуете от лица компании' },
+  ];
+
+  getDocStatus(type: DocumentType): 'none' | 'pending' | 'approved' | 'rejected' {
+    const doc = this.documents.find(d => d.type === type);
+    if (!doc) return 'none';
+    return doc.status as 'pending' | 'approved' | 'rejected';
+  }
+
+  getDocStatusIcon(type: DocumentType): string {
+    switch (this.getDocStatus(type)) {
+      case 'approved': return 'check_circle';
+      case 'pending': return 'schedule';
+      case 'rejected': return 'cancel';
+      default: return 'radio_button_unchecked';
+    }
+  }
+
+  uploadRequired(type: DocumentType): void {
+    this.uploadType = type;
+    this.showUploadModal = true;
+    this.selectedFile = null;
+    this.selectedFileName = '';
+    this.uploadError = '';
+  }
+
   ngOnInit(): void {
     this.loadDocuments();
   }

@@ -6,6 +6,7 @@ import { UserService, IUser } from '../../../core/services/user.service';
 import { BalanceService, IBalanceTransaction, ITransactionsResponse } from '../../../core/services/balance.service';
 import { DocumentsService, IDocument } from '../../../core/services/documents.service';
 import { UserTasksComponent } from '../../../components/user-tasks/user-tasks.component';
+import { environment } from '../../../../environments/environment';
 
 const RESTRICTED_COUNTRY_FLAGS = ['🇷🇺', '🇧🇾'];
 
@@ -332,7 +333,11 @@ export class UserDetailComponent implements OnInit {
   }
 
   openDocFile(url: string): void {
-    window.open(url, '_blank');
+    if (!url) return;
+    const fullUrl = url.startsWith('http')
+      ? url
+      : `${environment.apiUrl.replace('/api', '')}${url}`;
+    window.open(fullUrl, '_blank');
   }
 
   approveDoc(doc: IDocument): void {
