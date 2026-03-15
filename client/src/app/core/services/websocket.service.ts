@@ -9,6 +9,9 @@ import {
   IFeedUpdate,
   IPlaceBidResult,
   IWatcherCount,
+  IBidRollback,
+  IAuctionPaused,
+  IAuctionResumed,
 } from '../../models/auction.model';
 
 @Injectable({ providedIn: 'root' })
@@ -26,9 +29,11 @@ export class WebsocketService implements OnDestroy {
   private readonly _bidPlaced$ = new Subject<IPlaceBidResult>();
   private readonly _bidError$ = new Subject<{ message: string }>();
   private readonly _watcherCount$ = new Subject<IWatcherCount>();
+  private readonly _bidRollback$ = new Subject<IBidRollback>();
+  private readonly _auctionPaused$ = new Subject<IAuctionPaused>();
+  private readonly _auctionResumed$ = new Subject<IAuctionResumed>();
 
   readonly connected$: Observable<boolean> = this._connected$.asObservable();
-  /** Emits whenever the socket reconnects after a previous disconnect. */
   readonly reconnected$: Observable<void> = this._reconnected$.asObservable();
   readonly bidUpdate$: Observable<IBidUpdate> = this._bidUpdate$.asObservable();
   readonly auctionExtended$: Observable<IAuctionExtended> = this._auctionExtended$.asObservable();
@@ -37,6 +42,9 @@ export class WebsocketService implements OnDestroy {
   readonly bidPlaced$: Observable<IPlaceBidResult> = this._bidPlaced$.asObservable();
   readonly bidError$: Observable<{ message: string }> = this._bidError$.asObservable();
   readonly watcherCount$: Observable<IWatcherCount> = this._watcherCount$.asObservable();
+  readonly bidRollback$: Observable<IBidRollback> = this._bidRollback$.asObservable();
+  readonly auctionPaused$: Observable<IAuctionPaused> = this._auctionPaused$.asObservable();
+  readonly auctionResumed$: Observable<IAuctionResumed> = this._auctionResumed$.asObservable();
 
   connect(): void {
     if (typeof window === 'undefined') return;
@@ -90,6 +98,18 @@ export class WebsocketService implements OnDestroy {
 
       this.socket.on('watcher_count', (data: IWatcherCount) => {
         this._watcherCount$.next(data);
+      });
+
+      this.socket.on('bid_rollback', (data: IBidRollback) => {
+        this._bidRollback$.next(data);
+      });
+
+      this.socket.on('auction_paused', (data: IAuctionPaused) => {
+        this._auctionPaused$.next(data);
+      });
+
+      this.socket.on('auction_resumed', (data: IAuctionResumed) => {
+        this._auctionResumed$.next(data);
       });
 
       this.socket.on('connect_error', (err: Error) => {
@@ -202,5 +222,8 @@ export class WebsocketService implements OnDestroy {
     this._connected$.complete();
     this._reconnected$.complete();
     this._watcherCount$.complete();
+    this._bidRollback$.complete();
+    this._auctionPaused$.complete();
+    this._auctionResumed$.complete();
   }
 }

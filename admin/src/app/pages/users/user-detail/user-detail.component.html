@@ -44,6 +44,12 @@
       <button class="tab-btn" [class.tab-btn--active]="activeTab === 'tasks'" (click)="activeTab = 'tasks'">
         <span class="material-symbols-rounded">checklist</span> Задачи
       </button>
+      <button class="tab-btn" [class.tab-btn--active]="activeTab === 'docs'" (click)="openDocsTab()">
+        <span class="material-symbols-rounded">description</span> Документы
+        @if (userDocsCount > 0) {
+          <span class="tab-badge">{{ userDocsCount }}</span>
+        }
+      </button>
     </div>
 
     <!-- INFO TAB -->
@@ -330,6 +336,79 @@
     <!-- TASKS TAB -->
     @if (activeTab === 'tasks') {
       <app-user-tasks [userId]="userId" />
+    }
+
+    <!-- DOCUMENTS TAB -->
+    @if (activeTab === 'docs') {
+      @if (docsLoading) {
+        <div class="state-loading">
+          <span class="material-symbols-rounded spin">progress_activity</span>
+        </div>
+      }
+
+      @if (!docsLoading) {
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-header__title">
+              <span class="material-symbols-rounded">description</span>
+              Документы клиента
+            </h3>
+            <span class="badge" [class]="user?.isVerified ? 'badge--green' : 'badge--amber'">
+              {{ user?.isVerified ? 'KYC подтверждён' : 'KYC не подтверждён' }}
+            </span>
+          </div>
+
+          @if (userDocs.length === 0) {
+            <div class="empty-state-sm">
+              <span class="material-symbols-rounded">folder_off</span>
+              <p>Клиент ещё не загрузил документы</p>
+            </div>
+          }
+
+          @if (userDocs.length > 0) {
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Файл</th>
+                    <th>Тип</th>
+                    <th>Статус</th>
+                    <th>Загружен</th>
+                    <th>Действия</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (doc of userDocs; track doc.id) {
+                    <tr>
+                      <td>{{ doc.fileName || 'Документ' }}</td>
+                      <td>{{ getDocTypeLabel(doc.type) }}</td>
+                      <td>
+                        <span class="badge" [class]="doc.status === 'approved' ? 'badge--green' : doc.status === 'rejected' ? 'badge--red' : 'badge--amber'">
+                          {{ getDocStatusLabel(doc.status) }}
+                        </span>
+                      </td>
+                      <td class="text-muted">{{ doc.createdAt | date:'dd.MM.yy HH:mm' }}</td>
+                      <td class="actions-cell">
+                        <button class="btn btn--ghost btn--sm" (click)="openDocFile(doc.fileUrl)">
+                          <span class="material-symbols-rounded">open_in_new</span>
+                        </button>
+                        @if (doc.status === 'pending') {
+                          <button class="btn btn--sm btn--primary" (click)="approveDoc(doc)">
+                            <span class="material-symbols-rounded">check</span>
+                          </button>
+                          <button class="btn btn--sm btn--danger" (click)="rejectDoc(doc)">
+                            <span class="material-symbols-rounded">close</span>
+                          </button>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      }
     }
   }
 </div>

@@ -436,6 +436,35 @@
   flex-wrap: wrap;
 }
 
+.fill-month-grid--bots {
+  margin-top: $space-sm;
+  padding-top: $space-sm;
+  border-top: 1px dashed $border-color;
+}
+
+.fill-bot-warning,
+.fill-bot-info {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-sm $space-base;
+  border-radius: $radius-sm;
+  font-size: $fs-xs;
+  margin-top: $space-xs;
+
+  .material-symbols-rounded { font-size: 18px; }
+}
+
+.fill-bot-warning {
+  background: rgba($status-yellow, 0.1);
+  color: $status-yellow;
+}
+
+.fill-bot-info {
+  background: rgba($accent, 0.06);
+  color: $text-secondary;
+}
+
 // ─── Load More ──────────────────────────────────────────────────────────────
 
 .load-more-row {

@@ -43,6 +43,47 @@ export class DocumentsService {
     return { data, total, page, limit };
   }
 
+  async getAllDocuments(
+    pagination: { page: number; limit: number },
+    status?: string,
+  ): Promise<{
+    data: Document[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const { page, limit } = pagination;
+    const where: any = {};
+    if (status && Object.values(DocumentStatus).includes(status as DocumentStatus)) {
+      where.status = status;
+    }
+
+    const [data, total] = await this.documentRepository.findAndCount({
+      where,
+      relations: ['user'],
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    return {
+      data: data.map((doc) => ({
+        ...doc,
+        user: doc.user
+          ? {
+              id: doc.user.id,
+              email: doc.user.email,
+              firstName: doc.user.firstName,
+              lastName: doc.user.lastName,
+            }
+          : undefined,
+      })) as any,
+      total,
+      page,
+      limit,
+    };
+  }
+
   async uploadDocument(
     userId: string,
     dto: UploadDocumentDto,

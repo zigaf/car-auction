@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { DecimalPipe, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { LotService, ILot } from '../../core/services/lot.service';
+import { BotService, IBotUser, BotPattern } from '../../core/services/bot.service';
 import { BotSettingsComponent } from '../../components/bot-settings/bot-settings.component';
 
 type Tab = 'upcoming' | 'current' | 'past' | 'plan' | 'calendar';
@@ -24,6 +25,7 @@ const PAGE_SIZE = 20;
 })
 export class SchedulePage implements OnInit {
   private readonly lotService = inject(LotService);
+  private readonly botService = inject(BotService);
 
   activeTab: Tab = 'upcoming';
 
@@ -104,6 +106,14 @@ export class SchedulePage implements OnInit {
     skipExisting: true,
     filterBrands: [] as string[],
     filterStatuses: ['imported', 'active'] as string[],
+    // Bot auto-assignment
+    assignBots: false,
+    botCount: 2,
+    botMaxPricePercent: 80,
+    botPattern: 'RANDOM' as BotPattern,
+    botMinDelaySec: 3,
+    botMaxDelaySec: 15,
+    botIntensity: 1.0,
   };
   fillMonthRunning = false;
   fillMonthProgress = 0;
@@ -112,6 +122,8 @@ export class SchedulePage implements OnInit {
   fillMonthError = '';
   fillMonthErrors = 0;
   availableBrands: string[] = [];
+  availableBotUsers: IBotUser[] = [];
+  readonly botPatterns: BotPattern[] = ['AGGRESSIVE', 'STEADY', 'SNIPER', 'RANDOM'];
 
   // ─── Pagination getters ───────────────────────────────────────────────────
   get hasMoreUpcoming(): boolean { return this.upcomingPage * PAGE_SIZE < this.upcomingTotal; }
@@ -505,6 +517,11 @@ export class SchedulePage implements OnInit {
       this.fillMonthErrors = 0;
       this.fillMonthProgress = 0;
       this.fillMonthTotal = 0;
+      if (this.availableBotUsers.length === 0) {
+        this.botService.getBotUsers().subscribe({
+          next: (users) => { this.availableBotUsers = users; },
+        });
+      }
     }
   }
 
@@ -625,27 +642,57 @@ export class SchedulePage implements OnInit {
 
     this.fillMonthTotal = tasks.length;
 
-    // Step 4: Execute sequentially
+    // Step 4: Execute sequentially (schedule + assign bots)
     for (const task of tasks) {
       try {
-        await new Promise<void>((resolve, reject) => {
+        const lot = await new Promise<ILot>((resolve, reject) => {
           this.lotService.scheduleLot(task.lot.id, {
             auctionStartAt: task.startAt.toISOString(),
             auctionEndAt: task.endAt.toISOString(),
             auctionType: s.auctionType,
           }).subscribe({
-            next: (lot) => {
-              const existingIdx = this.upcomingLots.findIndex(l => l.id === lot.id);
+            next: (scheduledLot) => {
+              const existingIdx = this.upcomingLots.findIndex(l => l.id === scheduledLot.id);
               if (existingIdx >= 0) {
-                this.upcomingLots[existingIdx] = lot;
+                this.upcomingLots[existingIdx] = scheduledLot;
               } else {
-                this.upcomingLots.push(lot);
+                this.upcomingLots.push(scheduledLot);
               }
-              resolve();
+              resolve(scheduledLot);
             },
             error: (err) => reject(err),
           });
         });
+
+        // Auto-assign bots if enabled
+        if (s.assignBots && this.availableBotUsers.length > 0) {
+          const startingBid = task.lot.startingBid || task.lot.currentPrice || 1000;
+          const maxPrice = Math.round(startingBid * (s.botMaxPricePercent / 100));
+          const count = Math.min(s.botCount, this.availableBotUsers.length);
+
+          for (let i = 0; i < count; i++) {
+            const botUser = this.availableBotUsers[i % this.availableBotUsers.length];
+            try {
+              await new Promise<void>((resolve, reject) => {
+                this.botService.createConfig({
+                  lotId: lot.id,
+                  botUserId: botUser.id,
+                  maxPrice,
+                  pattern: s.botPattern,
+                  isActive: true,
+                  minDelaySec: s.botMinDelaySec,
+                  maxDelaySec: s.botMaxDelaySec,
+                  intensity: s.botIntensity,
+                }).subscribe({
+                  next: () => resolve(),
+                  error: () => resolve(),
+                });
+              });
+            } catch {
+              // Bot assignment errors are non-critical
+            }
+          }
+        }
       } catch {
         this.fillMonthErrors++;
       }

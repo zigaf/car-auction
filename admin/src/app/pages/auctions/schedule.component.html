@@ -373,6 +373,74 @@
             </div>
           }
 
+          <!-- Bot auto-assignment -->
+          <div class="fill-section">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="fillMonthSettings.assignBots" />
+              <span class="material-symbols-rounded" style="font-size: 18px">smart_toy</span>
+              Автоматически назначать ботов
+            </label>
+          </div>
+
+          @if (fillMonthSettings.assignBots) {
+            <div class="fill-month-grid fill-month-grid--bots">
+              <div class="fill-field">
+                <label class="form-label">Ботов на лот</label>
+                <input class="form-control fill-control--sm" type="number" min="1" max="5"
+                  [(ngModel)]="fillMonthSettings.botCount" />
+              </div>
+
+              <div class="fill-field">
+                <label class="form-label">Макс. цена (% от стартовой)</label>
+                <div class="fill-range-row">
+                  <input class="form-control fill-control--sm" type="number" min="10" max="200"
+                    [(ngModel)]="fillMonthSettings.botMaxPricePercent" />
+                  <span class="text-muted">%</span>
+                </div>
+              </div>
+
+              <div class="fill-field">
+                <label class="form-label">Паттерн торговли</label>
+                <select class="form-control" [(ngModel)]="fillMonthSettings.botPattern">
+                  @for (p of botPatterns; track p) {
+                    <option [value]="p">{{ p }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="fill-field">
+                <label class="form-label">Задержка между ставками (сек)</label>
+                <div class="fill-range-row">
+                  <span class="text-muted">от</span>
+                  <input class="form-control fill-control--sm" type="number" min="1" max="60"
+                    [(ngModel)]="fillMonthSettings.botMinDelaySec" />
+                  <span class="text-muted">до</span>
+                  <input class="form-control fill-control--sm" type="number" min="1" max="120"
+                    [(ngModel)]="fillMonthSettings.botMaxDelaySec" />
+                </div>
+              </div>
+
+              <div class="fill-field">
+                <label class="form-label">Интенсивность (множитель шага)</label>
+                <input class="form-control fill-control--sm" type="number" min="0.5" max="5" step="0.5"
+                  [(ngModel)]="fillMonthSettings.botIntensity" />
+              </div>
+            </div>
+
+            @if (availableBotUsers.length === 0) {
+              <div class="fill-bot-warning">
+                <span class="material-symbols-rounded">warning</span>
+                Нет ботов. Создайте ботов на странице «Боты» перед назначением.
+              </div>
+            }
+            @if (availableBotUsers.length > 0) {
+              <div class="fill-bot-info">
+                <span class="material-symbols-rounded">info</span>
+                Доступно {{ availableBotUsers.length }} ботов. Будет использовано {{ fillMonthSettings.botCount > availableBotUsers.length ? availableBotUsers.length : fillMonthSettings.botCount }} на каждый лот.
+              </div>
+            }
+          }
+
           <!-- Progress bar -->
           @if (fillMonthRunning || (fillMonthTotal > 0 && !fillMonthDone)) {
             <div class="fill-progress-wrap">

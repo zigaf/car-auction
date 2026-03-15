@@ -41,6 +41,21 @@
   .material-symbols-rounded { font-size: 18px; }
 }
 
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: $accent;
+  color: #fff;
+  font-size: 11px;
+  font-weight: $fw-bold;
+  line-height: 1;
+}
+
 // ─── Restriction banner ───────────────────────────────────────────────────────
 .restriction-banner {
   display: flex;
@@ -205,4 +220,37 @@
   gap: $space-xs;
   color: $text-secondary;
   font-size: $fs-sm;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-md;
+  padding: $space-md $space-lg;
+  border-bottom: 1px solid $border-color;
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: $space-sm;
+    font-size: $fs-base;
+    font-weight: $fw-semibold;
+    color: $text-primary;
+    margin: 0;
+
+    .material-symbols-rounded { font-size: 20px; color: $accent; }
+  }
+}
+
+.empty-state-sm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-2xl $space-lg;
+  color: $text-tertiary;
+
+  .material-symbols-rounded { font-size: 40px; }
+  p { margin: 0; font-size: $fs-sm; }
 }

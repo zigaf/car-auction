@@ -798,8 +798,8 @@
 .auction-panel__buynow {
   padding: $space-sm $space-base;
   margin-bottom: $space-md;
-  background: rgba($status-yellow, 0.08);
-  border: 1px solid rgba($status-yellow, 0.2);
+  background: $bg-elevated;
+  border: 1px solid $border-color;
   border-radius: $radius-base;
   display: flex;
   justify-content: space-between;
@@ -807,13 +807,13 @@
 
   .auction-panel__price-label {
     margin: 0;
-    color: $status-yellow;
-    font-weight: $fw-semibold;
+    color: $text-secondary;
+    font-weight: $fw-medium;
   }
 
   .auction-panel__price-value {
     font-size: $fs-lg;
-    color: $status-yellow;
+    color: $text-primary;
   }
 }
 
@@ -869,11 +869,11 @@
   gap: $space-sm;
   padding: $space-sm $space-base;
   margin-bottom: $space-md;
-  background: rgba($status-green, 0.06);
-  border: 1px solid rgba($status-green, 0.15);
+  background: $bg-elevated;
+  border: 1px solid $border-color;
   border-radius: $radius-base;
 
-  > .material-symbols-rounded { font-size: 20px; color: $status-green; flex-shrink: 0; }
+  > .material-symbols-rounded { font-size: 20px; color: $text-tertiary; flex-shrink: 0; }
 }
 
 .auction-panel__min-label {
@@ -885,43 +885,9 @@
 .auction-panel__min-value {
   font-size: $fs-sm;
   font-weight: $fw-semibold;
-  color: $status-green;
+  color: $text-primary;
 }
 
-// Reserve bids from partners
-.auction-panel__reserve {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: $space-sm;
-  padding: $space-sm $space-base;
-  margin-bottom: $space-md;
-  background: rgba($accent, 0.05);
-  border: 1px solid rgba($accent, 0.15);
-  border-radius: $radius-base;
-
-  > .material-symbols-rounded { font-size: 20px; color: $accent; flex-shrink: 0; }
-}
-
-.auction-panel__reserve-label {
-  display: block;
-  font-size: $fs-xs;
-  color: $text-tertiary;
-}
-
-.auction-panel__reserve-value {
-  font-size: $fs-sm;
-  font-weight: $fw-semibold;
-  color: $accent;
-}
-
-.auction-panel__reserve-hint {
-  width: 100%;
-  margin: $space-xs 0 0;
-  font-size: $fs-xs;
-  color: $text-tertiary;
-  line-height: 1.4;
-}
 
 .auction-panel__info-rows {
   display: flex;

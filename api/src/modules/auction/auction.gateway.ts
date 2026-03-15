@@ -27,6 +27,7 @@ interface PlacePreBidPayload {
 
 const WS_CORS_ORIGINS = [
   'http://localhost:4200',
+  'http://localhost:4201',
   'http://localhost:4000',
   'https://car-auction-production-5f48.up.railway.app',
 ];

@@ -131,6 +131,7 @@ export class AuthService {
       balance: 0,
       preferredLanguage: user.preferredLanguage,
       preferredCurrency: user.preferredCurrency,
+      brokerId: user.brokerId || null,
     };
   }
 

@@ -69,6 +69,10 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/cabinet/dashboard/dashboard').then((m) => m.DashboardComponent),
       },
       {
+        path: 'traders',
+        loadComponent: () => import('./pages/cabinet/traders/traders').then((m) => m.TradersComponent),
+      },
+      {
         path: 'bids',
         loadComponent: () => import('./pages/cabinet/my-bids/my-bids').then((m) => m.MyBidsComponent),
       },

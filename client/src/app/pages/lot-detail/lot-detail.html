@@ -547,16 +547,13 @@
           </div>
 
           <!-- Buy Now -->
+          @if (lot.buyNowPrice) {
           <div class="auction-panel__buynow">
-            @if (lot.buyNowPrice) {
             <span class="auction-panel__price-label">Цена выкупа</span>
             <span class="auction-panel__price-value mono">{{ lot.buyNowPrice | number }} {{ lot.originalCurrency ||
               'EUR' }}</span>
-            } @else {
-            <span class="auction-panel__price-label">Цена выкупа</span>
-            <span class="auction-panel__buynow-na">Не запрошена продавцом</span>
-            }
           </div>
+          }
 
           <!-- ═══ LIVE AUCTION PANEL (trading status only) ═══ -->
           @if (isTrading) {
@@ -748,18 +745,6 @@
           </div>
           }
 
-          <!-- Reserve bids from partners -->
-          @if (reserveBid) {
-          <div class="auction-panel__reserve">
-            <span class="material-symbols-rounded">groups</span>
-            <div>
-              <span class="auction-panel__reserve-label">Резервная ставка партнёров</span>
-              <span class="auction-panel__reserve-value mono">{{ reserveBid | number }} {{ lot.originalCurrency ||
-                'EUR' }}</span>
-            </div>
-            <p class="auction-panel__reserve-hint">Если ставки не превысят эту сумму, автомобиль уйдёт партнёрам</p>
-          </div>
-          }
 
           <!-- Info rows -->
           <div class="auction-panel__info-rows">

@@ -1,0 +1,188 @@
+<div class="traders">
+  <h1 class="traders__title">Мои трейдеры</h1>
+
+  @if (error) {
+    <div class="traders__state traders__state--error">
+      <span class="material-symbols-rounded">error</span>
+      <p>{{ error }}</p>
+    </div>
+  }
+
+  @if (loading) {
+    <div class="traders__state traders__state--loading">
+      <span class="material-symbols-rounded spin">progress_activity</span>
+      <p>Загрузка...</p>
+    </div>
+  }
+
+  @if (!loading && !error && traders.length === 0) {
+    <div class="traders__state traders__state--empty">
+      <span class="material-symbols-rounded">group_off</span>
+      <p>У вас пока нет назначенных трейдеров</p>
+    </div>
+  }
+
+  @if (!loading && !error && traders.length > 0) {
+    <div class="traders__layout">
+      <!-- Trader list -->
+      <div class="traders__list">
+        @for (trader of traders; track trader.id) {
+          <button
+            class="trader-card"
+            [class.trader-card--active]="selectedTrader?.id === trader.id"
+            (click)="selectTrader(trader)"
+          >
+            <div class="trader-card__avatar">
+              @if (trader.countryFlag) {
+                <span class="trader-card__flag">{{ trader.countryFlag }}</span>
+              }
+              <span class="trader-card__initials">{{ getTraderInitials(trader) }}</span>
+            </div>
+            <div class="trader-card__info">
+              <span class="trader-card__name">{{ getTraderDisplayName(trader) }}</span>
+              <span class="trader-card__meta">
+                <span class="trader-card__status {{ getStatusClass(trader.status) }}">{{ getStatusLabel(trader.status) }}</span>
+                @if (trader.isVerified) {
+                  <span class="material-symbols-rounded trader-card__verified" title="Верифицирован">verified</span>
+                }
+              </span>
+            </div>
+            @if (selectedTrader?.id === trader.id) {
+              <span class="material-symbols-rounded trader-card__check">chevron_right</span>
+            }
+          </button>
+        }
+      </div>
+
+      <!-- Selected trader details -->
+      @if (selectedTrader) {
+        <div class="traders__detail">
+          <div class="detail__header">
+            <div>
+              <h2 class="detail__name">{{ getTraderDisplayName(selectedTrader) }}</h2>
+              <div class="detail__meta">
+                @if (selectedTrader.email) {
+                  <span class="detail__meta-item">
+                    <span class="material-symbols-rounded">email</span>
+                    {{ selectedTrader.email }}
+                  </span>
+                }
+                @if (selectedTrader.phone) {
+                  <span class="detail__meta-item">
+                    <span class="material-symbols-rounded">phone</span>
+                    {{ selectedTrader.phone }}
+                  </span>
+                }
+              </div>
+            </div>
+            <a routerLink="/live" class="detail__trade-btn">
+              <span class="material-symbols-rounded">gavel</span>
+              Торговать
+            </a>
+          </div>
+
+          <!-- Favorites section -->
+          <div class="detail__section">
+            <div class="detail__section-header">
+              <h3>Избранные лоты</h3>
+              <button class="detail__add-btn" (click)="openAddModal()">
+                <span class="material-symbols-rounded">add</span>
+                Добавить
+              </button>
+            </div>
+
+            @if (favoritesLoading) {
+              <div class="detail__loading">Загрузка...</div>
+            }
+
+            @if (!favoritesLoading && traderFavorites.length === 0) {
+              <div class="detail__empty">
+                <span class="material-symbols-rounded">star_border</span>
+                <p>Нет избранных лотов</p>
+              </div>
+            }
+
+            @if (!favoritesLoading && traderFavorites.length > 0) {
+              <div class="detail__favorites">
+                @for (fav of traderFavorites; track fav.lotId) {
+                  <div class="fav-card">
+                    <a [routerLink]="['/catalog', fav.lot.id]" class="fav-card__link">
+                      <div class="fav-card__image">
+                        @if (fav.lot.images && fav.lot.images.length > 0) {
+                          <img [src]="fav.lot.images[0].url" [alt]="fav.lot.title" />
+                        } @else {
+                          <span class="material-symbols-rounded">directions_car</span>
+                        }
+                      </div>
+                      <div class="fav-card__info">
+                        <span class="fav-card__title">{{ fav.lot.title }}</span>
+                        <span class="fav-card__meta">
+                          @if (fav.lot.year) { {{ fav.lot.year }} · }
+                          @if (fav.lot.mileage) { {{ fav.lot.mileage | number }} км · }
+                          @if (fav.lot.fuelType) { {{ fav.lot.fuelType }} }
+                        </span>
+                      </div>
+                      @if (fav.lot.startingBid) {
+                        <span class="fav-card__price mono">€{{ fav.lot.startingBid | number }}</span>
+                      }
+                    </a>
+                    <button class="fav-card__remove" (click)="removeFavorite(fav.lotId)" title="Убрать из избранного">
+                      <span class="material-symbols-rounded">close</span>
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Add lot modal -->
+  @if (showAddModal && selectedTrader) {
+    <div class="modal-overlay" (click)="closeAddModal()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal__header">
+          <h3>Добавить лот в избранное — {{ getTraderDisplayName(selectedTrader) }}</h3>
+          <button class="modal__close" (click)="closeAddModal()">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+        <div class="modal__body">
+          <div class="modal__search">
+            <span class="material-symbols-rounded">search</span>
+            <input
+              type="text"
+              placeholder="Поиск по марке, модели..."
+              [value]="searchQuery"
+              (input)="searchQuery = $any($event.target).value; searchLots()"
+            />
+          </div>
+          @if (searching) {
+            <div class="modal__loading">Поиск...</div>
+          }
+          @if (!searching && searchResults.length === 0 && searchQuery) {
+            <div class="modal__empty">Ничего не найдено</div>
+          }
+          <div class="modal__results">
+            @for (lot of searchResults; track lot.id) {
+              <div class="modal__lot">
+                <div class="modal__lot-info">
+                  <span class="modal__lot-title">{{ lot.title }}</span>
+                  <span class="modal__lot-meta">
+                    @if (lot.year) { {{ lot.year }} }
+                    @if (lot.mileage) { · {{ lot.mileage | number }} км }
+                  </span>
+                </div>
+                <button class="modal__lot-add" (click)="addToFavorites(lot)">
+                  <span class="material-symbols-rounded">favorite</span>
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

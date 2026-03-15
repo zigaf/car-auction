@@ -59,3 +59,19 @@ export interface IWatcherCount {
   lotId: string;
   count: number;
 }
+
+export interface IBidRollback {
+  lotId: string;
+  rolledBackBidId: string;
+  newCurrentPrice: number;
+}
+
+export interface IAuctionPaused {
+  lotId: string;
+  pausedRemainingMs: number;
+}
+
+export interface IAuctionResumed {
+  lotId: string;
+  newEndAt: string;
+}

@@ -15,6 +15,56 @@
   }
 
   @if (!loading) {
+    <!-- Onboarding Steps -->
+    @if (!onboardingComplete) {
+    <div class="onboarding">
+      <div class="onboarding__header">
+        <div class="onboarding__title-row">
+          <span class="material-symbols-rounded onboarding__icon">rocket_launch</span>
+          <div>
+            <h2 class="onboarding__title">Начало работы</h2>
+            <p class="onboarding__subtitle">Выполните {{ steps.length - completedSteps }} оставшихся шагов для полного доступа</p>
+          </div>
+        </div>
+        <span class="onboarding__counter mono">{{ completedSteps }}/{{ steps.length }}</span>
+      </div>
+      <div class="onboarding__progress">
+        <div class="onboarding__progress-bar" [style.width.%]="(completedSteps / steps.length) * 100"></div>
+      </div>
+      <div class="onboarding__steps">
+        @for (step of steps; track step.label; let i = $index) {
+        <div class="onboarding__step" [class.onboarding__step--done]="step.done" [class.onboarding__step--next]="!step.done && (i === 0 || steps[i - 1].done)">
+          <div class="onboarding__step-indicator">
+            @if (step.done) {
+            <span class="material-symbols-rounded">check_circle</span>
+            } @else {
+            <span class="onboarding__step-num">{{ i + 1 }}</span>
+            }
+          </div>
+          <div class="onboarding__step-content">
+            <span class="onboarding__step-label">{{ step.label }}</span>
+            @if (!step.done && step.link) {
+            <a [routerLink]="step.link" class="onboarding__step-action">Перейти</a>
+            }
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+    } @else {
+    <div class="onboarding onboarding--complete">
+      <div class="onboarding__header">
+        <div class="onboarding__title-row">
+          <span class="material-symbols-rounded onboarding__icon onboarding__icon--done">verified</span>
+          <div>
+            <h2 class="onboarding__title">Аккаунт полностью настроен</h2>
+            <p class="onboarding__subtitle">Все этапы пройдены — вы можете торговать на аукционе</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+
     <div class="dashboard__cards">
       <div class="dash-card dash-card--accent">
         <span class="material-symbols-rounded">account_balance_wallet</span>

@@ -5,9 +5,11 @@ import { Subject, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { AuctionService } from '../../core/services/auction.service';
 import { WebsocketService } from '../../core/services/websocket.service';
+import { BrokerService } from '../../core/services/broker.service';
 import { StateService } from '../../core/services/state.service';
 import { TimeService } from '../../core/services/time.service';
 import { ILot } from '../../models/lot.model';
+import { IUser } from '../../models/user.model';
 import { IBid, IBidUpdate, IFeedUpdate, IWatcherCount } from '../../models/auction.model';
 
 @Component({
@@ -57,6 +59,11 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
   /** LotId for which the active auto-bid was set */
   activeAutoBidLotId: string | null = null;
 
+  // Broker state
+  traders: IUser[] = [];
+  selectedTraderId: string | null = null;
+  traderPickerOpen = false;
+
   // Social stats
   watcherCount = 0;
   uniqueBidders = 0;
@@ -75,6 +82,7 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
   constructor(
     private readonly auctionService: AuctionService,
     private readonly wsService: WebsocketService,
+    private readonly brokerService: BrokerService,
     private readonly stateService: StateService,
     private readonly timeService: TimeService,
     private readonly cdr: ChangeDetectorRef,
@@ -91,6 +99,20 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
     this.loadActiveLots();
     this.connectWebSocket();
     this.startTimerTick();
+
+    if (this.isBroker) {
+      this.brokerService.getMyTraders()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (traders) => {
+            this.traders = traders;
+            if (traders.length === 1) {
+              this.selectedTraderId = traders[0].id;
+            }
+            this.cdr.markForCheck();
+          },
+        });
+    }
   }
 
   ngOnDestroy(): void {
@@ -164,6 +186,16 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
           setTimeout(() => { this.bidError = null; this.cdr.markForCheck(); }, 4000);
         }
         this.cdr.markForCheck();
+      });
+
+    // Re-sync data on reconnect (lots/prices may have changed)
+    this.wsService.reconnected$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.loadActiveLots();
+        if (this.activeLot) {
+          this.loadBidHistory(this.activeLot.id);
+        }
       });
 
     // Real-time bid updates
@@ -274,6 +306,46 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
           this.cdr.markForCheck();
         }
       });
+
+    // Bid rollback (admin removed highest bid)
+    this.wsService.bidRollback$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data) => {
+        const lot = this.auctionList.find(l => l.id === data.lotId);
+        if (lot) lot.currentPrice = data.newCurrentPrice;
+        if (this.activeLot?.id === data.lotId) {
+          this.activeLot = { ...this.activeLot, currentPrice: data.newCurrentPrice };
+          this.loadBidHistory(data.lotId);
+        }
+        this.cdr.markForCheck();
+      });
+
+    // Auction paused
+    this.wsService.auctionPaused$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data) => {
+        const lot = this.auctionList.find(l => l.id === data.lotId);
+        if (lot) lot.isPaused = true;
+        if (this.activeLot?.id === data.lotId) {
+          this.activeLot = { ...this.activeLot, isPaused: true };
+        }
+        this.cdr.markForCheck();
+      });
+
+    // Auction resumed
+    this.wsService.auctionResumed$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data) => {
+        const lot = this.auctionList.find(l => l.id === data.lotId);
+        if (lot) {
+          lot.isPaused = false;
+          lot.auctionEndAt = data.newEndAt;
+        }
+        if (this.activeLot?.id === data.lotId) {
+          this.activeLot = { ...this.activeLot, isPaused: false, auctionEndAt: data.newEndAt };
+        }
+        this.cdr.markForCheck();
+      });
   }
 
   private handleBidUpdate(update: IBidUpdate): void {
@@ -335,6 +407,29 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
           this.bidHistory = response.data;
           this.stats.totalBids = response.total;
           this.uniqueBidders = response.uniqueBidders ?? 0;
+
+          // Restore auto-bid state from bid history
+          if (this.currentUserId && response.data.length > 0) {
+            const myPreBid = response.data.find(
+              b => b.userId === this.currentUserId && b.isPreBid && b.maxAutoBid
+            );
+            if (myPreBid?.maxAutoBid) {
+              const currentPrice = this.activeLot ? this.getCurrentPrice(this.activeLot) : 0;
+              if (myPreBid.maxAutoBid > currentPrice) {
+                this.activeAutoBidMax = myPreBid.maxAutoBid;
+                this.activeAutoBidLotId = lotId;
+              }
+            }
+
+            // Restore winning/outbid status
+            const topBid = response.data[0];
+            if (topBid) {
+              this.isWinning = topBid.userId === this.currentUserId;
+              this.isOutbid = topBid.userId !== this.currentUserId &&
+                response.data.some(b => b.userId === this.currentUserId);
+            }
+          }
+
           this.cdr.markForCheck();
         },
       });
@@ -416,7 +511,7 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
       }
     }, 15000);
 
-    this.wsService.placeBid(this.activeLot.id, this.customBidAmount);
+    this.wsService.placeBid(this.activeLot.id, this.customBidAmount, this.selectedTraderId);
   }
 
   placePreBid(): void {
@@ -448,7 +543,7 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
       }
     }, 15000);
 
-    this.wsService.placePreBid(this.activeLot.id, this.maxAutoBidAmount);
+    this.wsService.placePreBid(this.activeLot.id, this.maxAutoBidAmount, this.selectedTraderId);
     this.maxAutoBidAmount = null;
   }
 
@@ -461,7 +556,7 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
     if (!this.activeLot || !this.activeLot.buyNowPrice) return;
     if (!confirm(`Buy now for €${Number(this.activeLot.buyNowPrice).toLocaleString()}?`)) return;
 
-    this.auctionService.buyNow(this.activeLot.id)
+    this.auctionService.buyNow(this.activeLot.id, this.selectedTraderId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
@@ -540,5 +635,26 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
 
   isCurrentUser(userId: string): boolean {
     return this.currentUserId === userId;
+  }
+
+  // ─── Broker helpers ─────────────────────────────────────────────────────
+
+  get isBroker(): boolean {
+    return this.stateService.snapshot.user?.role === 'broker';
+  }
+
+  get selectedTrader(): IUser | null {
+    return this.traders.find(t => t.id === this.selectedTraderId) ?? null;
+  }
+
+  selectTrader(traderId: string | null): void {
+    this.selectedTraderId = traderId;
+    this.traderPickerOpen = false;
+    this.cdr.markForCheck();
+  }
+
+  toggleTraderPicker(): void {
+    this.traderPickerOpen = !this.traderPickerOpen;
+    this.cdr.markForCheck();
   }
 }

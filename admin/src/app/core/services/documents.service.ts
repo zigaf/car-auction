@@ -7,6 +7,7 @@ export interface IDocument {
   type: string;
   status: string;
   fileUrl: string;
+  fileName: string;
   createdAt: string;
   user: {
     id: string;

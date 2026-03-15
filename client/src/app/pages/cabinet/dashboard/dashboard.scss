@@ -6,6 +6,171 @@
   margin: 0 0 $space-xl;
 }
 
+// --- Onboarding Block ---
+.onboarding {
+  @include panel;
+  padding: $space-lg;
+  margin-bottom: $space-xl;
+  border-left: 3px solid $accent;
+
+  &--complete {
+    border-left-color: $status-green;
+  }
+}
+
+.onboarding__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-md;
+  margin-bottom: $space-base;
+}
+
+.onboarding__title-row {
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+}
+
+.onboarding__icon {
+  font-size: 28px;
+  color: $accent;
+
+  &--done {
+    color: $status-green;
+  }
+}
+
+.onboarding__title {
+  margin: 0;
+  font-size: $fs-lg;
+  font-weight: $fw-bold;
+  color: $text-primary;
+}
+
+.onboarding__subtitle {
+  margin: 2px 0 0;
+  font-size: $fs-sm;
+  color: $text-secondary;
+}
+
+.onboarding__counter {
+  font-size: $fs-lg;
+  font-weight: $fw-bold;
+  color: $accent;
+  flex-shrink: 0;
+}
+
+.onboarding__progress {
+  height: 4px;
+  background: $bg-elevated;
+  border-radius: 2px;
+  margin-bottom: $space-lg;
+  overflow: hidden;
+}
+
+.onboarding__progress-bar {
+  height: 100%;
+  background: $accent;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.onboarding__steps {
+  display: flex;
+  gap: $space-sm;
+  overflow-x: auto;
+  padding-bottom: $space-xs;
+
+  &::-webkit-scrollbar { height: 3px; }
+  &::-webkit-scrollbar-thumb { background: $border-color; border-radius: 2px; }
+
+  @include mobile {
+    flex-direction: column;
+    overflow-x: visible;
+  }
+}
+
+.onboarding__step {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+  padding: $space-sm $space-md;
+  border-radius: $radius-base;
+  background: $bg-elevated;
+  transition: all $transition-fast;
+
+  &--done {
+    background: rgba($status-green, 0.06);
+
+    .onboarding__step-indicator .material-symbols-rounded {
+      color: $status-green;
+    }
+
+    .onboarding__step-label {
+      color: $text-primary;
+    }
+  }
+
+  &--next {
+    border: 1px solid $accent-muted;
+    background: $accent-subtle;
+
+    .onboarding__step-num {
+      background: $accent;
+      color: #fff;
+    }
+  }
+}
+
+.onboarding__step-indicator {
+  flex-shrink: 0;
+
+  .material-symbols-rounded {
+    font-size: 22px;
+  }
+}
+
+.onboarding__step-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: $radius-round;
+  background: $text-tertiary;
+  color: #fff;
+  font-size: $fs-xs;
+  font-weight: $fw-bold;
+}
+
+.onboarding__step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.onboarding__step-label {
+  font-size: $fs-xs;
+  font-weight: $fw-medium;
+  color: $text-secondary;
+  line-height: 1.3;
+}
+
+.onboarding__step-action {
+  font-size: $fs-xs;
+  color: $accent;
+  text-decoration: none;
+  font-weight: $fw-semibold;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// --- Dashboard Cards ---
 .dashboard__cards {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

@@ -271,6 +271,11 @@
   &.timer--green { color: $status-green; }
   &.timer--yellow { color: $status-yellow; animation: pulse-timer 1.2s infinite; }
   &.timer--red { color: $status-red; animation: pulse-timer 0.6s infinite; }
+
+  &--paused {
+    color: $status-yellow;
+    background: rgba($status-yellow, 0.1);
+  }
 }
 
 @keyframes pulse-timer {
@@ -503,6 +508,93 @@
   &:hover {
     background: rgba($status-yellow, 0.08);
     border-color: $status-yellow;
+  }
+}
+
+// --- Broker trader picker ---
+.lot__trader-picker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-sm $space-base;
+  margin-bottom: $space-sm;
+  background: rgba($accent, 0.06);
+  border: 1px solid rgba($accent, 0.15);
+  border-radius: $radius-base;
+}
+
+.lot__trader-label {
+  font-size: $fs-sm;
+  color: $text-secondary;
+  white-space: nowrap;
+}
+
+.lot__trader-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-xs;
+  background: $bg-card;
+  border: 1px solid $divider;
+  border-radius: $radius-sm;
+  padding: $space-xs $space-sm;
+  cursor: pointer;
+  font-family: $font-ui;
+  font-size: $fs-sm;
+  color: $text-primary;
+  transition: border-color $transition-fast;
+
+  &:hover { border-color: $accent; }
+
+  .material-symbols-rounded { font-size: 18px; color: $text-tertiary; }
+}
+
+.lot__trader-name {
+  &--empty { color: $text-tertiary; }
+}
+
+.lot__trader-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  margin-top: $space-xs;
+  background: $bg-card;
+  border: 1px solid $divider;
+  border-radius: $radius-base;
+  box-shadow: $shadow-md;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.lot__trader-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-sm $space-base;
+  background: none;
+  border: none;
+  font-family: $font-ui;
+  font-size: $fs-sm;
+  color: $text-primary;
+  cursor: pointer;
+  transition: background $transition-fast;
+
+  &:hover { background: rgba($accent, 0.06); }
+
+  &--active {
+    color: $accent;
+    font-weight: $fw-semibold;
+  }
+
+  .material-symbols-rounded {
+    margin-left: auto;
+    font-size: 16px;
+    color: $accent;
   }
 }
 

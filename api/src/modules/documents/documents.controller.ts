@@ -40,6 +40,15 @@ export class DocumentsController {
     return this.documentsService.getUserDocuments(user.id, { page, limit });
   }
 
+  @Get('all')
+  @UseGuards(RolesGuard)
+  @Roles(Role.BROKER, Role.ADMIN)
+  getAllDocuments(@Query() query: GetDocumentsDto) {
+    const page = Math.max(parseInt(query.page || '1', 10), 1);
+    const limit = Math.min(Math.max(parseInt(query.limit || '20', 10), 1), 100);
+    return this.documentsService.getAllDocuments({ page, limit }, query.status);
+  }
+
   @Post()
   uploadDocument(
     @CurrentUser() user: User,

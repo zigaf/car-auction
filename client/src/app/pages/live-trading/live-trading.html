@@ -93,10 +93,17 @@
 
           <!-- Timer + Price -->
           <div class="lot__price-row">
-            <div class="lot__timer" [class]="getTimerClass(activeLot.auctionEndAt)">
-              <span class="material-symbols-rounded">timer</span>
-              <span class="mono">{{ getTimeLeft(activeLot.auctionEndAt) }}</span>
-            </div>
+            @if (activeLot.isPaused) {
+              <div class="lot__timer lot__timer--paused">
+                <span class="material-symbols-rounded">pause_circle</span>
+                <span class="mono">Пауза</span>
+              </div>
+            } @else {
+              <div class="lot__timer" [class]="getTimerClass(activeLot.auctionEndAt)">
+                <span class="material-symbols-rounded">timer</span>
+                <span class="mono">{{ getTimeLeft(activeLot.auctionEndAt) }}</span>
+              </div>
+            }
             <div class="lot__current-bid">
               <span class="lot__bid-label">Current bid</span>
               <span
@@ -179,6 +186,45 @@
                 <span class="material-symbols-rounded">notification_important</span>
                 <span>You've been outbid</span>
                 <span class="lot__status-banner__cta">Bid again ↑</span>
+              }
+            </div>
+          }
+
+          <!-- Broker: trader picker -->
+          @if (isBroker && traders.length > 0) {
+            <div class="lot__trader-picker">
+              <span class="lot__trader-label">Торгую за:</span>
+              <button class="lot__trader-btn" (click)="toggleTraderPicker()">
+                @if (selectedTrader) {
+                  <span class="lot__trader-name">
+                    @if (selectedTrader.countryFlag) {
+                      <span>{{ selectedTrader.countryFlag }}</span>
+                    }
+                    {{ selectedTrader.firstName }} {{ selectedTrader.lastName }}
+                  </span>
+                } @else {
+                  <span class="lot__trader-name lot__trader-name--empty">Выберите трейдера</span>
+                }
+                <span class="material-symbols-rounded">{{ traderPickerOpen ? 'expand_less' : 'expand_more' }}</span>
+              </button>
+              @if (traderPickerOpen) {
+                <div class="lot__trader-dropdown">
+                  @for (trader of traders; track trader.id) {
+                    <button
+                      class="lot__trader-option"
+                      [class.lot__trader-option--active]="selectedTraderId === trader.id"
+                      (click)="selectTrader(trader.id)"
+                    >
+                      @if (trader.countryFlag) {
+                        <span>{{ trader.countryFlag }}</span>
+                      }
+                      {{ trader.firstName }} {{ trader.lastName }}
+                      @if (selectedTraderId === trader.id) {
+                        <span class="material-symbols-rounded">check</span>
+                      }
+                    </button>
+                  }
+                </div>
               }
             </div>
           }

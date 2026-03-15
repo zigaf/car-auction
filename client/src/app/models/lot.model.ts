@@ -97,6 +97,8 @@ export interface ILot {
   auctionEndAt: string | null;
   currentPrice: number | null;
   winnerId: string | null;
+  isPaused: boolean;
+  pausedRemainingMs: number | null;
   images: ILotImage[];
   createdAt: string;
   updatedAt: string;

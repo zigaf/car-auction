@@ -12,8 +12,10 @@ export class AuctionService {
     return this.api.post<IPlaceBidResult>('/bids', { lotId, amount, idempotencyKey });
   }
 
-  buyNow(lotId: string): Observable<{ bid: IBid; lot: ILot }> {
-    return this.api.post<{ bid: IBid; lot: ILot }>('/bids/buy-now', { lotId });
+  buyNow(lotId: string, traderId?: string | null): Observable<{ bid: IBid; lot: ILot }> {
+    const body: Record<string, string> = { lotId };
+    if (traderId) body['traderId'] = traderId;
+    return this.api.post<{ bid: IBid; lot: ILot }>('/bids/buy-now', body);
   }
 
   getBidsByLot(lotId: string, page: number = 1, limit: number = 20): Observable<IPaginatedResponse<IBid>> {

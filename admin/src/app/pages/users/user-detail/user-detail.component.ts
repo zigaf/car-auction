@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DecimalPipe, DatePipe } from '@angular/common';
 import { UserService, IUser } from '../../../core/services/user.service';
 import { BalanceService, IBalanceTransaction, ITransactionsResponse } from '../../../core/services/balance.service';
+import { DocumentsService, IDocument } from '../../../core/services/documents.service';
 import { UserTasksComponent } from '../../../components/user-tasks/user-tasks.component';
 
 const RESTRICTED_COUNTRY_FLAGS = ['🇷🇺', '🇧🇾'];
@@ -19,6 +20,7 @@ export class UserDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly userService = inject(UserService);
   private readonly balanceService = inject(BalanceService);
+  private readonly documentsService = inject(DocumentsService);
 
   userId = '';
   user: IUser | null = null;
@@ -27,7 +29,7 @@ export class UserDetailComponent implements OnInit {
   error = '';
   saveSuccess = false;
 
-  activeTab: 'info' | 'actions' | 'tasks' | 'balance' = 'info';
+  activeTab: 'info' | 'actions' | 'tasks' | 'balance' | 'docs' = 'info';
 
   // Info tab form fields
   formFirstName = '';
@@ -277,5 +279,78 @@ export class UserDetailComponent implements OnInit {
       bid_unlock: 'Разбл. ставки',
     };
     return map[type] ?? type;
+  }
+
+  // Documents tab
+  userDocs: IDocument[] = [];
+  userDocsCount = 0;
+  docsLoading = false;
+  private docsLoaded = false;
+
+  private static DOC_STATUS_LABELS: Record<string, string> = {
+    pending: 'На проверке',
+    approved: 'Одобрен',
+    rejected: 'Отклонён',
+  };
+
+  private static DOC_TYPE_LABELS: Record<string, string> = {
+    passport: 'Паспорт',
+    driver_license: 'Вод. удостоверение',
+    proof_of_address: 'Подтверждение адреса',
+    power_of_attorney: 'Доверенность',
+    invoice: 'Счёт',
+    customs_doc: 'Таможенный документ',
+    other: 'Другое',
+  };
+
+  getDocStatusLabel(status: string): string {
+    return UserDetailComponent.DOC_STATUS_LABELS[status] ?? status;
+  }
+
+  getDocTypeLabel(type: string): string {
+    return UserDetailComponent.DOC_TYPE_LABELS[type] ?? type;
+  }
+
+  openDocsTab(): void {
+    this.activeTab = 'docs';
+    if (!this.docsLoaded) {
+      this.loadUserDocs();
+    }
+  }
+
+  loadUserDocs(): void {
+    this.docsLoading = true;
+    this.documentsService.getDocuments({ status: undefined, limit: 100 }).subscribe({
+      next: (res) => {
+        this.userDocs = res.data.filter((d) => d.user?.id === this.userId);
+        this.userDocsCount = this.userDocs.length;
+        this.docsLoading = false;
+        this.docsLoaded = true;
+      },
+      error: () => (this.docsLoading = false),
+    });
+  }
+
+  openDocFile(url: string): void {
+    window.open(url, '_blank');
+  }
+
+  approveDoc(doc: IDocument): void {
+    this.documentsService.updateStatus(doc.id, 'approved').subscribe({
+      next: (updated) => {
+        const idx = this.userDocs.findIndex((d) => d.id === updated.id);
+        if (idx !== -1) this.userDocs[idx] = updated;
+      },
+    });
+  }
+
+  rejectDoc(doc: IDocument): void {
+    const comment = prompt('Причина отклонения (необязательно):') ?? undefined;
+    this.documentsService.updateStatus(doc.id, 'rejected', comment).subscribe({
+      next: (updated) => {
+        const idx = this.userDocs.findIndex((d) => d.id === updated.id);
+        if (idx !== -1) this.userDocs[idx] = updated;
+      },
+    });
   }
 }

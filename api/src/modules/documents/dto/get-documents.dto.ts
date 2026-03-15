@@ -1,4 +1,4 @@
-import { IsOptional, IsNumberString } from 'class-validator';
+import { IsOptional, IsNumberString, IsString } from 'class-validator';
 
 export class GetDocumentsDto {
   @IsOptional()
@@ -8,4 +8,8 @@ export class GetDocumentsDto {
   @IsOptional()
   @IsNumberString()
   limit?: string;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
 }
