@@ -11,12 +11,15 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
+  const corsOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
+    : [];
   app.enableCors({
     origin: [
       'http://localhost:4200',
+      'http://localhost:4201',
       'http://localhost:4000',
-      'https://car-auction-production-5f48.up.railway.app',
-      'https://gentle-courtesy-production-2aea.up.railway.app',
+      ...corsOrigins,
     ],
     credentials: true,
   });
