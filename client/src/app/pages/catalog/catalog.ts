@@ -68,6 +68,10 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
   ];
 
   brands: string[] = [];
+  models: string[] = [];
+  filteredModels: string[] = [];
+  showModelDropdown = false;
+  private previousBrand = '';
   fuelTypes = ['petrol', 'diesel', 'hybrid', 'electric', 'lpg', 'other'];
   fuelTypeLabels: Record<string, string> = {
     petrol: 'Бензин', diesel: 'Дизель', hybrid: 'Гибрид',
@@ -86,6 +90,7 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnInit(): void {
     this.loadBrands();
+    this.loadModels();
     this.loadLots();
     this.loadFavorites();
 
@@ -137,6 +142,43 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
       },
       error: () => { /* keep empty */ },
     });
+  }
+
+  loadModels(brand?: string): void {
+    this.lotService.getModels(brand || undefined).subscribe({
+      next: (data) => {
+        this.models = data.map((m) => m.model).filter(Boolean);
+        this.filteredModels = this.models;
+      },
+      error: () => { /* keep empty */ },
+    });
+  }
+
+  onBrandChange(): void {
+    if (this.filters.brand !== this.previousBrand) {
+      this.previousBrand = this.filters.brand;
+      this.filters.model = '';
+      this.loadModels(this.filters.brand);
+    }
+    this.applyFilters();
+  }
+
+  onModelInput(): void {
+    const query = this.filters.model.toLowerCase().trim();
+    this.filteredModels = query
+      ? this.models.filter((m) => m.toLowerCase().includes(query))
+      : this.models;
+    this.showModelDropdown = true;
+  }
+
+  selectModel(model: string): void {
+    this.filters.model = model;
+    this.showModelDropdown = false;
+    this.applyFilters();
+  }
+
+  hideModelDropdown(): void {
+    setTimeout(() => this.showModelDropdown = false, 200);
   }
 
   loadLots(): void {

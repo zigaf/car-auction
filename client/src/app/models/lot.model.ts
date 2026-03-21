@@ -148,3 +148,8 @@ export interface IBrandCount {
   brand: string;
   count: number;
 }
+
+export interface IModelCount {
+  model: string;
+  count: number;
+}

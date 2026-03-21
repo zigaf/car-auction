@@ -6,6 +6,7 @@ import { takeUntil, filter, distinctUntilChanged, switchMap } from 'rxjs/operato
 import { StateService } from '../../core/services/state.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { ToastService } from '../../core/services/toast.service';
+import { ThemeService } from '../../core/services/theme.service';
 import { AppButtonComponent } from '../../shared/components/button/button.component';
 
 @Component({
@@ -22,6 +23,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private readonly notificationService = inject(NotificationService);
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
+  readonly themeService = inject(ThemeService);
   private readonly destroy$ = new Subject<void>();
 
   appState$ = this.stateService.appState$;

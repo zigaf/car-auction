@@ -88,6 +88,11 @@ export class LotController {
     return this.lotService.getBrands();
   }
 
+  @Get('models')
+  async getModels(@Query('brand') brand?: string) {
+    return this.lotService.getModels(brand);
+  }
+
   @Get('stats')
   async getStats() {
     return this.lotService.getStats();

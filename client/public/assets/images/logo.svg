@@ -1,31 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 120" width="100%" height="100%">
-  <!-- Clean, minimalist wordmark logo based on provided reference image -->
-  
   <defs>
-    <!-- Brand colors -->
     <linearGradient id="primaryBlue" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#0066FF" /> <!-- Vibrant electric blue -->
+      <stop offset="0%" stop-color="#0066FF" />
       <stop offset="100%" stop-color="#0052CC" />
     </linearGradient>
   </defs>
 
-  <!-- Typography Group (Left Aligned like the image) -->
   <g transform="translate(40, 60)">
-    
-    <!-- Row 1: Main Brand Name -->
-    <!-- "RB" in dark navy/slate, bold weight -->
-    <text x="0" y="0" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="52" fill="#0F172A" letter-spacing="-1">RB</text>
-    
-    <!-- "motors" in brand blue, medium/regular weight -->
-    <!-- Using an x offset that accounts for the width of "RB" (approx 75px) -->
+    <!-- "RB" inherits color from CSS so it works in both light and dark themes -->
+    <text x="0" y="0" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="52" fill="currentColor" letter-spacing="-1">RB</text>
+
+    <!-- "motors" always in brand blue gradient -->
     <text x="78" y="0" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif" font-weight="500" font-size="52" fill="url(#primaryBlue)" letter-spacing="-1">motors</text>
-    
-    <!-- Row 2: Subtitle & Accent Line -->
-    <!-- Blue accent dash directly under "RB" -->
+
+    <!-- Blue accent dash under "RB" -->
     <rect x="3" y="20" width="36" height="4" fill="url(#primaryBlue)" rx="2" />
-    
-    <!-- "EUROPEAN AUTO AUCTION" subtext, tracked out, light gray -->
-    <text x="52" y="25" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif" font-weight="600" font-size="12" fill="#64748B" letter-spacing="5.5">EUROPEAN AUTO AUCTION</text>
-    
+
+    <!-- Subtitle — neutral gray readable on both backgrounds -->
+    <text x="52" y="25" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif" font-weight="600" font-size="12" fill="#8094AE" letter-spacing="5.5">EUROPEAN AUTO AUCTION</text>
   </g>
 </svg>

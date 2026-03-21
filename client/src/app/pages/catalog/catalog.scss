@@ -234,6 +234,43 @@
   }
 }
 
+.filter-autocomplete {
+  position: relative;
+
+  &__dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background: $bg-panel;
+    border: 1px solid $border-color;
+    border-top: none;
+    border-radius: 0 0 $radius-base $radius-base;
+    max-height: 200px;
+    overflow-y: auto;
+    @include custom-scrollbar;
+  }
+
+  &__item {
+    display: block;
+    width: 100%;
+    padding: $space-sm $space-md;
+    background: none;
+    border: none;
+    text-align: left;
+    color: $text-primary;
+    font-size: $fs-sm;
+    font-family: $font-ui;
+    cursor: pointer;
+    transition: background $transition-fast;
+
+    &:hover {
+      background: $bg-secondary;
+    }
+  }
+}
+
 .filter-range {
   display: flex;
   align-items: center;

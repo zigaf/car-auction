@@ -38,13 +38,14 @@
           <label class="filter-label">Марка</label>
           <div class="filter-brands">
             <label class="filter-brands__item" [class.filter-brands__item--active]="filters.brand === ''">
-              <input type="radio" name="brandFilter" [(ngModel)]="filters.brand" value="" class="filter-brands__radio">
+              <input type="radio" name="brandFilter" [(ngModel)]="filters.brand" value=""
+                (ngModelChange)="onBrandChange()" class="filter-brands__radio">
               <span class="filter-brands__name">Все марки</span>
             </label>
             @for (b of brands; track b) {
             <label class="filter-brands__item" [class.filter-brands__item--active]="filters.brand === b">
               <input type="radio" name="brandFilter" [(ngModel)]="filters.brand" [value]="b"
-                class="filter-brands__radio">
+                (ngModelChange)="onBrandChange()" class="filter-brands__radio">
               <div class="filter-brands__icon">
                 <app-brand-icon [brand]="b" [size]="16"></app-brand-icon>
               </div>
@@ -54,26 +55,41 @@
           </div>
         </div>
 
-        <div class="filter-group">
+        <div class="filter-group filter-group--autocomplete">
           <label class="filter-label">Модель</label>
-          <input type="text" [(ngModel)]="filters.model" placeholder="Например: 320d, A4..." class="filter-input">
+          <div class="filter-autocomplete">
+            <input type="text" [(ngModel)]="filters.model" placeholder="Начните вводить модель..."
+              class="filter-input" (input)="onModelInput()" (focus)="onModelInput()"
+              (blur)="hideModelDropdown()" (keydown.enter)="applyFilters()">
+            @if (showModelDropdown && filteredModels.length > 0) {
+            <div class="filter-autocomplete__dropdown">
+              @for (m of filteredModels; track m) {
+              <button class="filter-autocomplete__item" (mousedown)="selectModel(m)">{{ m }}</button>
+              }
+            </div>
+            }
+          </div>
         </div>
 
         <div class="filter-group">
           <label class="filter-label">Год выпуска</label>
           <div class="filter-range">
-            <input type="number" [(ngModel)]="filters.yearFrom" placeholder="От" class="filter-input">
+            <input type="number" [(ngModel)]="filters.yearFrom" placeholder="От" class="filter-input"
+              (keydown.enter)="applyFilters()">
             <span class="filter-range__sep">--</span>
-            <input type="number" [(ngModel)]="filters.yearTo" placeholder="До" class="filter-input">
+            <input type="number" [(ngModel)]="filters.yearTo" placeholder="До" class="filter-input"
+              (keydown.enter)="applyFilters()">
           </div>
         </div>
 
         <div class="filter-group">
           <label class="filter-label">Цена, EUR</label>
           <div class="filter-range">
-            <input type="number" [(ngModel)]="filters.priceFrom" placeholder="От" class="filter-input">
+            <input type="number" [(ngModel)]="filters.priceFrom" placeholder="От" class="filter-input"
+              (keydown.enter)="applyFilters()">
             <span class="filter-range__sep">--</span>
-            <input type="number" [(ngModel)]="filters.priceTo" placeholder="До" class="filter-input">
+            <input type="number" [(ngModel)]="filters.priceTo" placeholder="До" class="filter-input"
+              (keydown.enter)="applyFilters()">
           </div>
         </div>
 
@@ -100,18 +116,22 @@
         <div class="filter-group">
           <label class="filter-label">Пробег, км</label>
           <div class="filter-range">
-            <input type="number" [(ngModel)]="filters.mileageFrom" placeholder="От" class="filter-input">
+            <input type="number" [(ngModel)]="filters.mileageFrom" placeholder="От" class="filter-input"
+              (keydown.enter)="applyFilters()">
             <span class="filter-range__sep">--</span>
-            <input type="number" [(ngModel)]="filters.mileageTo" placeholder="До" class="filter-input">
+            <input type="number" [(ngModel)]="filters.mileageTo" placeholder="До" class="filter-input"
+              (keydown.enter)="applyFilters()">
           </div>
         </div>
 
         <div class="filter-group">
           <label class="filter-label">Объём двигателя, см³</label>
           <div class="filter-range">
-            <input type="number" [(ngModel)]="filters.engineCapacityFrom" placeholder="От" class="filter-input">
+            <input type="number" [(ngModel)]="filters.engineCapacityFrom" placeholder="От" class="filter-input"
+              (keydown.enter)="applyFilters()">
             <span class="filter-range__sep">--</span>
-            <input type="number" [(ngModel)]="filters.engineCapacityTo" placeholder="До" class="filter-input">
+            <input type="number" [(ngModel)]="filters.engineCapacityTo" placeholder="До" class="filter-input"
+              (keydown.enter)="applyFilters()">
           </div>
         </div>
 

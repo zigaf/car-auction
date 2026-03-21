@@ -11,12 +11,18 @@
       <a routerLink="/reviews" routerLinkActive="active" class="header__nav-link">Отзывы</a>
     </nav>
 
+    <div class="header__spacer"></div>
+
     <div class="header__search">
       <span class="material-symbols-rounded header__search-icon">search</span>
       <input type="text" placeholder="Поиск по марке, модели..." class="header__search-input">
     </div>
 
     <div class="header__actions">
+      <button class="header__icon-btn header__theme-toggle" (click)="themeService.toggle()" [attr.aria-label]="themeService.isDark() ? 'Светлая тема' : 'Тёмная тема'">
+        <span class="material-symbols-rounded">{{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}</span>
+      </button>
+
       @if (appState$ | async; as state) {
         <a routerLink="/cabinet/notifications" class="header__icon-btn" aria-label="Уведомления">
           <span class="material-symbols-rounded">notifications</span>
@@ -31,23 +37,22 @@
       </button>
 
       @if (appState$ | async; as state) {
-      @if (state.isAuthenticated && state.user) {
-      <div class="header__user-menu">
-        <a routerLink="/cabinet" class="header__user-btn">
-          <img *ngIf="state.user.countryFlag" [src]="state.user.countryFlag" alt="Flag" class="header__user-flag">
-          <span class="header__user-name">{{ state.user.firstName || 'Профиль' }}</span>
-        </a>
-        <app-button variant="ghost" size="sm" icon="logout" (click)="logout()" aria-label="Выйти"
-          class="header__logout-btn"></app-button>
-      </div>
-      } @else {
-      <a routerLink="/login" class="header__login-btn">
-        <span class="material-symbols-rounded">person</span>
-        <span>Войти</span>
-      </a>
+        @if (state.isAuthenticated && state.user) {
+          <div class="header__user-menu">
+            <a routerLink="/cabinet" class="header__user-btn">
+              <img *ngIf="state.user.countryFlag" [src]="state.user.countryFlag" alt="Flag" class="header__user-flag">
+              <span class="header__user-name">{{ state.user.firstName || 'Профиль' }}</span>
+            </a>
+            <app-button variant="ghost" size="sm" icon="logout" (click)="logout()" aria-label="Выйти"
+              class="header__logout-btn"></app-button>
+          </div>
+        } @else {
+          <a routerLink="/login" class="header__login-btn">
+            <span class="material-symbols-rounded">person</span>
+            <span>Войти</span>
+          </a>
+        }
       }
-      }
-
     </div>
 
     <button class="header__burger" (click)="toggleMenu()">
@@ -60,6 +65,13 @@
 @if (appState$ | async; as state) {
 <div class="drawer-backdrop" [class.drawer-backdrop--open]="menuOpen()" (click)="toggleMenu()"></div>
 <aside class="drawer" [class.drawer--open]="menuOpen()">
+  <div class="drawer__header">
+    <img src="assets/images/logo.svg" alt="RB Motors" class="drawer__logo">
+    <button class="header__icon-btn header__theme-toggle" (click)="themeService.toggle()" [attr.aria-label]="themeService.isDark() ? 'Светлая тема' : 'Тёмная тема'">
+      <span class="material-symbols-rounded">{{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}</span>
+    </button>
+  </div>
+
   <nav class="drawer__nav">
     <a routerLink="/" [routerLinkActiveOptions]="{ exact: true }" routerLinkActive="active" class="drawer__link" (click)="menuOpen.set(false)">
       <span class="material-symbols-rounded">home</span>

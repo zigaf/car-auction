@@ -171,6 +171,24 @@ export class LotService {
     return result;
   }
 
+  async getModels(brand?: string): Promise<{ model: string; count: number }[]> {
+    const qb = this.lotRepository
+      .createQueryBuilder('lot')
+      .select('lot.model', 'model')
+      .addSelect('COUNT(*)', 'count')
+      .where('lot.model IS NOT NULL')
+      .andWhere('lot.deletedAt IS NULL');
+
+    if (brand) {
+      qb.andWhere('LOWER(lot.brand) = LOWER(:brand)', { brand });
+    }
+
+    return qb
+      .groupBy('lot.model')
+      .orderBy('count', 'DESC')
+      .getRawMany();
+  }
+
   async getStats(): Promise<{
     totalLots: number;
     totalBrands: number;

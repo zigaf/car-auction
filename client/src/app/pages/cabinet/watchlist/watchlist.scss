@@ -86,7 +86,7 @@
   top: $space-sm;
   right: $space-sm;
   z-index: 2;
-  background: rgba($text-primary, 0.7);
+  background: rgba(var(--text-primary-rgb), 0.7);
   border: none;
   color: $status-red;
   cursor: pointer;
@@ -99,7 +99,7 @@
 
   .material-symbols-rounded { font-size: 20px; }
 
-  &:hover { background: rgba($text-primary, 0.9); }
+  &:hover { background: rgba(var(--text-primary-rgb), 0.9); }
 }
 
 .lot-card__image {
