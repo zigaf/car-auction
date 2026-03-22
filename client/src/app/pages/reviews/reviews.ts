@@ -4,6 +4,7 @@ import { DecimalPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ReviewsService } from '../../core/services/reviews.service';
 import { StateService } from '../../core/services/state.service';
+import { LanguageService } from '../../core/services/language.service';
 import { IReview, IReviewStats } from '../../models/review.model';
 
 @Component({
@@ -16,6 +17,7 @@ import { IReview, IReviewStats } from '../../models/review.model';
 export class ReviewsComponent implements OnInit, OnDestroy {
   private readonly reviewsService = inject(ReviewsService);
   private readonly stateService = inject(StateService);
+  readonly ls = inject(LanguageService);
   private countdownInterval: ReturnType<typeof setInterval> | null = null;
 
   reviews: IReview[] = [];
@@ -91,7 +93,7 @@ export class ReviewsComponent implements OnInit, OnDestroy {
         this.loading = false;
       },
       error: () => {
-        this.error = 'Не удалось загрузить отзывы';
+        this.error = this.ls.t('reviews.error.load');
         this.loading = false;
       },
     });
@@ -182,10 +184,7 @@ export class ReviewsComponent implements OnInit, OnDestroy {
 
   formatDate(dateStr: string): string {
     const date = new Date(dateStr);
-    const months = [
-      'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-      'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря',
-    ];
-    return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+    const month = this.ls.t(`reviews.month.${date.getMonth()}`);
+    return `${date.getDate()} ${month} ${date.getFullYear()}`;
   }
 }

@@ -1,9 +1,9 @@
 <div class="contacts-page">
   <div class="container">
     <div class="contacts-page__header">
-      <span class="contacts-page__badge">Контакты</span>
-      <h1>Свяжитесь с нами</h1>
-      <p>Мы всегда на связи и готовы помочь</p>
+      <span class="contacts-page__badge">{{ ls.t('contacts.badge') }}</span>
+      <h1>{{ ls.t('contacts.title') }}</h1>
+      <p>{{ ls.t('contacts.subtitle') }}</p>
     </div>
 
     <div class="contacts__grid">
@@ -12,7 +12,7 @@
         <div class="contact-card">
           <span class="material-symbols-rounded">phone</span>
           <div>
-            <h3>Телефон</h3>
+            <h3>{{ ls.t('contacts.phone') }}</h3>
             <a href="tel:+380991234567">+380 99 123 45 67</a>
           </div>
         </div>
@@ -33,31 +33,31 @@
         <div class="contact-card">
           <span class="material-symbols-rounded">schedule</span>
           <div>
-            <h3>Время работы</h3>
-            <span>Пн — Пт: 9:00 — 18:00</span>
+            <h3>{{ ls.t('contacts.hours') }}</h3>
+            <span>{{ ls.t('contacts.hoursValue') }}</span>
           </div>
         </div>
       </div>
 
       <!-- Contact form -->
       <div class="contacts__form-wrap">
-        <h2>Напишите нам</h2>
+        <h2>{{ ls.t('contacts.formTitle') }}</h2>
         <form class="contacts__form" (ngSubmit)="$event.preventDefault()">
           <div class="form-group">
-            <label>Имя</label>
-            <input type="text" [(ngModel)]="name" name="name" placeholder="Ваше имя" class="form-input">
+            <label>{{ ls.t('contacts.name') }}</label>
+            <input type="text" [(ngModel)]="name" name="name" [placeholder]="ls.t('contacts.namePlaceholder')" class="form-input">
           </div>
           <div class="form-group">
             <label>Email</label>
             <input type="email" [(ngModel)]="email" name="email" placeholder="your@email.com" class="form-input">
           </div>
           <div class="form-group">
-            <label>Сообщение</label>
-            <textarea [(ngModel)]="message" name="message" placeholder="Ваше сообщение..." rows="5" class="form-input form-textarea"></textarea>
+            <label>{{ ls.t('contacts.messageLabel') }}</label>
+            <textarea [(ngModel)]="message" name="message" [placeholder]="ls.t('contacts.messagePlaceholder')" rows="5" class="form-input form-textarea"></textarea>
           </div>
           <button type="submit" class="contacts__submit">
             <span class="material-symbols-rounded">send</span>
-            Отправить
+            {{ ls.t('contacts.submit') }}
           </button>
         </form>
       </div>

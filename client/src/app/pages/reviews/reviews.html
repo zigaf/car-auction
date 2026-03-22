@@ -2,9 +2,9 @@
   <div class="container">
     <!-- Hero -->
     <section class="reviews__hero">
-      <span class="reviews__badge">Отзывы клиентов</span>
-      <h1>Что говорят <span class="accent-text">наши клиенты</span></h1>
-      <p>Реальные отзывы покупателей, которые приобрели автомобили через нашу платформу. Мы ценим каждое мнение.</p>
+      <span class="reviews__badge">{{ ls.t('reviews.badge') }}</span>
+      <h1 [innerHTML]="ls.t('reviews.title')"></h1>
+      <p>{{ ls.t('reviews.subtitle') }}</p>
     </section>
 
     <!-- Promo banner -->
@@ -14,34 +14,34 @@
           <span class="material-symbols-rounded">videocam</span>
         </div>
         <div class="promo-banner__content">
-          <h3 class="promo-banner__title">Акция: видео-отзыв = 100 USDT</h3>
-          <p class="promo-banner__text">Запиши видео-отзыв со своим авто, купленным через RB Motors, в апреле 2026 и получи кешбек <strong>100 USDT</strong> на баланс.</p>
+          <h3 class="promo-banner__title">{{ ls.t('reviews.promo.title') }}</h3>
+          <p class="promo-banner__text" [innerHTML]="ls.t('reviews.promo.text')"></p>
           <div class="promo-banner__countdown">
-            <span class="promo-banner__countdown-label">До старта акции:</span>
+            <span class="promo-banner__countdown-label">{{ ls.t('reviews.promo.countdownLabel') }}</span>
             <div class="promo-banner__timer">
               <div class="promo-banner__timer-cell">
                 <span class="promo-banner__timer-value">{{ promoDays }}</span>
-                <span class="promo-banner__timer-unit">дн</span>
+                <span class="promo-banner__timer-unit">{{ ls.t('reviews.promo.days') }}</span>
               </div>
               <span class="promo-banner__timer-sep">:</span>
               <div class="promo-banner__timer-cell">
                 <span class="promo-banner__timer-value">{{ promoHours.toString().padStart(2, '0') }}</span>
-                <span class="promo-banner__timer-unit">ч</span>
+                <span class="promo-banner__timer-unit">{{ ls.t('reviews.promo.hours') }}</span>
               </div>
               <span class="promo-banner__timer-sep">:</span>
               <div class="promo-banner__timer-cell">
                 <span class="promo-banner__timer-value">{{ promoMinutes.toString().padStart(2, '0') }}</span>
-                <span class="promo-banner__timer-unit">мин</span>
+                <span class="promo-banner__timer-unit">{{ ls.t('reviews.promo.minutes') }}</span>
               </div>
               <span class="promo-banner__timer-sep">:</span>
               <div class="promo-banner__timer-cell">
                 <span class="promo-banner__timer-value">{{ promoSeconds.toString().padStart(2, '0') }}</span>
-                <span class="promo-banner__timer-unit">сек</span>
+                <span class="promo-banner__timer-unit">{{ ls.t('reviews.promo.seconds') }}</span>
               </div>
             </div>
           </div>
         </div>
-        <a routerLink="/contacts" class="promo-banner__btn">Подробнее</a>
+        <a routerLink="/contacts" class="promo-banner__btn">{{ ls.t('reviews.promo.btn') }}</a>
       </div>
     </section>
 
@@ -55,7 +55,7 @@
     @if (loading) {
       <div class="reviews__loading">
         <span class="material-symbols-rounded spin">progress_activity</span>
-        <p>Загрузка отзывов...</p>
+        <p>{{ ls.t('reviews.loading') }}</p>
       </div>
     }
 
@@ -71,7 +71,7 @@
                   <span class="material-symbols-rounded" [class.star--filled]="s <= stats.average" [class.star--half]="s > stats.average && s < stats.average + 1">star</span>
                 }
               </div>
-              <span class="reviews__avg-count">{{ stats.total }} отзывов</span>
+              <span class="reviews__avg-count">{{ ls.t('reviews.totalCount').replace('{n}', stats.total.toString()) }}</span>
             </div>
             <div class="reviews__distribution">
               @for (star of [5, 4, 3, 2, 1]; track star) {
@@ -90,12 +90,12 @@
             @if (isAuthenticated) {
               <button class="reviews__write-btn" (click)="openModal()">
                 <span class="material-symbols-rounded">edit</span>
-                Оставить отзыв
+                {{ ls.t('reviews.leaveReview') }}
               </button>
             } @else {
               <a routerLink="/login" class="reviews__write-btn">
                 <span class="material-symbols-rounded">login</span>
-                Войдите, чтобы оставить отзыв
+                {{ ls.t('reviews.loginToReview') }}
               </a>
             }
           </div>
@@ -129,9 +129,9 @@
           <button class="reviews__more-btn" (click)="loadMore()" [disabled]="loadingMore">
             @if (loadingMore) {
               <span class="material-symbols-rounded spin">progress_activity</span>
-              Загрузка...
+              {{ ls.t('reviews.loadingMore') }}
             } @else {
-              Показать ещё
+              {{ ls.t('reviews.loadMore') }}
             }
           </button>
         </div>
@@ -140,7 +140,7 @@
       @if (reviews.length === 0) {
         <div class="reviews__empty">
           <span class="material-symbols-rounded">rate_review</span>
-          <p>Отзывов пока нет. Будьте первым!</p>
+          <p>{{ ls.t('reviews.noReviews') }}</p>
         </div>
       }
     }
@@ -152,19 +152,19 @@
           @if (submitSuccess) {
             <div class="review-modal__success">
               <span class="material-symbols-rounded">check_circle</span>
-              <h3>Спасибо за отзыв!</h3>
-              <p>Ваш отзыв успешно опубликован.</p>
+              <h3>{{ ls.t('reviews.modal.success.title') }}</h3>
+              <p>{{ ls.t('reviews.modal.success.text') }}</p>
             </div>
           } @else {
             <div class="review-modal__header">
-              <h3 class="review-modal__title">Оставить отзыв</h3>
+              <h3 class="review-modal__title">{{ ls.t('reviews.modal.title') }}</h3>
               <button class="review-modal__close" (click)="closeModal()">
                 <span class="material-symbols-rounded">close</span>
               </button>
             </div>
             <div class="review-modal__body">
               <div class="review-modal__rating">
-                <span class="review-modal__rating-label">Ваша оценка</span>
+                <span class="review-modal__rating-label">{{ ls.t('reviews.modal.ratingLabel') }}</span>
                 <div class="review-modal__stars">
                   @for (s of getStars(5); track s) {
                     <button
@@ -180,21 +180,21 @@
                 </div>
               </div>
               <div class="review-modal__field">
-                <label class="review-modal__label">Ваше имя</label>
+                <label class="review-modal__label">{{ ls.t('reviews.modal.nameLabel') }}</label>
                 <input
                   type="text"
                   class="review-modal__input"
                   [(ngModel)]="modalAuthor"
-                  placeholder="Как вас подписать? (необязательно)"
+                  [placeholder]="ls.t('reviews.modal.namePlaceholder')"
                   maxlength="100"
                 >
               </div>
               <div class="review-modal__field">
-                <label class="review-modal__label">Ваш отзыв</label>
+                <label class="review-modal__label">{{ ls.t('reviews.modal.textLabel') }}</label>
                 <textarea
                   class="review-modal__textarea"
                   [(ngModel)]="modalText"
-                  placeholder="Расскажите о вашем опыте покупки автомобиля через RB Motors..."
+                  [placeholder]="ls.t('reviews.modal.textPlaceholder')"
                   rows="5"
                   maxlength="2000"
                 ></textarea>
@@ -202,7 +202,7 @@
               </div>
             </div>
             <div class="review-modal__footer">
-              <button class="review-modal__cancel" (click)="closeModal()">Отмена</button>
+              <button class="review-modal__cancel" (click)="closeModal()">{{ ls.t('reviews.modal.cancel') }}</button>
               <button
                 class="review-modal__submit"
                 (click)="submitReview()"
@@ -210,9 +210,9 @@
               >
                 @if (submitting) {
                   <span class="material-symbols-rounded spin">progress_activity</span>
-                  Отправка...
+                  {{ ls.t('reviews.modal.submitting') }}
                 } @else {
-                  Опубликовать
+                  {{ ls.t('reviews.modal.submit') }}
                 }
               </button>
             </div>

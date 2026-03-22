@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { LanguageService } from '../../core/services/language.service';
 
 @Component({
   selector: 'app-contacts',
@@ -9,6 +10,8 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './contacts.scss',
 })
 export class ContactsComponent {
+  readonly ls = inject(LanguageService);
+
   name = '';
   email = '';
   message = '';
