@@ -39,6 +39,7 @@ export class AuctionsComponent implements OnInit, OnDestroy {
   now = Date.now();
 
   liveLots: ILot[] = [];
+  featuredIndex = 0;
   dayGroups: DayGroup[] = [];
   upcomingTotal = 0;
 
@@ -64,7 +65,7 @@ export class AuctionsComponent implements OnInit, OnDestroy {
         const prev = this.getLivePrice(lot);
         const delta = update.currentPrice - prev;
 
-        if (this.liveLots[0]?.id === update.lotId && delta > 0) {
+        if (this.liveLots[this.featuredIndex]?.id === update.lotId && delta > 0) {
           this.recentDeltas = [
             { amount: update.currentPrice, delta, bidderFlag: '🏁', timestamp: new Date().toISOString() },
             ...this.recentDeltas,
@@ -224,6 +225,12 @@ export class AuctionsComponent implements OnInit, OnDestroy {
     if (diff < 60000) return `${Math.floor(diff / 1000)}с`;
     if (diff < 3600000) return `${Math.floor(diff / 60000)}м`;
     return `${Math.floor(diff / 3600000)}ч`;
+  }
+
+  selectFeatured(index: number): void {
+    if (index === this.featuredIndex) return;
+    this.featuredIndex = index;
+    this.recentDeltas = [];
   }
 
   isWatching(lot: ILot): boolean {

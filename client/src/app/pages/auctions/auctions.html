@@ -35,7 +35,7 @@
 
     <!-- ── 2-column arena ────────────────────────────────────── -->
     @if (liveLots.length > 0) {
-      @let featured = liveLots[0];
+      @let featured = liveLots[featuredIndex];
       <div class="lb-arena container">
 
         <!-- LEFT: Featured lot -->
@@ -166,12 +166,13 @@
             <div class="lb-sidebar__section">
               <div class="lb-sidebar__section-hd">
                 <span class="material-symbols-rounded">view_list</span>
-                Также в торгах
-                <span class="lb-sidebar__count">{{ liveLots.length - 1 }}</span>
+                Все лоты в торгах
+                <span class="lb-sidebar__count">{{ liveLots.length }}</span>
               </div>
               <div class="lb-lot-list">
-                @for (lot of liveLots | slice:1; track lot.id) {
-                  <a [routerLink]="['/catalog', lot.id]" class="lb-lot-card">
+                @for (lot of liveLots; track lot.id; let i = $index) {
+                  <button class="lb-lot-card" [class.lb-lot-card--active]="i === featuredIndex"
+                          (click)="selectFeatured(i)">
                     <div class="lb-lot-card__thumb">
                       @if (getMainImage(lot)) {
                         <img [src]="getMainImage(lot)" [alt]="lot.title">
@@ -184,7 +185,7 @@
                       <span class="lb-lot-card__price">{{ getLivePrice(lot) | number }} {{ lot.originalCurrency || 'EUR' }}</span>
                     </div>
                     <span class="lb-lot-card__timer" [class]="getTimerClass(lot)">{{ getTimeLeft(lot) }}</span>
-                  </a>
+                  </button>
                 }
               </div>
             </div>
