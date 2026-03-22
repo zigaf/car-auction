@@ -1,11 +1,13 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy, PLATFORM_ID, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe, isPlatformBrowser } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { Subject, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { AuctionService } from '../../core/services/auction.service';
 import { WebsocketService } from '../../core/services/websocket.service';
 import { BrokerService } from '../../core/services/broker.service';
+import { LotService } from '../../core/services/lot.service';
 import { StateService } from '../../core/services/state.service';
 import { TimeService } from '../../core/services/time.service';
 import { ILot } from '../../models/lot.model';
@@ -15,7 +17,7 @@ import { IBid, IBidUpdate, IFeedUpdate, IWatcherCount } from '../../models/aucti
 @Component({
   selector: 'app-live-trading',
   standalone: true,
-  imports: [FormsModule, DecimalPipe],
+  imports: [FormsModule, DecimalPipe, RouterLink],
   templateUrl: './live-trading.html',
   styleUrl: './live-trading.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,6 +39,9 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
   activeLot: ILot | null = null;
   bidHistory: IBid[] = [];
   liveFeed: IFeedUpdate[] = [];
+
+  nextLot: ILot | null = null;
+  nextLotLoading = false;
 
   // UI state
   loading = true;
@@ -83,6 +88,7 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
     private readonly auctionService: AuctionService,
     private readonly wsService: WebsocketService,
     private readonly brokerService: BrokerService,
+    private readonly lotService: LotService,
     private readonly stateService: StateService,
     private readonly timeService: TimeService,
     private readonly cdr: ChangeDetectorRef,
@@ -139,10 +145,31 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
           if (lots.length > 0 && !this.activeLot) {
             this.selectLot(lots[0]);
           }
+          if (lots.length === 0) {
+            this.loadNextLot();
+          }
           this.cdr.markForCheck();
         },
         error: () => {
           this.loading = false;
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  private loadNextLot(): void {
+    this.nextLotLoading = true;
+    const now = new Date().toISOString();
+    this.lotService.getAll({ dateFrom: now, sort: 'date_asc', limit: 1 })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.nextLot = res.data[0] ?? null;
+          this.nextLotLoading = false;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.nextLotLoading = false;
           this.cdr.markForCheck();
         },
       });
@@ -635,6 +662,31 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
 
   isCurrentUser(userId: string): boolean {
     return this.currentUserId === userId;
+  }
+
+  getNextLotLabel(): string {
+    if (!this.nextLot) return '';
+    const target = this.nextLot.auctionStartAt ?? this.nextLot.auctionEndAt;
+    if (!target) return '';
+    const date = new Date(target);
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrowStart = new Date(todayStart);
+    tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+    const afterTomorrowStart = new Date(tomorrowStart);
+    afterTomorrowStart.setDate(afterTomorrowStart.getDate() + 1);
+
+    const time = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+
+    if (date >= todayStart && date < tomorrowStart) {
+      return `Сегодня в ${time}`;
+    }
+    if (date >= tomorrowStart && date < afterTomorrowStart) {
+      return `Завтра в ${time}`;
+    }
+    const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+    const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+    return `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]} в ${time}`;
   }
 
   // ─── Broker helpers ─────────────────────────────────────────────────────

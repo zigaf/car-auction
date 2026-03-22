@@ -9,10 +9,23 @@
 
   <!-- Empty State -->
   @if (!loading && auctionList.length === 0) {
-    <div class="live__empty">
-      <span class="material-symbols-rounded">gavel</span>
-      <h3>No active auctions</h3>
-      <p>There are currently no lots in live trading. Check back later.</p>
+    <div class="live__no-auctions">
+      <span class="material-symbols-rounded live__no-auctions__icon">gavel</span>
+      <h3 class="live__no-auctions__title">Сейчас торгов нет</h3>
+      @if (nextLotLoading) {
+        <p class="live__no-auctions__sub">Загрузка расписания...</p>
+      } @else if (nextLot) {
+        <p class="live__no-auctions__sub">
+          Следующий аукцион — <strong>{{ getNextLotLabel() }}</strong>
+        </p>
+        <p class="live__no-auctions__car">{{ nextLot.title }}</p>
+      } @else {
+        <p class="live__no-auctions__sub">Расписание пока не объявлено</p>
+      }
+      <a routerLink="/auctions" class="live__no-auctions__link">
+        <span class="material-symbols-rounded">calendar_month</span>
+        Смотреть расписание
+      </a>
     </div>
   }
 
