@@ -1,159 +1,279 @@
 <div class="auctions-page">
-  <div class="container">
 
-    <!-- Header -->
-    <div class="auctions-page__header">
-      <div>
-        <h1 class="auctions-page__title">Торги</h1>
-        <p class="auctions-page__subtitle">Аукционы в реальном времени</p>
-      </div>
-      @if (!loading && liveLots.length > 0) {
-        <div class="auctions-page__live-badge">
-          <span class="live-dot"></span>
-          {{ liveLots.length }} {{ liveLots.length === 1 ? 'лот идёт' : 'лота идут' }} сейчас
-        </div>
-      }
+  <!-- ── Page header ──────────────────────────────────────────── -->
+  <div class="lb-header container">
+    <div>
+      <h1 class="lb-header__title">Live Bids</h1>
+      <p class="lb-header__subtitle">Аукционы в реальном времени</p>
     </div>
+    @if (!loading && liveLots.length > 0) {
+      <div class="lb-header__badge">
+        <span class="live-pulse"></span>
+        {{ liveLots.length }} {{ liveLots.length === 1 ? 'лот идёт' : 'лота идут' }} сейчас
+      </div>
+    }
+  </div>
 
-    <!-- Loading -->
-    @if (loading) {
-      <div class="auctions-page__loading">
-        <span class="material-symbols-rounded auctions-page__spinner">progress_activity</span>
-        <span>Загрузка...</span>
+  <!-- ── Loading ──────────────────────────────────────────────── -->
+  @if (loading) {
+    <div class="lb-loading container">
+      <span class="material-symbols-rounded lb-loading__icon">progress_activity</span>
+      <span>Загрузка...</span>
+    </div>
+  }
+
+  @if (!loading) {
+
+    <!-- ── No live placeholder ────────────────────────────────── -->
+    @if (liveLots.length === 0) {
+      <div class="lb-empty container">
+        <span class="material-symbols-rounded lb-empty__icon">gavel</span>
+        <p class="lb-empty__title">Сейчас торгов нет</p>
+        <span class="lb-empty__sub">Смотрите расписание ниже</span>
       </div>
     }
 
-    <!-- ═══ LIVE TRADING — main content ═══ -->
-    @if (!loading && liveLots.length > 0) {
-      <section class="live-section">
-        <div class="live-grid">
-          @for (lot of liveLots; track lot.id) {
-            <a [routerLink]="['/catalog', lot.id]" class="live-card">
-              <div class="live-card__image">
-                @if (getMainImage(lot)) {
-                  <img [src]="getMainImage(lot)" [alt]="lot.title" loading="lazy">
-                } @else {
-                  <div class="live-card__placeholder">
-                    <span class="material-symbols-rounded">directions_car</span>
+    <!-- ── 2-column arena ────────────────────────────────────── -->
+    @if (liveLots.length > 0) {
+      @let featured = liveLots[0];
+      <div class="lb-arena container">
+
+        <!-- LEFT: Featured lot -->
+        <div class="lb-featured">
+
+          <!-- Big image -->
+          <div class="lb-featured__image">
+            @if (getMainImage(featured)) {
+              <img [src]="getMainImage(featured)" [alt]="featured.title" class="lb-featured__img">
+            } @else {
+              <div class="lb-featured__placeholder">
+                <span class="material-symbols-rounded">directions_car</span>
+              </div>
+            }
+            <div class="lb-featured__live-badge">
+              <span class="live-pulse live-pulse--sm"></span>
+              LIVE
+            </div>
+            <div class="lb-featured__timer-chip" [class]="getTimerClass(featured)">
+              <span class="material-symbols-rounded">timer</span>
+              {{ getTimeLeft(featured) }}
+            </div>
+          </div>
+
+          <!-- Title + specs -->
+          <h2 class="lb-featured__title">{{ featured.title }}</h2>
+
+          <div class="lb-featured__specs">
+            @if (featured.year) {
+              <span class="lb-chip">
+                <span class="material-symbols-rounded">calendar_month</span>
+                {{ featured.year }}
+              </span>
+            }
+            @if (featured.mileage) {
+              <span class="lb-chip">
+                <span class="material-symbols-rounded">speed</span>
+                {{ featured.mileage | number }} км
+              </span>
+            }
+            @if (featured.fuelType) {
+              <span class="lb-chip">
+                <span class="material-symbols-rounded">local_gas_station</span>
+                {{ getFuelLabel(featured.fuelType) }}
+              </span>
+            }
+            @if (featured.enginePowerPs) {
+              <span class="lb-chip">
+                <span class="material-symbols-rounded">bolt</span>
+                {{ featured.enginePowerPs }} л.с.
+              </span>
+            }
+            @if (featured.transmission) {
+              <span class="lb-chip">{{ featured.transmission === 'automatic' ? 'Автомат' : 'Механика' }}</span>
+            }
+            @if (featured.saleCountry) {
+              <span class="lb-chip">
+                <span class="material-symbols-rounded">location_on</span>
+                {{ featured.saleCountry }}
+              </span>
+            }
+          </div>
+
+          <!-- Bid panel -->
+          <div class="lb-bid-panel">
+
+            <div class="lb-bid-panel__top">
+              <!-- Current price -->
+              <div class="lb-bid-panel__price-block">
+                <span class="lb-bid-panel__label">Текущая ставка</span>
+                <span class="lb-bid-panel__price"
+                      [class.lb-bid-panel__price--pulse]="pricePulsingId === featured.id">
+                  {{ getLivePrice(featured) | number }} {{ featured.originalCurrency || 'EUR' }}
+                </span>
+              </div>
+
+              <!-- Countdown timer -->
+              <div class="lb-bid-panel__timer-block" [class]="getTimerClass(featured)">
+                <span class="lb-bid-panel__label">Осталось</span>
+                <span class="lb-bid-panel__timer">{{ getTimeLeft(featured) }}</span>
+              </div>
+            </div>
+
+            <!-- Bid step -->
+            @if (featured.bidStep) {
+              <div class="lb-bid-panel__step">
+                <span class="material-symbols-rounded">trending_up</span>
+                Шаг ставки:
+                <strong>+{{ featured.bidStep | number }} {{ featured.originalCurrency || 'EUR' }}</strong>
+              </div>
+            }
+
+            <!-- Recent price deltas -->
+            @if (recentDeltas.length > 0) {
+              <div class="lb-bid-panel__deltas">
+                <span class="lb-bid-panel__deltas-label">Последние ставки</span>
+                @for (d of recentDeltas; track d.timestamp) {
+                  <div class="lb-delta" [class.lb-delta--new]="$index === 0">
+                    <span class="lb-delta__flag">{{ d.bidderFlag }}</span>
+                    <span class="lb-delta__price">{{ d.amount | number }} {{ featured.originalCurrency || 'EUR' }}</span>
+                    <span class="lb-delta__diff">+{{ d.delta | number }}</span>
+                    <span class="lb-delta__time">{{ getRelativeTime(d.timestamp) }}</span>
                   </div>
                 }
-                <div class="live-card__timer" [class]="getTimerClass(lot)">
-                  <span class="material-symbols-rounded live-card__timer-icon">timer</span>
-                  {{ getTimeLeft(lot) }}
-                </div>
-                <div class="live-card__status-badge">
-                  <span class="live-dot live-dot--sm"></span>
-                  LIVE
-                </div>
               </div>
+            }
 
-              <div class="live-card__body">
-                <h3 class="live-card__title">{{ lot.title }}</h3>
-
-                <div class="live-card__specs">
-                  @if (lot.year) { <span>{{ lot.year }}</span> }
-                  @if (lot.mileage) { <span>{{ lot.mileage | number }} км</span> }
-                  @if (lot.fuelType) { <span>{{ getFuelLabel(lot.fuelType) }}</span> }
-                  @if (lot.transmission) { <span>{{ lot.transmission === 'automatic' ? 'Автомат' : 'Механика' }}</span> }
-                </div>
-
-                <div class="live-card__price-row">
-                  <div class="live-card__price">
-                    <span class="live-card__price-label">Текущая ставка</span>
-                    <span class="live-card__price-value">
-                      {{ getLivePrice(lot) | number }} {{ lot.originalCurrency || 'EUR' }}
-                    </span>
-                  </div>
-                  @if (lot.bidStep) {
-                    <div class="live-card__step">
-                      <span class="live-card__price-label">Шаг</span>
-                      <span>+{{ lot.bidStep | number }} {{ lot.originalCurrency || 'EUR' }}</span>
-                    </div>
-                  }
-                </div>
-
-                <div class="live-card__cta">
-                  <span class="material-symbols-rounded">gavel</span>
-                  Перейти к торгам
-                </div>
-              </div>
-            </a>
-          }
-        </div>
-      </section>
-    }
-
-    <!-- No live auctions -->
-    @if (!loading && liveLots.length === 0) {
-      <div class="auctions-page__no-live">
-        <span class="material-symbols-rounded">gavel</span>
-        <p>Активных торгов нет</p>
-        <span>Смотрите расписание ниже</span>
-      </div>
-    }
-
-    <!-- ═══ UPCOMING SCHEDULE — secondary ═══ -->
-    @if (!loading && dayGroups.length > 0) {
-      <div class="schedule">
-        <div class="schedule__header">
-          <span class="material-symbols-rounded">calendar_month</span>
-          Расписание аукционов
-          <span class="schedule__count">{{ upcomingTotal }} лотов</span>
+            <!-- Actions -->
+            <div class="lb-bid-panel__actions">
+              <button class="lb-watch-btn" (click)="toggleWatch(featured)"
+                      [class.lb-watch-btn--active]="isWatching(featured)">
+                <span class="material-symbols-rounded">{{ isWatching(featured) ? 'bookmark' : 'bookmark_border' }}</span>
+                {{ isWatching(featured) ? 'Слежу' : 'Следить' }}
+              </button>
+              <a [routerLink]="['/catalog', featured.id]" class="lb-cta-btn">
+                <span class="material-symbols-rounded">gavel</span>
+                Перейти к торгам
+              </a>
+            </div>
+          </div>
         </div>
 
-        <div class="schedule__body">
-          @for (group of dayGroups; track group.date) {
-            <div class="schedule-group">
-              <div class="schedule-group__header">
-                <span class="material-symbols-rounded">calendar_today</span>
-                <span class="schedule-group__label">{{ group.label }}</span>
-                <span class="schedule-group__count">{{ group.lots.length }}</span>
+        <!-- RIGHT: Sidebar -->
+        <aside class="lb-sidebar">
+
+          <!-- Other live lots -->
+          @if (liveLots.length > 1) {
+            <div class="lb-sidebar__section">
+              <div class="lb-sidebar__section-hd">
+                <span class="material-symbols-rounded">view_list</span>
+                Также в торгах
+                <span class="lb-sidebar__count">{{ liveLots.length - 1 }}</span>
               </div>
-              <div class="schedule-group__list">
-                @for (lot of group.lots; track lot.id) {
-                  <a [routerLink]="['/catalog', lot.id]" class="schedule-item">
-                    <div class="schedule-item__image">
+              <div class="lb-lot-list">
+                @for (lot of liveLots | slice:1; track lot.id) {
+                  <a [routerLink]="['/catalog', lot.id]" class="lb-lot-card">
+                    <div class="lb-lot-card__thumb">
                       @if (getMainImage(lot)) {
-                        <img [src]="getMainImage(lot)" [alt]="lot.title" loading="lazy">
+                        <img [src]="getMainImage(lot)" [alt]="lot.title">
                       } @else {
                         <span class="material-symbols-rounded">directions_car</span>
                       }
                     </div>
-                    <div class="schedule-item__info">
-                      <span class="schedule-item__title">{{ lot.title }}</span>
-                      <span class="schedule-item__specs">
-                        @if (lot.year) { {{ lot.year }} · }
-                        @if (lot.mileage) { {{ lot.mileage | number }} км · }
-                        @if (lot.fuelType) { {{ getFuelLabel(lot.fuelType) }} }
-                      </span>
+                    <div class="lb-lot-card__info">
+                      <span class="lb-lot-card__title">{{ lot.title }}</span>
+                      <span class="lb-lot-card__price">{{ getLivePrice(lot) | number }} {{ lot.originalCurrency || 'EUR' }}</span>
                     </div>
-                    <div class="schedule-item__right">
-                      @if (lot.startingBid) {
-                        <span class="schedule-item__price">{{ lot.startingBid | number }} {{ lot.originalCurrency || 'EUR' }}</span>
-                      }
-                      <span class="schedule-item__countdown">{{ getCountdown(lot) }}</span>
-                    </div>
+                    <span class="lb-lot-card__timer" [class]="getTimerClass(lot)">{{ getTimeLeft(lot) }}</span>
                   </a>
                 }
               </div>
             </div>
           }
-        </div>
+
+          <!-- Bid feed -->
+          <div class="lb-sidebar__section lb-sidebar__section--feed">
+            <div class="lb-sidebar__section-hd">
+              <span class="material-symbols-rounded">rss_feed</span>
+              Лента ставок
+              <span class="lb-feed-dot"></span>
+            </div>
+            <div class="lb-feed">
+              @if (bidFeed.length === 0) {
+                <div class="lb-feed__empty">
+                  <span class="material-symbols-rounded">hourglass_empty</span>
+                  Ждём ставок...
+                </div>
+              }
+              @for (entry of bidFeed; track entry.timestamp) {
+                <div class="lb-feed__item" [class.lb-feed__item--new]="$index === 0">
+                  <span class="lb-feed__flag">{{ entry.bidderFlag }}</span>
+                  <span class="lb-feed__car">{{ entry.lotTitle || 'Лот' }}</span>
+                  <span class="lb-feed__price">{{ entry.amount | number }}</span>
+                  <span class="lb-feed__time">{{ getRelativeTime(entry.timestamp) }}</span>
+                </div>
+              }
+            </div>
+          </div>
+
+        </aside>
       </div>
     }
 
-    <!-- Completely empty -->
-    @if (!loading && liveLots.length === 0 && dayGroups.length === 0) {
-      <div class="auctions-page__empty">
-        <span class="material-symbols-rounded auctions-page__empty-icon">event_busy</span>
-        <h3 class="auctions-page__empty-title">Нет аукционов</h3>
-        <p class="auctions-page__empty-desc">Торги не запланированы. Загляните позже или посмотрите каталог.</p>
-        <a routerLink="/catalog" class="auctions-page__empty-btn">
+    <!-- ── Upcoming schedule ──────────────────────────────────── -->
+    @if (dayGroups.length > 0) {
+      <div class="lb-upcoming">
+        <div class="lb-upcoming__hd container">
+          <span class="material-symbols-rounded">calendar_month</span>
+          Расписание аукционов
+          <span class="lb-upcoming__total">{{ upcomingTotal }} лотов</span>
+        </div>
+
+        @for (group of dayGroups; track group.date) {
+          <div class="lb-day-group">
+            <div class="lb-day-group__label container">{{ group.label }}</div>
+            <div class="lb-day-scroll">
+              @for (lot of group.lots; track lot.id) {
+                <a [routerLink]="['/catalog', lot.id]" class="lb-upcoming-card">
+                  <div class="lb-upcoming-card__image">
+                    @if (getMainImage(lot)) {
+                      <img [src]="getMainImage(lot)" [alt]="lot.title" loading="lazy">
+                    } @else {
+                      <span class="material-symbols-rounded">directions_car</span>
+                    }
+                  </div>
+                  <div class="lb-upcoming-card__body">
+                    <span class="lb-upcoming-card__title">{{ lot.title }}</span>
+                    <span class="lb-upcoming-card__specs">
+                      @if (lot.year) { {{ lot.year }} · }
+                      @if (lot.fuelType) { {{ getFuelLabel(lot.fuelType) }} }
+                    </span>
+                    <div class="lb-upcoming-card__foot">
+                      @if (lot.startingBid) {
+                        <span class="lb-upcoming-card__price">{{ lot.startingBid | number }}</span>
+                      }
+                      <span class="lb-upcoming-card__countdown">{{ getCountdown(lot) }}</span>
+                    </div>
+                  </div>
+                </a>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Fully empty -->
+    @if (liveLots.length === 0 && dayGroups.length === 0) {
+      <div class="lb-all-empty container">
+        <span class="material-symbols-rounded">event_busy</span>
+        <h3>Нет аукционов</h3>
+        <p>Торги не запланированы. Загляните позже или посмотрите каталог.</p>
+        <a routerLink="/catalog" class="lb-cta-btn">
           <span class="material-symbols-rounded">search</span>
           Перейти в каталог
         </a>
       </div>
     }
 
-  </div>
+  }
 </div>

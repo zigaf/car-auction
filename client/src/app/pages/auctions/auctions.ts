@@ -1,11 +1,13 @@
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { DecimalPipe } from '@angular/common';
+import { DecimalPipe, SlicePipe } from '@angular/common';
 import { Subject, takeUntil, forkJoin, interval } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { LotService } from '../../core/services/lot.service';
 import { AuctionStateService } from '../../core/services/auction-state.service';
+import { WebsocketService } from '../../core/services/websocket.service';
 import { ILot, ImageCategory, LotStatus } from '../../models/lot.model';
+import { IFeedUpdate } from '../../models/auction.model';
 
 interface DayGroup {
   date: Date;
@@ -13,28 +15,38 @@ interface DayGroup {
   lots: ILot[];
 }
 
+interface BidDelta {
+  amount: number;
+  delta: number;
+  bidderFlag: string;
+  timestamp: string;
+}
+
 @Component({
   selector: 'app-auctions',
   standalone: true,
-  imports: [RouterLink, DecimalPipe],
+  imports: [RouterLink, DecimalPipe, SlicePipe],
   templateUrl: './auctions.html',
   styleUrl: './auctions.scss',
 })
 export class AuctionsComponent implements OnInit, OnDestroy {
   private readonly lotService = inject(LotService);
   private readonly auctionState = inject(AuctionStateService);
+  private readonly wsService = inject(WebsocketService);
   private readonly destroy$ = new Subject<void>();
 
   loading = true;
   now = Date.now();
 
-  // Primary content — currently trading
   liveLots: ILot[] = [];
-
-  // Secondary content — upcoming schedule
   dayGroups: DayGroup[] = [];
   upcomingTotal = 0;
-  scheduleExpanded = false;
+
+  bidFeed: IFeedUpdate[] = [];
+  recentDeltas: BidDelta[] = [];
+  pricePulsingId: string | null = null;
+  private pricePulseTimer: ReturnType<typeof setTimeout> | null = null;
+  private watchedIds = new Set<string>();
 
   ngOnInit(): void {
     this.loadAuctions();
@@ -43,21 +55,39 @@ export class AuctionsComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => { this.now = Date.now(); });
 
-    // Patch live prices from WebSocket feed
     this.auctionState.priceUpdate$
       .pipe(takeUntil(this.destroy$))
       .subscribe((update) => {
         const lot = this.liveLots.find((l) => l.id === update.lotId);
-        if (lot) {
-          lot.currentPrice = update.currentPrice;
-          if (update.auctionEndAt !== undefined) {
-            lot.auctionEndAt = update.auctionEndAt;
-          }
+        if (!lot) return;
+
+        const prev = this.getLivePrice(lot);
+        const delta = update.currentPrice - prev;
+
+        if (this.liveLots[0]?.id === update.lotId && delta > 0) {
+          this.recentDeltas = [
+            { amount: update.currentPrice, delta, bidderFlag: '🏁', timestamp: new Date().toISOString() },
+            ...this.recentDeltas,
+          ].slice(0, 4);
         }
+
+        this.pricePulsingId = update.lotId;
+        if (this.pricePulseTimer) clearTimeout(this.pricePulseTimer);
+        this.pricePulseTimer = setTimeout(() => { this.pricePulsingId = null; }, 750);
+
+        lot.currentPrice = update.currentPrice;
+        if (update.auctionEndAt !== undefined) lot.auctionEndAt = update.auctionEndAt;
+      });
+
+    this.wsService.feedUpdate$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((entry) => {
+        this.bidFeed = [entry, ...this.bidFeed].slice(0, 40);
       });
   }
 
   ngOnDestroy(): void {
+    if (this.pricePulseTimer) clearTimeout(this.pricePulseTimer);
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -66,15 +96,18 @@ export class AuctionsComponent implements OnInit, OnDestroy {
     this.loading = true;
 
     const now = new Date();
-    const dateFrom = now.toISOString();
     const endDate = new Date(now);
     endDate.setDate(endDate.getDate() + 3);
     endDate.setHours(23, 59, 59, 999);
-    const dateTo = endDate.toISOString();
 
     forkJoin({
       live: this.lotService.getAll({ status: LotStatus.TRADING, limit: 50 }),
-      upcoming: this.lotService.getAll({ dateFrom, dateTo, limit: 200, sort: 'auction_asc' }),
+      upcoming: this.lotService.getAll({
+        dateFrom: now.toISOString(),
+        dateTo: endDate.toISOString(),
+        limit: 200,
+        sort: 'auction_asc',
+      }),
     })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -184,5 +217,21 @@ export class AuctionsComponent implements OnInit, OnDestroy {
       electric: 'Электро', lpg: 'Газ', other: 'Другое',
     };
     return labels[fuelType] || fuelType || '-';
+  }
+
+  getRelativeTime(dateStr: string): string {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    if (diff < 60000) return `${Math.floor(diff / 1000)}с`;
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}м`;
+    return `${Math.floor(diff / 3600000)}ч`;
+  }
+
+  isWatching(lot: ILot): boolean {
+    return this.watchedIds.has(lot.id);
+  }
+
+  toggleWatch(lot: ILot): void {
+    if (this.watchedIds.has(lot.id)) this.watchedIds.delete(lot.id);
+    else this.watchedIds.add(lot.id);
   }
 }
