@@ -11,20 +11,20 @@
   @if (!loading && auctionList.length === 0) {
     <div class="live__no-auctions">
       <span class="material-symbols-rounded live__no-auctions__icon">gavel</span>
-      <h3 class="live__no-auctions__title">Сейчас торгов нет</h3>
+      <h3 class="live__no-auctions__title">{{ ls.t('live.noAuctions') }}</h3>
       @if (nextLotLoading) {
-        <p class="live__no-auctions__sub">Загрузка расписания...</p>
+        <p class="live__no-auctions__sub">{{ ls.t('live.loadingSchedule') }}</p>
       } @else if (nextLot) {
         <p class="live__no-auctions__sub">
-          Следующий аукцион — <strong>{{ nextLotLabel }}</strong>
+          {{ ls.t('live.nextAuction') }} <strong>{{ nextLotLabel }}</strong>
         </p>
         <p class="live__no-auctions__car">{{ nextLot.title }}</p>
       } @else {
-        <p class="live__no-auctions__sub">Расписание пока не объявлено</p>
+        <p class="live__no-auctions__sub">{{ ls.t('live.noSchedule') }}</p>
       }
       <a routerLink="/auctions" class="live__no-auctions__link">
         <span class="material-symbols-rounded">calendar_month</span>
-        Смотреть расписание
+        {{ ls.t('live.viewSchedule') }}
       </a>
     </div>
   }
@@ -109,7 +109,7 @@
             @if (activeLot.isPaused) {
               <div class="lot__timer lot__timer--paused">
                 <span class="material-symbols-rounded">pause_circle</span>
-                <span class="mono">Пауза</span>
+                <span class="mono">Pause</span>
               </div>
             } @else {
               <div class="lot__timer" [class]="getTimerClass(activeLot.auctionEndAt)">
@@ -206,7 +206,7 @@
           <!-- Broker: trader picker -->
           @if (isBroker && traders.length > 0) {
             <div class="lot__trader-picker">
-              <span class="lot__trader-label">Торгую за:</span>
+              <span class="lot__trader-label">{{ ls.t('live.tradingFor') }}</span>
               <button class="lot__trader-btn" (click)="toggleTraderPicker()">
                 @if (selectedTrader) {
                   <span class="lot__trader-name">
@@ -216,7 +216,7 @@
                     {{ selectedTrader.firstName }} {{ selectedTrader.lastName }}
                   </span>
                 } @else {
-                  <span class="lot__trader-name lot__trader-name--empty">Выберите трейдера</span>
+                  <span class="lot__trader-name lot__trader-name--empty">{{ ls.t('live.selectTrader') }}</span>
                 }
                 <span class="material-symbols-rounded">{{ traderPickerOpen ? 'expand_less' : 'expand_more' }}</span>
               </button>

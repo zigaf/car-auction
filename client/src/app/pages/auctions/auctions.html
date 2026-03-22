@@ -1,7 +1,7 @@
 <div class="schedule">
   <div class="schedule__header">
-    <h1 class="schedule__title">Расписание аукционов</h1>
-    <p class="schedule__subtitle">Выберите день, чтобы увидеть лоты</p>
+    <h1 class="schedule__title">{{ ls.t('auctions.title') }}</h1>
+    <p class="schedule__subtitle">{{ ls.t('auctions.subtitle') }}</p>
   </div>
 
   <div class="schedule__calendar">
@@ -68,7 +68,7 @@
               <span class="lot-row__title">{{ lot.title }}</span>
               <div class="lot-row__meta">
                 @if (lot.year) { <span>{{ lot.year }}</span> }
-                @if (lot.mileage) { <span>{{ lot.mileage | number }} км</span> }
+                @if (lot.mileage) { <span>{{ lot.mileage | number }} {{ ls.t('auctions.km') }}</span> }
                 @if (lot.fuelType) { <span>{{ lot.fuelType }}</span> }
               </div>
             </div>
@@ -76,7 +76,7 @@
               @if (isLotActive(lot)) {
                 <span class="lot-row__live-badge">
                   <span class="lot-row__live-dot"></span>
-                  Идёт
+                  {{ ls.t('auctions.live') }}
                 </span>
               } @else {
                 <span class="lot-row__time">{{ getLotTime(lot) }}</span>
@@ -91,7 +91,7 @@
             @if (isLotActive(lot)) {
               <button class="lot-row__join" (click)="navigateToLive($event)">
                 <span class="material-symbols-rounded">gavel</span>
-                В торги
+                {{ ls.t('auctions.joinBid') }}
               </button>
             }
           </a>

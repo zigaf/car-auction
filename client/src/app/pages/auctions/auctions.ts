@@ -4,6 +4,7 @@ import { DecimalPipe } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { LotService } from '../../core/services/lot.service';
+import { LanguageService } from '../../core/services/language.service';
 import { ILot, ImageCategory } from '../../models/lot.model';
 
 interface CalendarCell {
@@ -32,17 +33,13 @@ export class AuctionsComponent implements OnInit, OnDestroy {
   selectedDateKey: string | null = null;
   selectedLots: ILot[] = [];
 
-  readonly weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   readonly skeletonCells = Array.from({ length: 35 }, (_, i) => i);
-  readonly monthNames = [
-    'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
-    'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь',
-  ];
 
   constructor(
     private readonly lotService: LotService,
     private readonly cdr: ChangeDetectorRef,
     private readonly router: Router,
+    private readonly ls: LanguageService,
   ) {}
 
   ngOnInit(): void {
@@ -54,8 +51,24 @@ export class AuctionsComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  private get locale(): string {
+    const map: Record<string, string> = { ru: 'ru-RU', by: 'be-BY', en: 'en-US' };
+    return map[this.ls.lang()] ?? 'ru-RU';
+  }
+
+  get weekdays(): string[] {
+    const fmt = new Intl.DateTimeFormat(this.locale, { weekday: 'short' });
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(2024, 0, 1 + i);
+      const s = fmt.format(d);
+      return s.charAt(0).toUpperCase() + s.slice(1);
+    });
+  }
+
   get monthLabel(): string {
-    return `${this.monthNames[this.viewDate.getMonth()]} ${this.viewDate.getFullYear()}`;
+    const month = new Intl.DateTimeFormat(this.locale, { month: 'long' }).format(this.viewDate);
+    const cap = month.charAt(0).toUpperCase() + month.slice(1);
+    return `${cap} ${this.viewDate.getFullYear()}`;
   }
 
   get isCurrentMonth(): boolean {
@@ -113,11 +126,14 @@ export class AuctionsComponent implements OnInit, OnDestroy {
   }
 
   getLotCountLabel(count: number): string {
+    if (this.ls.lang() === 'en') {
+      return `${count} ${count === 1 ? 'lot' : 'lots'}`;
+    }
     const mod10 = count % 10;
     const mod100 = count % 100;
-    if (mod10 === 1 && mod100 !== 11) return `${count} лот`;
-    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return `${count} лота`;
-    return `${count} лотов`;
+    if (mod10 === 1 && mod100 !== 11) return `${count} ${this.ls.t('auctions.lot1')}`;
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return `${count} ${this.ls.t('auctions.lot2')}`;
+    return `${count} ${this.ls.t('auctions.lots')}`;
   }
 
   isLotActive(lot: ILot): boolean {
@@ -145,7 +161,7 @@ export class AuctionsComponent implements OnInit, OnDestroy {
   getLotTime(lot: ILot): string {
     const target = lot.auctionStartAt ?? lot.auctionEndAt;
     if (!target) return '';
-    return new Date(target).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    return new Intl.DateTimeFormat(this.locale, { hour: '2-digit', minute: '2-digit' }).format(new Date(target));
   }
 
   private loadMonth(date: Date): void {

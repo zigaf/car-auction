@@ -10,6 +10,7 @@ import { BrokerService } from '../../core/services/broker.service';
 import { LotService } from '../../core/services/lot.service';
 import { StateService } from '../../core/services/state.service';
 import { TimeService } from '../../core/services/time.service';
+import { LanguageService } from '../../core/services/language.service';
 import { ILot } from '../../models/lot.model';
 import { IUser } from '../../models/user.model';
 import { IBid, IBidUpdate, IFeedUpdate, IWatcherCount } from '../../models/auction.model';
@@ -84,6 +85,7 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
   };
 
   private readonly platformId = inject(PLATFORM_ID);
+  readonly ls = inject(LanguageService);
 
   constructor(
     private readonly auctionService: AuctionService,
@@ -680,17 +682,18 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
     const afterTomorrowStart = new Date(tomorrowStart);
     afterTomorrowStart.setDate(afterTomorrowStart.getDate() + 1);
 
-    const time = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    const localeMap: Record<string, string> = { ru: 'ru-RU', by: 'be-BY', en: 'en-US' };
+    const locale = localeMap[this.ls.lang()] ?? 'ru-RU';
+    const time = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(date);
 
     if (date >= todayStart && date < tomorrowStart) {
-      return `Сегодня в ${time}`;
+      return `${this.ls.t('live.today')} ${time}`;
     }
     if (date >= tomorrowStart && date < afterTomorrowStart) {
-      return `Завтра в ${time}`;
+      return `${this.ls.t('live.tomorrow')} ${time}`;
     }
-    const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
-    const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-    return `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]} в ${time}`;
+    const dayMonth = new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long' }).format(date);
+    return `${dayMonth} ${this.ls.t('time.at')} ${time}`;
   }
 
   // ─── Broker helpers ─────────────────────────────────────────────────────
