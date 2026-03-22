@@ -502,9 +502,22 @@
   color: $text-primary;
   border-top: 1px solid $border-color;
   transition: background $transition-fast;
+  width: 100%;
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  cursor: pointer;
+  text-align: left;
 
   &:first-child { border-top: none; }
   &:hover { background: $bg-elevated; }
+
+  &--active {
+    background: rgba($accent, 0.07);
+    border-left: 3px solid $accent;
+    padding-left: calc(#{$space-md} - 3px);
+  }
 }
 
 .lb-lot-card__thumb {
