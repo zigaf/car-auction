@@ -148,44 +148,28 @@
 }
 
 // --- Language switcher ---
-.header__lang-switcher {
-  display: flex;
-  align-items: center;
-  gap: 2px;
+.header__lang-select {
+  height: 32px;
+  padding: 0 $space-sm;
   background: $bg-secondary;
   border: 1px solid $border-color;
   border-radius: $radius-pill;
-  padding: 2px;
-}
-
-.header__lang-btn {
-  height: 28px;
-  padding: 0 $space-sm;
-  background: none;
-  border: none;
-  border-radius: $radius-pill;
+  font-family: $font-ui;
   font-size: $fs-xs;
   font-weight: $fw-semibold;
-  color: $text-tertiary;
+  color: $text-primary;
   cursor: pointer;
-  transition: color $transition-fast, background $transition-fast;
-  letter-spacing: 0.04em;
+  transition: border-color $transition-fast, background $transition-fast;
 
-  &:hover {
+  &:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  option {
+    background: $bg-panel;
     color: $text-primary;
   }
-
-  &--active {
-    background: $bg-panel;
-    color: var(--accent);
-    box-shadow: $shadow-sm;
-  }
-}
-
-.header__lang-sep {
-  width: 1px;
-  height: 14px;
-  background: $border-color;
 }
 
 .header__theme-toggle {

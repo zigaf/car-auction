@@ -26,11 +26,11 @@
     </div>
 
     <div class="header__actions">
-      <div class="header__lang-switcher">
-        <button class="header__lang-btn" [class.header__lang-btn--active]="ls.lang() === 'ru'" (click)="ls.setLang('ru')">RU</button>
-        <span class="header__lang-sep"></span>
-        <button class="header__lang-btn" [class.header__lang-btn--active]="ls.lang() === 'by'" (click)="ls.setLang('by')">BY</button>
-      </div>
+      <select class="header__lang-select" [value]="ls.lang()" (change)="ls.setLang($any($event.target).value)">
+        <option value="ru">RU</option>
+        <option value="by">BY</option>
+        <option value="en">EN</option>
+      </select>
 
       <button class="header__icon-btn header__theme-toggle" (click)="themeService.toggle()" [attr.aria-label]="themeService.isDark() ? ls.t('header.theme.light') : ls.t('header.theme.dark')">
         <span class="material-symbols-rounded">{{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}</span>
@@ -83,11 +83,11 @@
   <div class="drawer__header">
     <img [src]="themeService.isDark() ? 'assets/images/logo-dark.svg' : 'assets/images/logo.svg'" alt="RB Motors" class="drawer__logo">
     <div class="drawer__header-actions">
-      <div class="header__lang-switcher">
-        <button class="header__lang-btn" [class.header__lang-btn--active]="ls.lang() === 'ru'" (click)="ls.setLang('ru')">RU</button>
-        <span class="header__lang-sep"></span>
-        <button class="header__lang-btn" [class.header__lang-btn--active]="ls.lang() === 'by'" (click)="ls.setLang('by')">BY</button>
-      </div>
+      <select class="header__lang-select" [value]="ls.lang()" (change)="ls.setLang($any($event.target).value)">
+        <option value="ru">RU</option>
+        <option value="by">BY</option>
+        <option value="en">EN</option>
+      </select>
       <button class="header__icon-btn header__theme-toggle" (click)="themeService.toggle()" [attr.aria-label]="themeService.isDark() ? ls.t('header.theme.light') : ls.t('header.theme.dark')">
         <span class="material-symbols-rounded">{{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}</span>
       </button>

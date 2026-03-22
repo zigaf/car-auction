@@ -13,6 +13,7 @@ export enum UserStatus {
 export enum Language {
   RU = 'ru',
   BY = 'by',
+  EN = 'en',
 }
 
 export enum Currency {

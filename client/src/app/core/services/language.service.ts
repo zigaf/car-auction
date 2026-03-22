@@ -2,7 +2,7 @@ import { Injectable, signal, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Language } from '../../models/user.model';
 
-type Lang = 'ru' | 'by';
+type Lang = 'ru' | 'by' | 'en';
 
 const T: Record<Lang, Record<string, string>> = {
   ru: {
@@ -241,6 +241,124 @@ const T: Record<Lang, Record<string, string>> = {
     'auth.register.hasAccount': 'Ужо ёсць акаўнт?',
     'auth.register.login': 'Увайсці',
   },
+  en: {
+    // Header nav
+    'nav.catalog': 'Catalog',
+    'nav.auctions': 'Auctions',
+    'nav.live': 'Live Bids',
+    'nav.schedule': 'Schedule',
+    'nav.about': 'About',
+    'nav.reviews': 'Reviews',
+    'nav.home': 'Home',
+    'header.search': 'Search by make, model...',
+    'header.login': 'Log in',
+    'header.logout': 'Log out',
+    'header.register': 'Register',
+    'header.theme.dark': 'Dark mode',
+    'header.theme.light': 'Light mode',
+    'header.notifications': 'Notifications',
+    'header.favorites': 'Favourites',
+    'header.profile': 'Profile',
+    'toast.login.required': 'Log in to see your favourites',
+    // Cabinet nav
+    'cabinet.overview': 'Overview',
+    'cabinet.bids': 'My Bids',
+    'cabinet.orders': 'Orders',
+    'cabinet.documents': 'Documents',
+    'cabinet.balance': 'Balance',
+    'cabinet.watchlist': 'Watchlist',
+    'cabinet.calendar': 'Calendar',
+    'cabinet.notifications': 'Notifications',
+    'cabinet.calculator': 'Calculator',
+    'cabinet.settings': 'Settings',
+    'user.verified': 'Verified',
+    'user.notVerified': 'Not Verified',
+    // About page
+    'about.badge': 'About Us',
+    'about.hero.title': 'RB Motors — <span class="accent-text">your gateway</span> to European cars',
+    'about.hero.desc': 'We built a platform that makes buying cars at European auctions simple, transparent, and accessible to everyone.',
+    'about.why.title': 'Why choose us',
+    'about.why.1.title': 'Real-time bidding',
+    'about.why.1.desc': 'Clients always track their bid on a vehicle in real time.',
+    'about.why.2.title': 'Full transaction transparency',
+    'about.why.2.desc': 'Transparency at every step, controlled pricing, no hidden fees.',
+    'about.why.3.title': 'Delivery to your door',
+    'about.why.3.desc': 'We accompany the vehicle to the specified address and assist with all paperwork, including vehicle registration.',
+    'about.why.4.title': 'Expert inspection',
+    'about.why.4.desc': 'Our specialists inspect every vehicle before bidding begins and will always flag any hidden issues.',
+    'about.mission.title': 'Our Mission',
+    'about.mission.p1': 'To give CIS buyers direct access to the European car market with full support — from bidding to doorstep delivery.',
+    'about.mission.p2': 'We combine real-time technology, transparent auction mechanics, and professional logistics so every client can buy a car at the best price.',
+    'about.values.title': 'Our Values',
+    'about.values.1.title': 'Transparency',
+    'about.values.1.desc': 'Open auctions, fair prices, complete history of every vehicle',
+    'about.values.2.title': 'Speed',
+    'about.values.2.desc': 'Real-time bidding, fast delivery, swift customs clearance',
+    'about.values.3.title': 'Reliability',
+    'about.values.3.desc': 'Verified vehicles, guaranteed delivery, legal clarity',
+    'about.team.title': 'Team',
+    // Footer
+    'footer.desc': 'Online car auction platform from Europe. Transparent real-time bidding.',
+    'footer.col.auctions': 'Auctions',
+    'footer.catalog': 'Lot Catalog',
+    'footer.live': 'Live Bidding',
+    'footer.ending': 'Ending Soon',
+    'footer.liveTrading': 'Live Trading',
+    'footer.calendar': 'Auction Calendar',
+    'footer.col.buyers': 'For Buyers',
+    'footer.how.register': 'How to Register',
+    'footer.how.bids': 'How to Bid',
+    'footer.payment': 'Payment & Delivery',
+    'footer.customs': 'Car Customs Clearance',
+    'footer.guarantee': 'Guarantees & Returns',
+    'footer.col.company': 'Company',
+    'footer.about': 'About Us',
+    'footer.faq': 'FAQ',
+    'footer.contacts': 'Contacts',
+    'footer.jobs': 'Careers',
+    'footer.blog': 'Blog',
+    'footer.partners': 'Partners:',
+    'footer.copyright': '© 2025–2026 RB Motors. All rights reserved.',
+    'footer.privacy': 'Privacy Policy',
+    'footer.terms': 'Terms of Use',
+    'footer.cookies': 'Cookies',
+    // Settings
+    'settings.title': 'Settings',
+    'settings.profile': 'Profile',
+    'settings.loading': 'Loading profile...',
+    'settings.firstName': 'First Name',
+    'settings.lastName': 'Last Name',
+    'settings.phone': 'Phone',
+    'settings.saveProfile': 'Save Profile',
+    'settings.regional': 'Regional Settings',
+    'settings.country': 'Country',
+    'settings.language': 'Language',
+    'settings.currency': 'Currency',
+    'settings.saveRegional': 'Save Regional Settings',
+    'settings.restricted.title': 'Restricted Region',
+    'settings.restricted.desc': 'At the request of our partner rbmotors.de, certain platform features, including balance top-up, may be restricted for users from Russia and the Republic of Belarus.',
+    'settings.saved.profile': 'Profile saved',
+    'settings.saved.regional': 'Regional settings saved',
+    'settings.error.profile': 'Error saving profile',
+    'settings.error.regional': 'Error saving settings',
+    // Auth
+    'auth.login.title': 'Log in to RB Motors',
+    'auth.login.subtitle': 'Log in to start bidding',
+    'auth.login.forgot': 'Forgot password?',
+    'auth.login.submit': 'Log In',
+    'auth.login.noAccount': 'No account?',
+    'auth.login.register': 'Register',
+    'auth.register.title': 'Create an RB Motors account',
+    'auth.register.subtitle': 'Create an account to participate in auctions',
+    'auth.register.firstName': 'First Name',
+    'auth.register.lastName': 'Last Name',
+    'auth.register.phone': 'Phone',
+    'auth.register.password': 'Password',
+    'auth.register.confirm': 'Confirm Password',
+    'auth.register.submit': 'Register',
+    'auth.register.hasAccount': 'Already have an account?',
+    'auth.register.login': 'Log In',
+  },
 };
 
 @Injectable({ providedIn: 'root' })
@@ -251,7 +369,7 @@ export class LanguageService {
   init(): void {
     if (!isPlatformBrowser(this.platformId)) return;
     const saved = localStorage.getItem('lang') as Lang | null;
-    if (saved === 'ru' || saved === 'by') {
+    if (saved === 'ru' || saved === 'by' || saved === 'en') {
       this.lang.set(saved);
     }
   }
