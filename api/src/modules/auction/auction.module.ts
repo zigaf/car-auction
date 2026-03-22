@@ -13,6 +13,8 @@ import { AuctionSchedulerService } from './auction-scheduler.service';
 import { BalanceModule } from '../balance/balance.module';
 import { AuthModule } from '../auth/auth.module';
 import { NotificationModule } from '../notification/notification.module';
+import { WatchlistItem } from '../../db/entities/watchlist.entity';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
@@ -23,10 +25,12 @@ import { NotificationModule } from '../notification/notification.module';
       BalanceTransaction,
       Order,
       OrderStatusHistory,
+      WatchlistItem,
     ]),
     BalanceModule,
     AuthModule,
     NotificationModule,
+    EmailModule,
   ],
   controllers: [AuctionController],
   providers: [AuctionService, AuctionGateway, AuctionSchedulerService],

@@ -6,12 +6,14 @@ import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
 import { AuthModule } from '../auth/auth.module';
 import { NotificationModule } from '../notification/notification.module';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Order, OrderStatusHistory]),
     AuthModule,
     NotificationModule,
+    EmailModule,
   ],
   controllers: [OrderController],
   providers: [OrderService],

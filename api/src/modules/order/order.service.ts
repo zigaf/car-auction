@@ -11,6 +11,8 @@ import { OrderStatusHistory } from '../../db/entities/order-status-history.entit
 import { OrderStatus } from '../../common/enums/order-status.enum';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationType } from '../../common/enums/notification-type.enum';
+import { EmailService } from '../email/email.service';
+import { EmailEventType } from '../../common/enums/email-event-type.enum';
 
 const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   [OrderStatus.AWAITING_PAYMENT]: 'Ожидание оплаты',
@@ -46,6 +48,7 @@ export class OrderService {
     private readonly historyRepository: Repository<OrderStatusHistory>,
     private readonly dataSource: DataSource,
     private readonly notificationService: NotificationService,
+    private readonly emailService: EmailService,
   ) {}
 
   async getMyOrders(
@@ -223,6 +226,10 @@ export class OrderService {
             data: { orderId, status },
           })
           .catch(() => {});
+        this.emailService.sendToUser(updatedOrder.userId, EmailEventType.ORDER_STATUS_CHANGED, {
+          orderId: orderId.slice(0, 8).toUpperCase(),
+          statusLabel: label,
+        }).catch(() => {});
       }
 
       return updatedOrder as Order;

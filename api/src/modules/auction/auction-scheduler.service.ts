@@ -14,6 +14,9 @@ import { BalanceTransactionType } from '../../common/enums/balance-transaction-t
 import { Role } from '../../common/enums/role.enum';
 import { AuctionGateway } from './auction.gateway';
 import { BalanceService } from '../balance/balance.service';
+import { EmailService } from '../email/email.service';
+import { EmailEventType } from '../../common/enums/email-event-type.enum';
+import { WatchlistItem } from '../../db/entities/watchlist.entity';
 
 @Injectable()
 export class AuctionSchedulerService {
@@ -28,6 +31,8 @@ export class AuctionSchedulerService {
     private readonly dataSource: DataSource,
     private readonly auctionGateway: AuctionGateway,
     private readonly balanceService: BalanceService,
+    @InjectRepository(WatchlistItem) private readonly watchlistRepository: Repository<WatchlistItem>,
+    private readonly emailService: EmailService,
   ) {}
 
   @Cron(CronExpression.EVERY_10_SECONDS)
@@ -50,6 +55,14 @@ export class AuctionSchedulerService {
             title: lot.title,
             auctionEndAt: lot.auctionEndAt,
           });
+          const watchers = await this.watchlistRepository.find({ where: { lotId: lot.id } });
+          for (const watcher of watchers) {
+            this.emailService.sendToUser(watcher.userId, EmailEventType.AUCTION_STARTING, {
+              lotTitle: lot.title || `Лот #${lot.id.slice(0, 8)}`,
+              auctionStartTime: lot.auctionStartAt?.toLocaleString('ru-RU') || '',
+              lotLink: `${process.env.CLIENT_URL}/catalog/${lot.id}`,
+            }).catch(() => {});
+          }
           this.logger.log(`Auction auto-started: lot=${lot.id}`);
         } catch (error) {
           this.logger.error(`Failed to start auction for lot=${lot.id}`, error);
@@ -246,6 +259,11 @@ export class AuctionSchedulerService {
           winningBid.userId,
           finalPrice,
         );
+
+        this.emailService.sendToUser(winningBid.userId, EmailEventType.AUCTION_WON, {
+          lotTitle: lockedLot.title || `Лот #${lot.id.slice(0, 8)}`,
+          finalPrice: `${finalPrice}`,
+        }).catch(() => {});
 
         this.logger.log(
           `Auction ended: lot=${lot.id}, winner=${winningBid.userId}, price=${finalPrice}`,
