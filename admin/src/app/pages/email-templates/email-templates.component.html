@@ -1,0 +1,84 @@
+<div class="email-templates">
+  <h2 class="email-templates__title">Email Templates</h2>
+
+  <div class="email-templates__list">
+    @for (row of rows; track row.setting.eventType) {
+      <div class="event-row" [class.event-row--expanded]="row.expanded">
+        <div class="event-row__header">
+          <span class="event-row__label">{{ row.label }}</span>
+          <div class="event-row__actions">
+            <mat-slide-toggle
+              [(ngModel)]="row.setting.isEnabled"
+              (change)="onToggle(row)"
+            ></mat-slide-toggle>
+            <button class="event-row__edit-btn" (click)="toggleExpand(row)">
+              {{ row.expanded ? 'Закрыть' : 'Редактировать' }}
+            </button>
+          </div>
+        </div>
+
+        @if (row.expanded) {
+          <div class="event-row__editor">
+            <div class="lang-tabs">
+              @for (lang of availableLanguages; track lang) {
+                <button
+                  class="lang-tab"
+                  [class.lang-tab--active]="row.activeLanguage === lang"
+                  [class.lang-tab--missing]="!hasTemplate(row, lang)"
+                  (click)="switchLanguage(row, lang)"
+                >
+                  {{ lang.toUpperCase() }}
+                  @if (!hasTemplate(row, lang)) { ⚠ }
+                </button>
+              }
+            </div>
+
+            <div class="editor-fields">
+              <label class="editor-label">
+                Тема письма
+                <input
+                  class="editor-input"
+                  [(ngModel)]="row.editSubject"
+                  placeholder="Тема письма"
+                />
+              </label>
+
+              <label class="editor-label">
+                HTML тело
+                <textarea
+                  class="editor-textarea"
+                  [(ngModel)]="row.editBodyHtml"
+                  rows="10"
+                  placeholder="<p>Привет!</p>"
+                ></textarea>
+              </label>
+
+              <div class="editor-vars">
+                Переменные:
+                @for (v of row.variables; track v) {
+                  <code class="var-chip">{{ '{{' + v + '}}' }}</code>
+                }
+              </div>
+
+              <div class="editor-actions">
+                <button class="btn btn--secondary" (click)="preview(row)">Предпросмотр</button>
+                @if (hasTemplate(row, row.activeLanguage)) {
+                  <button class="btn btn--danger" (click)="deleteTemplate(row)">Удалить</button>
+                }
+                <button class="btn btn--primary" [disabled]="row.saving" (click)="save(row)">
+                  {{ row.saving ? 'Сохранение...' : 'Сохранить' }}
+                </button>
+              </div>
+
+              @if (row.previewHtml) {
+                <div class="preview-wrapper">
+                  <iframe class="preview-frame" [attr.srcdoc]="row.previewHtml"></iframe>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

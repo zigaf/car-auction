@@ -56,6 +56,13 @@ export const routes: Routes = [
         path: 'scraper',
         loadComponent: () => import('./pages/scraper/scraper.component').then(m => m.ScraperPageComponent),
       },
+      {
+        path: 'email-templates',
+        loadComponent: () =>
+          import('./pages/email-templates/email-templates.component').then(
+            (m) => m.EmailTemplatesComponent,
+          ),
+      },
     ],
   },
   { path: '**', redirectTo: '' },

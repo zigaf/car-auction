@@ -29,6 +29,7 @@ export class AdminLayout {
     { label: 'Боты', icon: 'smart_toy', path: '/bots' },
     { label: 'Парсер', icon: 'terminal', path: '/scraper' },
     { label: 'Монитор', icon: 'monitor_heart', path: '/monitor' },
+    { label: 'Email', icon: 'mail', path: '/email-templates' },
   ];
 
   get currentUser() {
