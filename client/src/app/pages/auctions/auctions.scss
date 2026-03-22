@@ -1,7 +1,7 @@
 @use 'styles/variables' as *;
 @use 'styles/mixins' as *;
 
-// ─── Page ──────────────────────────────────────────────────────────────────────
+// ─── Page ───────────────────────────────────────────────────────────────────
 
 .auctions-page {
   padding: $space-2xl 0 $space-3xl;
@@ -14,14 +14,13 @@
 
 .auctions-page__header {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
   margin-bottom: $space-xl;
   gap: $space-md;
 
   @include mobile {
     flex-direction: column;
-    align-items: flex-start;
     margin-bottom: $space-lg;
   }
 }
@@ -41,22 +40,43 @@
   margin: $space-xs 0 0;
 }
 
-.auctions-page__total {
+.auctions-page__live-badge {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: $accent-muted;
-  color: $accent;
-  border-radius: $radius-chip;
+  gap: $space-sm;
+  padding: $space-sm $space-base;
+  background: rgba($status-red, 0.1);
+  border: 1px solid rgba($status-red, 0.25);
+  border-radius: $radius-pill;
+  color: $status-red;
   font-size: $fs-sm;
   font-weight: $fw-semibold;
   white-space: nowrap;
-
-  .material-symbols-rounded { font-size: 18px; }
+  flex-shrink: 0;
 }
 
-// ─── Loading ───────────────────────────────────────────────────────────────────
+// ─── Live dot ───────────────────────────────────────────────────────────────
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: $status-red;
+  animation: pulse-dot 1.2s ease-in-out infinite;
+  flex-shrink: 0;
+
+  &--sm {
+    width: 6px;
+    height: 6px;
+  }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+// ─── Loading ────────────────────────────────────────────────────────────────
 
 .auctions-page__loading {
   display: flex;
@@ -77,7 +97,35 @@
   to { transform: rotate(360deg); }
 }
 
-// ─── Empty state ───────────────────────────────────────────────────────────────
+// ─── No live ────────────────────────────────────────────────────────────────
+
+.auctions-page__no-live {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $space-xs;
+  padding: $space-2xl 0;
+  color: $text-secondary;
+  text-align: center;
+
+  .material-symbols-rounded {
+    font-size: 40px;
+    color: $text-tertiary;
+  }
+
+  p {
+    font-size: $fs-base;
+    font-weight: $fw-semibold;
+    color: $text-primary;
+    margin: 0;
+  }
+
+  span {
+    font-size: $fs-sm;
+  }
+}
+
+// ─── Empty state ─────────────────────────────────────────────────────────────
 
 .auctions-page__empty {
   text-align: center;
@@ -112,70 +160,16 @@
   font-size: $fs-sm;
 }
 
-// ─── Day Group ─────────────────────────────────────────────────────────────────
+// ─── Live section ───────────────────────────────────────────────────────────
 
-.day-group {
-  margin-bottom: $space-xl;
-
-  &:last-child { margin-bottom: 0; }
-
-  &--live .day-group__header {
-    border-bottom-color: $status-red;
-  }
-
-  &--live .day-group__label {
-    color: $status-red;
-  }
+.live-section {
+  margin-bottom: $space-2xl;
 }
 
-.day-group__live-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: $status-red;
-  animation: pulse-dot 1.2s ease-in-out infinite;
-  flex-shrink: 0;
-}
-
-.day-group__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: $space-md;
-  padding-bottom: $space-sm;
-  border-bottom: 2px solid $border-color;
-}
-
-.day-group__date {
-  display: flex;
-  align-items: center;
-  gap: $space-sm;
-
-  .material-symbols-rounded {
-    font-size: 20px;
-    color: $accent;
-  }
-}
-
-.day-group__label {
-  font-size: $fs-lg;
-  font-weight: $fw-bold;
-
-  @include mobile {
-    font-size: $fs-base;
-  }
-}
-
-.day-group__count {
-  font-size: $fs-sm;
-  color: $text-secondary;
-  font-weight: $fw-medium;
-}
-
-.day-group__grid {
+.live-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: $space-md;
+  gap: $space-lg;
 
   @include tablet {
     grid-template-columns: repeat(2, 1fr);
@@ -183,22 +177,30 @@
 
   @include mobile {
     grid-template-columns: 1fr;
-    gap: $space-sm;
+    gap: $space-md;
   }
 }
 
-// ─── Auction Card ──────────────────────────────────────────────────────────────
+// ─── Live Card ──────────────────────────────────────────────────────────────
 
-.auction-card {
+.live-card {
   @include card;
   display: flex;
   flex-direction: column;
   text-decoration: none;
   color: $text-primary;
   overflow: hidden;
+  border: 1px solid rgba($status-red, 0.2);
+  transition: transform $transition-fast, box-shadow $transition-fast, border-color $transition-fast;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: $shadow-lg;
+    border-color: rgba($status-red, 0.4);
+  }
 }
 
-.auction-card__image {
+.live-card__image {
   position: relative;
   aspect-ratio: 16 / 10;
   overflow: hidden;
@@ -211,12 +213,12 @@
     transition: transform 0.3s ease;
   }
 
-  .auction-card:hover & img {
+  .live-card:hover & img {
     transform: scale(1.04);
   }
 }
 
-.auction-card__placeholder {
+.live-card__placeholder {
   width: 100%;
   height: 100%;
   display: flex;
@@ -230,47 +232,60 @@
   }
 }
 
-.auction-card__countdown {
+.live-card__status-badge {
+  position: absolute;
+  top: $space-sm;
+  left: $space-sm;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  background: rgba($status-red, 0.85);
+  backdrop-filter: blur(4px);
+  color: #FFFFFF;
+  font-size: $fs-xs;
+  font-weight: $fw-bold;
+  border-radius: $radius-chip;
+  letter-spacing: 1px;
+}
+
+.live-card__timer {
   position: absolute;
   top: $space-sm;
   right: $space-sm;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   padding: 4px 10px;
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(4px);
-  color: #fff;
-  font-size: $fs-xs;
-  font-weight: $fw-semibold;
+  color: #FFFFFF;
+  font-size: $fs-sm;
+  font-weight: $fw-bold;
   border-radius: $radius-chip;
   font-family: $font-mono;
-  letter-spacing: 0.5px;
 
-  &--live {
-    background: rgba(220, 38, 38, 0.85);
+  &.timer--red {
+    background: rgba($status-red, 0.9);
+    animation: flash-red 1s ease-in-out infinite;
   }
 
-  &--soon {
+  &.timer--yellow {
     background: rgba(234, 179, 8, 0.85);
     color: #000;
   }
 }
 
-.auction-card__live-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #fff;
-  animation: pulse-dot 1.2s ease-in-out infinite;
+.live-card__timer-icon {
+  font-size: 16px;
 }
 
-@keyframes pulse-dot {
+@keyframes flash-red {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  50% { opacity: 0.7; }
 }
 
-.auction-card__body {
+.live-card__body {
   padding: $space-md;
   display: flex;
   flex-direction: column;
@@ -278,14 +293,14 @@
   flex: 1;
 }
 
-.auction-card__title {
+.live-card__title {
   font-size: $fs-sm;
   font-weight: $fw-semibold;
   margin: 0;
   @include truncate(2);
 }
 
-.auction-card__specs {
+.live-card__specs {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
@@ -296,44 +311,248 @@
     padding: 2px 8px;
     background: $bg-elevated;
     border-radius: $radius-chip;
-    white-space: nowrap;
   }
 }
 
-.auction-card__footer {
+.live-card__price-row {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  margin-top: auto;
+  gap: $space-sm;
   padding-top: $space-sm;
   border-top: 1px solid $border-color;
+  margin-top: auto;
 }
 
-.auction-card__price {
+.live-card__price {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.auction-card__price-label {
+.live-card__price-label {
   font-size: $fs-xs;
   color: $text-secondary;
 }
 
-.auction-card__price-value {
-  font-size: $fs-base;
+.live-card__price-value {
+  font-size: $fs-lg;
   font-weight: $fw-bold;
   font-family: $font-mono;
+  color: $accent;
+}
 
-  &--accent {
+.live-card__step {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: $fs-xs;
+  color: $text-secondary;
+  font-family: $font-mono;
+}
+
+.live-card__cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-xs;
+  padding: $space-sm $space-md;
+  background: $accent;
+  color: #FFFFFF;
+  border-radius: $radius-base;
+  font-size: $fs-sm;
+  font-weight: $fw-semibold;
+  transition: background $transition-fast;
+
+  .material-symbols-rounded { font-size: 18px; }
+
+  .live-card:hover & {
+    background: $accent-hover;
+  }
+}
+
+// ─── Schedule (upcoming) ─────────────────────────────────────────────────────
+
+.schedule {
+  border: 1px solid $border-color;
+  border-radius: $radius-lg;
+  overflow: hidden;
+}
+
+.schedule__toggle {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  width: 100%;
+  padding: $space-md $space-lg;
+  background: $bg-secondary;
+  border: none;
+  cursor: pointer;
+  color: $text-primary;
+  font-size: $fs-base;
+  font-weight: $fw-semibold;
+  text-align: left;
+  transition: background $transition-fast;
+
+  .material-symbols-rounded:first-child {
+    font-size: 20px;
+    color: $accent;
+  }
+
+  &:hover {
+    background: $bg-elevated;
+  }
+}
+
+.schedule__count {
+  margin-left: auto;
+  font-size: $fs-sm;
+  color: $text-secondary;
+  font-weight: $fw-normal;
+}
+
+.schedule__chevron {
+  font-size: 20px;
+  color: $text-tertiary;
+  transition: transform $transition-fast;
+  margin-left: $space-xs;
+
+  &--open {
+    transform: rotate(180deg);
+  }
+}
+
+.schedule__body {
+  border-top: 1px solid $border-color;
+}
+
+// ─── Schedule Group ──────────────────────────────────────────────────────────
+
+.schedule-group {
+  & + & {
+    border-top: 1px solid $border-color;
+  }
+}
+
+.schedule-group__header {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-sm $space-lg;
+  background: $bg-panel;
+
+  .material-symbols-rounded {
+    font-size: 16px;
     color: $accent;
   }
 }
 
-.auction-card__country {
+.schedule-group__label {
+  font-size: $fs-sm;
+  font-weight: $fw-semibold;
+  color: $text-primary;
+}
+
+.schedule-group__count {
+  margin-left: auto;
   font-size: $fs-xs;
   color: $text-secondary;
-  padding: 2px 8px;
   background: $bg-elevated;
+  padding: 2px 8px;
+  border-radius: $radius-chip;
+}
+
+.schedule-group__list {
+  display: flex;
+  flex-direction: column;
+}
+
+// ─── Schedule Item ───────────────────────────────────────────────────────────
+
+.schedule-item {
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+  padding: $space-sm $space-lg;
+  text-decoration: none;
+  color: $text-primary;
+  border-top: 1px solid $border-color;
+  transition: background $transition-fast;
+
+  &:first-child {
+    border-top: none;
+  }
+
+  &:hover {
+    background: $bg-elevated;
+  }
+
+  @include mobile {
+    padding: $space-sm $space-md;
+    gap: $space-sm;
+  }
+}
+
+.schedule-item__image {
+  width: 60px;
+  height: 44px;
   border-radius: $radius-sm;
+  overflow: hidden;
+  background: $bg-elevated;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .material-symbols-rounded {
+    font-size: 22px;
+    color: $text-tertiary;
+  }
+}
+
+.schedule-item__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.schedule-item__title {
+  font-size: $fs-sm;
+  font-weight: $fw-medium;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.schedule-item__specs {
+  font-size: $fs-xs;
+  color: $text-secondary;
+}
+
+.schedule-item__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.schedule-item__price {
+  font-size: $fs-sm;
+  font-weight: $fw-semibold;
+  font-family: $font-mono;
+}
+
+.schedule-item__countdown {
+  font-size: $fs-xs;
+  color: $text-secondary;
 }
