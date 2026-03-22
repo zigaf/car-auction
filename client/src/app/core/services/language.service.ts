@@ -9,6 +9,8 @@ const T: Record<Lang, Record<string, string>> = {
     // Header nav
     'nav.catalog': 'Каталог',
     'nav.auctions': 'Аукционы',
+    'nav.live': 'Торги',
+    'nav.schedule': 'Расписание',
     'nav.about': 'О нас',
     'nav.reviews': 'Отзывы',
     'nav.home': 'Главная',
@@ -125,6 +127,8 @@ const T: Record<Lang, Record<string, string>> = {
     // Header nav
     'nav.catalog': 'Каталог',
     'nav.auctions': 'Аўкцыёны',
+    'nav.live': 'Таргі',
+    'nav.schedule': 'Расклад',
     'nav.about': 'Пра нас',
     'nav.reviews': 'Водгукі',
     'nav.home': 'Галоўная',

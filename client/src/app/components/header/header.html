@@ -6,7 +6,8 @@
 
     <nav class="header__nav">
       <a routerLink="/catalog" routerLinkActive="active" class="header__nav-link">{{ ls.t('nav.catalog') }}</a>
-      <a routerLink="/auctions" routerLinkActive="active" class="header__nav-link">{{ ls.t('nav.auctions') }}</a>
+      <a routerLink="/live" routerLinkActive="active" class="header__nav-link">{{ ls.t('nav.live') }}</a>
+      <a routerLink="/auctions" routerLinkActive="active" class="header__nav-link">{{ ls.t('nav.schedule') }}</a>
       <a routerLink="/about" routerLinkActive="active" class="header__nav-link">{{ ls.t('nav.about') }}</a>
       <a routerLink="/reviews" routerLinkActive="active" class="header__nav-link">{{ ls.t('nav.reviews') }}</a>
     </nav>
@@ -102,9 +103,13 @@
       <span class="material-symbols-rounded">directions_car</span>
       {{ ls.t('nav.catalog') }}
     </a>
-    <a routerLink="/auctions" routerLinkActive="active" class="drawer__link" (click)="menuOpen.set(false)">
+    <a routerLink="/live" routerLinkActive="active" class="drawer__link" (click)="menuOpen.set(false)">
       <span class="material-symbols-rounded">gavel</span>
-      {{ ls.t('nav.auctions') }}
+      {{ ls.t('nav.live') }}
+    </a>
+    <a routerLink="/auctions" routerLinkActive="active" class="drawer__link" (click)="menuOpen.set(false)">
+      <span class="material-symbols-rounded">calendar_month</span>
+      {{ ls.t('nav.schedule') }}
     </a>
     <a routerLink="/about" routerLinkActive="active" class="drawer__link" (click)="menuOpen.set(false)">
       <span class="material-symbols-rounded">info</span>
