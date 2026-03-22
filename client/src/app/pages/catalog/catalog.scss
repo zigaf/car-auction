@@ -115,9 +115,11 @@
 .catalog__filters {
   @include panel;
   padding: $space-lg;
-  height: fit-content;
   position: sticky;
   top: calc(#{$header-height} + #{$space-lg});
+  max-height: calc(100vh - #{$header-height} - #{$space-lg} * 2);
+  overflow-y: auto;
+  @include custom-scrollbar;
   display: flex;
   flex-direction: column;
   gap: $space-md;

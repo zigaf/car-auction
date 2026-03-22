@@ -1,45 +1,48 @@
-import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
-import { CommonModule, AsyncPipe } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { Subject } from 'rxjs';
 import { takeUntil, filter, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { StateService } from '../../core/services/state.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ThemeService } from '../../core/services/theme.service';
+import { LanguageService } from '../../core/services/language.service';
 import { AppButtonComponent } from '../../shared/components/button/button.component';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, AsyncPipe, RouterLink, RouterLinkActive, AppButtonComponent],
+  imports: [AsyncPipe, RouterLink, RouterLinkActive, AppButtonComponent],
   templateUrl: './header.html',
   styleUrl: './header.scss',
 })
 export class HeaderComponent implements OnInit, OnDestroy {
   menuOpen = signal(false);
+  searchQuery = signal('');
 
   private readonly stateService = inject(StateService);
   private readonly notificationService = inject(NotificationService);
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
   readonly themeService = inject(ThemeService);
+  readonly ls = inject(LanguageService);
   private readonly destroy$ = new Subject<void>();
 
   appState$ = this.stateService.appState$;
 
-  cabinetNavItems = [
-    { path: '/cabinet', label: 'Обзор', icon: 'dashboard', exact: true },
-    { path: '/cabinet/bids', label: 'Мои ставки', icon: 'gavel', exact: false },
-    { path: '/cabinet/orders', label: 'Заказы', icon: 'local_shipping', exact: false },
-    { path: '/cabinet/documents', label: 'Документы', icon: 'description', exact: false },
-    { path: '/cabinet/balance', label: 'Баланс', icon: 'account_balance_wallet', exact: false },
-    { path: '/cabinet/watchlist', label: 'Отслеживаемые', icon: 'favorite', exact: false },
-    { path: '/cabinet/calendar', label: 'Календарь', icon: 'calendar_month', exact: false },
-    { path: '/cabinet/notifications', label: 'Уведомления', icon: 'notifications', exact: false },
-    { path: '/cabinet/calculator', label: 'Калькулятор', icon: 'calculate', exact: false },
-    { path: '/cabinet/settings', label: 'Настройки', icon: 'settings', exact: false },
-  ];
+  readonly cabinetNavItems = computed(() => [
+    { path: '/cabinet', label: this.ls.t('cabinet.overview'), icon: 'dashboard', exact: true },
+    { path: '/cabinet/bids', label: this.ls.t('cabinet.bids'), icon: 'gavel', exact: false },
+    { path: '/cabinet/orders', label: this.ls.t('cabinet.orders'), icon: 'local_shipping', exact: false },
+    { path: '/cabinet/documents', label: this.ls.t('cabinet.documents'), icon: 'description', exact: false },
+    { path: '/cabinet/balance', label: this.ls.t('cabinet.balance'), icon: 'account_balance_wallet', exact: false },
+    { path: '/cabinet/watchlist', label: this.ls.t('cabinet.watchlist'), icon: 'favorite', exact: false },
+    { path: '/cabinet/calendar', label: this.ls.t('cabinet.calendar'), icon: 'calendar_month', exact: false },
+    { path: '/cabinet/notifications', label: this.ls.t('cabinet.notifications'), icon: 'notifications', exact: false },
+    { path: '/cabinet/calculator', label: this.ls.t('cabinet.calculator'), icon: 'calculate', exact: false },
+    { path: '/cabinet/settings', label: this.ls.t('cabinet.settings'), icon: 'settings', exact: false },
+  ]);
 
   ngOnInit(): void {
     this.appState$
@@ -51,7 +54,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
       )
       .subscribe();
 
-    // Close drawer on route navigation
     this.router.events
       .pipe(
         takeUntil(this.destroy$),
@@ -65,11 +67,18 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  search(): void {
+    const q = this.searchQuery().trim();
+    if (!q) return;
+    this.router.navigate(['/catalog'], { queryParams: { q } });
+    this.searchQuery.set('');
+  }
+
   onFavoritesClick(): void {
     if (this.stateService.snapshot.isAuthenticated) {
       this.router.navigate(['/cabinet/watchlist']);
     } else {
-      this.toastService.info('Войдите в аккаунт, чтобы увидеть избранное');
+      this.toastService.info(this.ls.t('toast.login.required'));
     }
   }
 

@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { UserService } from '../../../core/services/user.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { LanguageService } from '../../../core/services/language.service';
 import { AppButtonComponent } from '../../../shared/components/button/button.component';
 import { AppInputComponent } from '../../../shared/components/input/input.component';
 import { IUser, IUpdateProfile, Language, Currency } from '../../../models/user.model';
@@ -18,6 +19,7 @@ const RESTRICTED_FLAGS = ['🇷🇺', '🇧🇾'];
 export class SettingsComponent implements OnInit {
   private readonly userService = inject(UserService);
   private readonly toastService = inject(ToastService);
+  readonly ls = inject(LanguageService);
 
   profileLoading = true;
   profileSaving = false;
@@ -30,9 +32,8 @@ export class SettingsComponent implements OnInit {
     phone: '',
   };
 
-  // Option values are emoji flags (matching countryFlag field stored in DB)
   countries = [
-    { flag: '🇺🇦', name: 'Україна' },
+    { flag: '🇺🇦', name: 'Украина' },
     { flag: '🇩🇪', name: 'Deutschland' },
     { flag: '🇵🇱', name: 'Polska' },
     { flag: '🇱🇹', name: 'Lietuva' },
@@ -60,21 +61,20 @@ export class SettingsComponent implements OnInit {
     { flag: '🌍', name: 'Другая страна' },
   ];
 
-  languages = [
-    { code: 'ru', label: 'Русский' },
-    { code: 'ua', label: 'Українська' },
-    { code: 'en', label: 'English' },
+  languages: { code: Language; label: string }[] = [
+    { code: Language.RU, label: 'Русский' },
+    { code: Language.BY, label: 'Беларуская' },
   ];
 
-  currencies = [
-    { code: 'EUR', symbol: '€' },
-    { code: 'USD', symbol: '$' },
-    { code: 'UAH', symbol: '₴' },
+  currencies: { code: Currency; symbol: string }[] = [
+    { code: Currency.EUR, symbol: '€' },
+    { code: Currency.USD, symbol: '$' },
+    { code: Currency.BYN, symbol: 'Br' },
   ];
 
-  selectedCountry = '🇺🇦';
-  selectedLanguage = 'ru';
-  selectedCurrency = 'EUR';
+  selectedCountry = '🇧🇾';
+  selectedLanguage: Language = Language.RU;
+  selectedCurrency: Currency = Currency.EUR;
 
   get isRestrictedCountry(): boolean {
     return RESTRICTED_FLAGS.some((f) => this.selectedCountry.includes(f));
@@ -94,10 +94,9 @@ export class SettingsComponent implements OnInit {
           email: user.email,
           phone: user.phone || '',
         };
-        // countryFlag is stored as emoji — use directly as option value
-        this.selectedCountry = user.countryFlag || '🇺🇦';
-        this.selectedLanguage = user.preferredLanguage || 'ru';
-        this.selectedCurrency = user.preferredCurrency || 'EUR';
+        this.selectedCountry = user.countryFlag || '🇧🇾';
+        this.selectedLanguage = user.preferredLanguage || Language.RU;
+        this.selectedCurrency = user.preferredCurrency || Currency.EUR;
         this.profileLoading = false;
       },
       error: () => {
@@ -114,18 +113,19 @@ export class SettingsComponent implements OnInit {
       lastName: this.profile.lastName,
       phone: this.profile.phone,
       countryFlag: this.selectedCountry,
-      preferredLanguage: this.selectedLanguage as Language,
-      preferredCurrency: this.selectedCurrency as Currency,
+      preferredLanguage: this.selectedLanguage,
+      preferredCurrency: this.selectedCurrency,
     };
 
     this.userService.updateProfile(data).subscribe({
       next: () => {
         this.profileSaving = false;
-        this.toastService.success('Профиль сохранён');
+        this.ls.setLang(this.selectedLanguage);
+        this.toastService.success(this.ls.t('settings.saved.profile'));
       },
       error: () => {
         this.profileSaving = false;
-        this.toastService.error('Ошибка сохранения профиля');
+        this.toastService.error(this.ls.t('settings.error.profile'));
       },
     });
   }
@@ -135,18 +135,19 @@ export class SettingsComponent implements OnInit {
 
     const data: IUpdateProfile = {
       countryFlag: this.selectedCountry,
-      preferredLanguage: this.selectedLanguage as Language,
-      preferredCurrency: this.selectedCurrency as Currency,
+      preferredLanguage: this.selectedLanguage,
+      preferredCurrency: this.selectedCurrency,
     };
 
     this.userService.updateProfile(data).subscribe({
       next: () => {
         this.regionalSaving = false;
-        this.toastService.success('Региональные настройки сохранены');
+        this.ls.setLang(this.selectedLanguage);
+        this.toastService.success(this.ls.t('settings.saved.regional'));
       },
       error: () => {
         this.regionalSaving = false;
-        this.toastService.error('Ошибка сохранения');
+        this.toastService.error(this.ls.t('settings.error.regional'));
       },
     });
   }

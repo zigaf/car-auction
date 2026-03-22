@@ -1,31 +1,31 @@
 <div class="settings">
-  <h1 class="page-title">Настройки</h1>
+  <h1 class="page-title">{{ ls.t('settings.title') }}</h1>
 
   <!-- Profile Section -->
   <section class="settings__section">
-    <h2 class="section-title">Профиль</h2>
+    <h2 class="section-title">{{ ls.t('settings.profile') }}</h2>
     <div class="settings__panel">
       @if (profileLoading) {
-        <div class="settings__loading">Загрузка профиля...</div>
+        <div class="settings__loading">{{ ls.t('settings.loading') }}</div>
       } @else {
         <div class="form-grid">
           <div class="form-group">
-            <app-input label="Имя" type="text" placeholder="Имя" icon="person" name="firstName" [(ngModel)]="profile.firstName"></app-input>
+            <app-input [label]="ls.t('settings.firstName')" type="text" [placeholder]="ls.t('settings.firstName')" icon="person" name="firstName" [(ngModel)]="profile.firstName"></app-input>
           </div>
           <div class="form-group">
-            <app-input label="Фамилия" type="text" placeholder="Фамилия" icon="person" name="lastName" [(ngModel)]="profile.lastName"></app-input>
+            <app-input [label]="ls.t('settings.lastName')" type="text" [placeholder]="ls.t('settings.lastName')" icon="person" name="lastName" [(ngModel)]="profile.lastName"></app-input>
           </div>
           <div class="form-group">
             <label class="form-label">Email</label>
             <div class="form-input form-input--readonly">{{ profile.email }}</div>
           </div>
           <div class="form-group">
-            <app-input label="Телефон" type="text" placeholder="+380 XX XXX XXXX" icon="phone" name="phone" [(ngModel)]="profile.phone"></app-input>
+            <app-input [label]="ls.t('settings.phone')" type="text" placeholder="+375 XX XXX XXXX" icon="phone" name="phone" [(ngModel)]="profile.phone"></app-input>
           </div>
         </div>
         <div class="settings__save-row">
           <app-button type="button" variant="primary" [loading]="profileSaving" (click)="saveProfile()">
-            Сохранить профиль
+            {{ ls.t('settings.saveProfile') }}
           </app-button>
         </div>
       }
@@ -34,22 +34,22 @@
 
   <!-- Regional Section -->
   <section class="settings__section">
-    <h2 class="section-title">Региональные настройки</h2>
+    <h2 class="section-title">{{ ls.t('settings.regional') }}</h2>
     <div class="settings__panel">
 
       @if (isRestrictedCountry) {
         <div class="restriction-notice">
           <span class="material-symbols-rounded">warning</span>
           <div>
-            <strong>Ограниченный регион</strong>
-            По требованию партнёра <strong>rbmotors.de</strong>, для пользователей из России и Республики Беларусь функционал платформы, включая пополнение баланса, может быть ограничен.
+            <strong>{{ ls.t('settings.restricted.title') }}</strong>
+            {{ ls.t('settings.restricted.desc') }}
           </div>
         </div>
       }
 
       <div class="form-grid">
         <div class="form-group">
-          <label class="form-label">Страна</label>
+          <label class="form-label">{{ ls.t('settings.country') }}</label>
           <div class="select-wrapper">
             <select class="form-select" [(ngModel)]="selectedCountry">
               @for (country of countries; track country.flag) {
@@ -60,7 +60,7 @@
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Язык</label>
+          <label class="form-label">{{ ls.t('settings.language') }}</label>
           <div class="lang-selector">
             @for (lang of languages; track lang.code) {
               <button class="lang-btn" [class.lang-btn--active]="selectedLanguage === lang.code" (click)="selectedLanguage = lang.code">
@@ -70,7 +70,7 @@
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Валюта</label>
+          <label class="form-label">{{ ls.t('settings.currency') }}</label>
           <div class="currency-selector">
             @for (cur of currencies; track cur.code) {
               <button class="currency-btn" [class.currency-btn--active]="selectedCurrency === cur.code" (click)="selectedCurrency = cur.code">
@@ -83,7 +83,7 @@
       </div>
       <div class="settings__save-row">
         <app-button type="button" variant="secondary" [loading]="regionalSaving" (click)="saveRegional()">
-          Сохранить региональные настройки
+          {{ ls.t('settings.saveRegional') }}
         </app-button>
       </div>
     </div>

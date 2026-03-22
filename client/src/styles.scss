@@ -50,28 +50,28 @@ html {
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --bg-primary:     #0F172A;
-  --bg-secondary:   #1E293B;
-  --bg-panel:       #1E293B;
-  --bg-panel-hover: #334155;
-  --bg-card:        #1E293B;
-  --bg-input:       #1E293B;
-  --bg-elevated:    #334155;
+  --bg-primary:     #0F1117;
+  --bg-secondary:   #171820;
+  --bg-panel:       #1C1D27;
+  --bg-panel-hover: #23253100;
+  --bg-card:        #1C1D27;
+  --bg-input:       #13141B;
+  --bg-elevated:    #232430;
 
-  --accent:         #3B82F6;
-  --accent-muted:   rgba(59, 130, 246, 0.12);
-  --accent-subtle:  rgba(59, 130, 246, 0.06);
-  --accent-light:   rgba(59, 130, 246, 0.08);
+  --accent:         #4F8EFF;
+  --accent-muted:   rgba(79, 142, 255, 0.12);
+  --accent-subtle:  rgba(79, 142, 255, 0.06);
+  --accent-light:   rgba(79, 142, 255, 0.08);
 
-  --text-primary:   #F1F5F9;
-  --text-secondary: #94A3B8;
-  --text-tertiary:  #64748B;
-  --text-disabled:  #475569;
-  --text-primary-rgb: 241, 245, 249;
+  --text-primary:   #ECEDF2;
+  --text-secondary: #8C91AD;
+  --text-tertiary:  #555A75;
+  --text-disabled:  #373B52;
+  --text-primary-rgb: 236, 237, 242;
 
-  --border-color:   #334155;
-  --border-hover:   #475569;
-  --divider:        #1E293B;
+  --border-color:   #23253180;
+  --border-hover:   #33364A;
+  --divider:        #1C1D27;
 }
 
 // --- Global Reset & Base ---
