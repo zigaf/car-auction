@@ -13,9 +13,15 @@
 
     <div class="header__spacer"></div>
 
-    <div class="header__search">
-      <span class="material-symbols-rounded header__search-icon">search</span>
-      <input type="text" [placeholder]="ls.t('header.search')" class="header__search-input">
+    <div class="header__search" (click)="$event.stopPropagation()">
+      <span class="material-symbols-rounded header__search-icon" (click)="search()">search</span>
+      <input
+        type="text"
+        [placeholder]="ls.t('header.search')"
+        class="header__search-input"
+        [value]="searchQuery()"
+        (input)="searchQuery.set($any($event.target).value)"
+        (keydown.enter)="search()">
     </div>
 
     <div class="header__actions">

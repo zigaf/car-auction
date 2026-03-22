@@ -19,6 +19,7 @@ import { AppButtonComponent } from '../../shared/components/button/button.compon
 })
 export class HeaderComponent implements OnInit, OnDestroy {
   menuOpen = signal(false);
+  searchQuery = signal('');
 
   private readonly stateService = inject(StateService);
   private readonly notificationService = inject(NotificationService);
@@ -64,6 +65,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  search(): void {
+    const q = this.searchQuery().trim();
+    if (!q) return;
+    this.router.navigate(['/catalog'], { queryParams: { q } });
+    this.searchQuery.set('');
   }
 
   onFavoritesClick(): void {

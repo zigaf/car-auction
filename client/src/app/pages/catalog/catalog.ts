@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, OnDestroy, AfterViewInit, ElementRef, ViewChild, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { Subject } from 'rxjs';
@@ -27,6 +27,7 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly auctionState = inject(AuctionStateService);
   private readonly stateService = inject(StateService);
   private readonly toastService = inject(ToastService);
+  private readonly route = inject(ActivatedRoute);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly destroy$ = new Subject<void>();
   private observer: IntersectionObserver | null = null;
@@ -44,6 +45,7 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
   currentPage = 1;
 
   filters = {
+    search: '',
     brand: '',
     model: '',
     yearFrom: null as number | null,
@@ -89,10 +91,24 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit(): void {
+    const q = this.route.snapshot.queryParamMap.get('q');
+    if (q) this.filters.search = q;
+
     this.loadBrands();
     this.loadModels();
     this.loadLots();
     this.loadFavorites();
+
+    this.route.queryParamMap
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((params) => {
+        const search = params.get('q') ?? '';
+        if (search !== this.filters.search) {
+          this.filters.search = search;
+          this.currentPage = 1;
+          this.loadLots();
+        }
+      });
 
     // Reactively patch lot prices when WebSocket bid events arrive
     this.auctionState.priceUpdate$
@@ -252,6 +268,7 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
 
   resetFilters(): void {
     this.filters = {
+      search: '',
       brand: '', model: '', yearFrom: null, yearTo: null,
       priceFrom: null, priceTo: null, fuelType: '', transmission: '',
       mileageFrom: null, mileageTo: null,
@@ -266,6 +283,7 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
       page: this.currentPage,
       limit: 20,
       sort: this.sortBy || undefined,
+      search: this.filters.search || undefined,
       brand: this.filters.brand || undefined,
       model: this.filters.model || undefined,
       fuelType: this.filters.fuelType || undefined,
