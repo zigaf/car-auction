@@ -71,6 +71,15 @@
     border-color: $accent;
     color: $accent;
   }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+    &:hover {
+      border-color: $border-color;
+      color: $text-secondary;
+    }
+  }
 }
 
 .cal__grid {
@@ -321,7 +330,9 @@
   padding: $space-xs $space-sm;
   background: $accent;
   color: #FFFFFF;
+  border: none;
   border-radius: $radius-base;
+  cursor: pointer;
   font-size: $fs-xs;
   font-weight: $fw-semibold;
   text-decoration: none;

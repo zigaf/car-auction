@@ -7,7 +7,7 @@
   <div class="schedule__calendar">
     <!-- Month navigation -->
     <div class="cal__nav">
-      <button class="cal__nav-btn" (click)="prevMonth()">
+      <button class="cal__nav-btn" (click)="prevMonth()" [disabled]="isCurrentMonth">
         <span class="material-symbols-rounded">chevron_left</span>
       </button>
       <span class="cal__month-label">{{ monthLabel }}</span>

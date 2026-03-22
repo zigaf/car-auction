@@ -58,6 +58,12 @@ export class AuctionsComponent implements OnInit, OnDestroy {
     return `${this.monthNames[this.viewDate.getMonth()]} ${this.viewDate.getFullYear()}`;
   }
 
+  get isCurrentMonth(): boolean {
+    const now = new Date();
+    return this.viewDate.getFullYear() === now.getFullYear()
+      && this.viewDate.getMonth() === now.getMonth();
+  }
+
   prevMonth(): void {
     const now = new Date();
     if (
