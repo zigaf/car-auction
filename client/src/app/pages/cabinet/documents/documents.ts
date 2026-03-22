@@ -5,6 +5,7 @@ import { DocumentsService } from '../../../core/services/documents.service';
 import { AppButtonComponent } from '../../../shared/components/button/button.component';
 import { IDocument, DocumentType, DocumentStatus } from '../../../models/document.model';
 import { environment } from '../../../../environments/environment';
+import { LanguageService } from '../../../core/services/language.service';
 
 @Component({
   selector: 'app-documents',
@@ -14,6 +15,7 @@ import { environment } from '../../../../environments/environment';
   styleUrl: './documents.scss',
 })
 export class DocumentsComponent implements OnInit {
+  ls = inject(LanguageService);
   private readonly documentsService = inject(DocumentsService);
 
   documents: IDocument[] = [];
@@ -28,18 +30,22 @@ export class DocumentsComponent implements OnInit {
   uploading = false;
   uploadError = '';
 
-  readonly documentTypes = [
-    { value: DocumentType.PASSPORT, label: 'Паспорт / ID' },
-    { value: DocumentType.INVOICE, label: 'Инвойс' },
-    { value: DocumentType.CUSTOMS_DOC, label: 'Таможенный документ' },
-    { value: DocumentType.POWER_OF_ATTORNEY, label: 'Доверенность' },
-    { value: DocumentType.OTHER, label: 'Другое' },
-  ];
+  get documentTypes() {
+    return [
+      { value: DocumentType.PASSPORT, label: this.ls.t('docs.type.passport') },
+      { value: DocumentType.INVOICE, label: this.ls.t('docs.type.invoice') },
+      { value: DocumentType.CUSTOMS_DOC, label: this.ls.t('docs.type.customs') },
+      { value: DocumentType.POWER_OF_ATTORNEY, label: this.ls.t('docs.type.poa') },
+      { value: DocumentType.OTHER, label: this.ls.t('docs.type.other') },
+    ];
+  }
 
-  readonly requiredDocs: { type: DocumentType; label: string; icon: string; description: string }[] = [
-    { type: DocumentType.PASSPORT, label: 'Паспорт / ID', icon: 'badge', description: 'Скан или фото основного разворота' },
-    { type: DocumentType.POWER_OF_ATTORNEY, label: 'Доверенность', icon: 'gavel', description: 'Если действуете от лица компании' },
-  ];
+  get requiredDocs(): { type: DocumentType; label: string; icon: string; description: string }[] {
+    return [
+      { type: DocumentType.PASSPORT, label: this.ls.t('docs.req.passport.label'), icon: 'badge', description: this.ls.t('docs.req.passport.desc') },
+      { type: DocumentType.POWER_OF_ATTORNEY, label: this.ls.t('docs.req.poa.label'), icon: 'gavel', description: this.ls.t('docs.req.poa.desc') },
+    ];
+  }
 
   getDocStatus(type: DocumentType): 'none' | 'pending' | 'approved' | 'rejected' {
     const doc = this.documents.find(d => d.type === type);
@@ -78,7 +84,7 @@ export class DocumentsComponent implements OnInit {
         this.loading = false;
       },
       error: () => {
-        this.error = 'Не удалось загрузить документы';
+        this.error = this.ls.t('docs.error');
         this.loading = false;
       },
     });
@@ -103,7 +109,7 @@ export class DocumentsComponent implements OnInit {
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
       if (file.size > 10 * 1024 * 1024) {
-        this.uploadError = 'Максимальный размер файла — 10 МБ';
+        this.uploadError = this.ls.t('docs.error.fileSize');
         return;
       }
       this.selectedFile = file;
@@ -125,7 +131,7 @@ export class DocumentsComponent implements OnInit {
         this.showUploadModal = false;
       },
       error: () => {
-        this.uploadError = 'Не удалось загрузить файл. Попробуйте ещё раз.';
+        this.uploadError = this.ls.t('docs.error.upload');
         this.uploading = false;
       },
     });
@@ -161,14 +167,10 @@ export class DocumentsComponent implements OnInit {
 
   getStatusLabel(status: string): string {
     switch (status) {
-      case DocumentStatus.APPROVED:
-        return 'Подтверждён';
-      case DocumentStatus.PENDING:
-        return 'На проверке';
-      case DocumentStatus.REJECTED:
-        return 'Отклонён';
-      default:
-        return status;
+      case DocumentStatus.APPROVED:  return this.ls.t('docs.status.approved');
+      case DocumentStatus.PENDING:   return this.ls.t('docs.status.pending');
+      case DocumentStatus.REJECTED:  return this.ls.t('docs.status.rejected');
+      default:                       return status;
     }
   }
 
@@ -189,18 +191,12 @@ export class DocumentsComponent implements OnInit {
 
   getTypeLabel(type: string): string {
     switch (type) {
-      case DocumentType.PASSPORT:
-        return 'Паспорт';
-      case DocumentType.INVOICE:
-        return 'Инвойс';
-      case DocumentType.CUSTOMS_DOC:
-        return 'Таможня';
-      case DocumentType.POWER_OF_ATTORNEY:
-        return 'Доверенность';
-      case DocumentType.OTHER:
-        return 'Другое';
-      default:
-        return type;
+      case DocumentType.PASSPORT:          return this.ls.t('docs.type.passportShort');
+      case DocumentType.INVOICE:           return this.ls.t('docs.type.invoice');
+      case DocumentType.CUSTOMS_DOC:       return this.ls.t('docs.type.customsShort');
+      case DocumentType.POWER_OF_ATTORNEY: return this.ls.t('docs.type.poa');
+      case DocumentType.OTHER:             return this.ls.t('docs.type.other');
+      default:                             return type;
     }
   }
 }

@@ -1,5 +1,5 @@
 <div class="orders">
-  <h1 class="page-title">Мои заказы</h1>
+  <h1 class="page-title">{{ ls.t('orders.title') }}</h1>
 
   @if (error) {
     <div class="error-state">
@@ -10,14 +10,14 @@
 
   @if (loading) {
     <div class="loading-state">
-      <p>Загрузка...</p>
+      <p>{{ ls.t('orders.loading') }}</p>
     </div>
   }
 
   @if (!loading && !error && orders.length === 0) {
     <div class="empty-state">
       <span class="material-symbols-rounded">local_shipping</span>
-      <p>У вас пока нет заказов</p>
+      <p>{{ ls.t('orders.empty') }}</p>
     </div>
   }
 
@@ -56,7 +56,7 @@
                   <span class="material-symbols-rounded">check</span>
                 }
               </div>
-              <span class="progress-step__label">{{ step.label }}</span>
+              <span class="progress-step__label">{{ getStatusLabel(step.status) }}</span>
             </div>
           }
         </div>
@@ -65,47 +65,47 @@
         @if (expandedOrderId === order.id) {
           <div class="order-detail">
             <div class="order-detail__costs">
-              <h4 class="order-detail__title">Стоимость</h4>
+              <h4 class="order-detail__title">{{ ls.t('orders.costs') }}</h4>
               <div class="cost-row">
-                <span>Цена авто</span>
+                <span>{{ ls.t('orders.carPrice') }}</span>
                 <span class="mono">{{ order.carPrice | number }} EUR</span>
               </div>
               <div class="cost-row">
-                <span>Комиссия</span>
+                <span>{{ ls.t('orders.commission') }}</span>
                 <span class="mono">{{ order.commission | number }} EUR</span>
               </div>
               <div class="cost-row">
-                <span>Доставка</span>
+                <span>{{ ls.t('orders.delivery') }}</span>
                 <span class="mono">{{ order.deliveryCost | number }} EUR</span>
               </div>
               <div class="cost-row">
-                <span>Растаможка</span>
+                <span>{{ ls.t('orders.customs') }}</span>
                 <span class="mono">{{ order.customsCost | number }} EUR</span>
               </div>
               <div class="cost-row cost-row--total">
-                <span>Итого</span>
+                <span>{{ ls.t('orders.total') }}</span>
                 <span class="mono">{{ order.total | number }} EUR</span>
               </div>
             </div>
 
             @if (order.managerComment) {
               <div class="order-detail__comment">
-                <h4 class="order-detail__title">Комментарий менеджера</h4>
+                <h4 class="order-detail__title">{{ ls.t('orders.managerComment') }}</h4>
                 <p>{{ order.managerComment }}</p>
               </div>
             }
 
             <!-- Status history timeline -->
             <div class="order-detail__timeline">
-              <h4 class="order-detail__title">История статусов</h4>
+              <h4 class="order-detail__title">{{ ls.t('orders.timeline') }}</h4>
 
               @if (trackingLoading[order.id]) {
-                <p class="timeline-loading">Загрузка...</p>
+                <p class="timeline-loading">{{ ls.t('orders.timeline.loading') }}</p>
               }
 
               @if (!trackingLoading[order.id] && trackingMap[order.id]) {
                 @if (trackingMap[order.id].length === 0) {
-                  <p class="timeline-empty">Нет записей</p>
+                  <p class="timeline-empty">{{ ls.t('orders.timeline.empty') }}</p>
                 }
 
                 @if (trackingMap[order.id].length > 0) {
@@ -124,7 +124,7 @@
                           @if (entry.estimatedDate) {
                             <span class="timeline__estimate">
                               <span class="material-symbols-rounded">schedule</span>
-                              Ожидаемая дата: {{ entry.estimatedDate | date:'dd.MM.yyyy' }}
+                              {{ ls.t('orders.estimate') }} {{ entry.estimatedDate | date:'dd.MM.yyyy' }}
                             </span>
                           }
                         </div>

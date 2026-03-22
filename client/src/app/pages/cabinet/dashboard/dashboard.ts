@@ -10,9 +10,10 @@ import { OrderService } from '../../../core/services/order.service';
 import { DocumentsService } from '../../../core/services/documents.service';
 import { UserService } from '../../../core/services/user.service';
 import { StateService } from '../../../core/services/state.service';
+import { LanguageService } from '../../../core/services/language.service';
 
 interface OnboardingStep {
-  label: string;
+  key: string;
   icon: string;
   done: boolean;
   link?: string;
@@ -26,6 +27,7 @@ interface OnboardingStep {
   styleUrl: './dashboard.scss',
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  ls = inject(LanguageService);
   private readonly balanceService = inject(BalanceService);
   private readonly favoritesService = inject(FavoritesService);
   private readonly auctionService = inject(AuctionService);
@@ -48,6 +50,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   get completedSteps(): number {
     return this.steps.filter((s) => s.done).length;
+  }
+
+  get remainingStepsText(): string {
+    return this.ls.t('dash.onboarding.remaining').replace('{n}', String(this.steps.length - this.completedSteps));
   }
 
   ngOnInit(): void {
@@ -81,18 +87,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
           const hasDocs = documents.total > 0;
 
           this.steps = [
-            { label: 'Регистрация', icon: 'person_add', done: true },
-            { label: 'Email подтверждён', icon: 'mark_email_read', done: isActive },
-            { label: 'Документы загружены', icon: 'upload_file', done: hasDocs, link: '/cabinet/documents' },
-            { label: 'KYC верификация', icon: 'verified_user', done: isVerified },
-            { label: 'Брокер назначен', icon: 'handshake', done: hasBroker },
+            { key: 'dash.step.register', icon: 'person_add', done: true },
+            { key: 'dash.step.email', icon: 'mark_email_read', done: isActive },
+            { key: 'dash.step.docs', icon: 'upload_file', done: hasDocs, link: '/cabinet/documents' },
+            { key: 'dash.step.kyc', icon: 'verified_user', done: isVerified },
+            { key: 'dash.step.broker', icon: 'handshake', done: hasBroker },
           ];
 
           this.onboardingComplete = this.steps.every((s) => s.done);
           this.loading = false;
         },
         error: () => {
-          this.error = 'Не удалось загрузить данные';
+          this.error = this.ls.t('dash.error');
           this.loading = false;
         },
       });

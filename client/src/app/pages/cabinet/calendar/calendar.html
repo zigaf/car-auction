@@ -1,5 +1,5 @@
 <div class="calendar">
-  <h1 class="calendar__title">Календарь аукционов</h1>
+  <h1 class="calendar__title">{{ ls.t('calendar.title') }}</h1>
 
   @if (error) {
     <div class="calendar__state calendar__state--error">
@@ -10,15 +10,15 @@
 
   @if (loading) {
     <div class="calendar__state calendar__state--loading">
-      <p>Загрузка...</p>
+      <p>{{ ls.t('calendar.loading') }}</p>
     </div>
   }
 
   @if (!loading && !error && groups.length === 0) {
     <div class="calendar__state calendar__state--empty">
       <span class="material-symbols-rounded">calendar_month</span>
-      <p>Нет избранных лотов с запланированным аукционом</p>
-      <a routerLink="/catalog" class="calendar__browse-link">Перейти в каталог</a>
+      <p>{{ ls.t('calendar.empty') }}</p>
+      <a routerLink="/catalog" class="calendar__browse-link">{{ ls.t('calendar.browse') }}</a>
     </div>
   }
 
@@ -32,7 +32,7 @@
               <span class="calendar__date-text">{{ group.displayDate }}</span>
               <span class="calendar__date-weekday">{{ group.dayOfWeek }}</span>
               @if (group.isToday) {
-                <span class="calendar__today-badge">Сегодня</span>
+                <span class="calendar__today-badge">{{ ls.t('calendar.today') }}</span>
               }
             </div>
           </div>
@@ -60,7 +60,7 @@
                   @if (fav.lot.mileage) {
                     <span class="calendar__lot-spec">
                       <span class="material-symbols-rounded">speed</span>
-                      {{ fav.lot.mileage | number }} км
+                      {{ fav.lot.mileage | number }} {{ ls.t('calendar.km') }}
                     </span>
                   }
                 </div>

@@ -3,10 +3,10 @@
     @if (error) {
       <span class="material-symbols-rounded callback-icon error">error</span>
       <p class="callback-message">{{ error }}</p>
-      <p class="callback-redirect">Перенаправление на страницу входа...</p>
+      <p class="callback-redirect">{{ ls.t('auth.callback.redirect') }}</p>
     } @else {
       <div class="spinner"></div>
-      <p class="callback-message">Завершение входа...</p>
+      <p class="callback-message">{{ ls.t('auth.callback.loading') }}</p>
     }
   </div>
 </div>

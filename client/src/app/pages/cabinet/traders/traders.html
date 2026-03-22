@@ -1,5 +1,5 @@
 <div class="traders">
-  <h1 class="traders__title">Мои трейдеры</h1>
+  <h1 class="traders__title">{{ ls.t('traders.title') }}</h1>
 
   @if (error) {
     <div class="traders__state traders__state--error">
@@ -11,14 +11,14 @@
   @if (loading) {
     <div class="traders__state traders__state--loading">
       <span class="material-symbols-rounded spin">progress_activity</span>
-      <p>Загрузка...</p>
+      <p>{{ ls.t('traders.loading') }}</p>
     </div>
   }
 
   @if (!loading && !error && traders.length === 0) {
     <div class="traders__state traders__state--empty">
       <span class="material-symbols-rounded">group_off</span>
-      <p>У вас пока нет назначенных трейдеров</p>
+      <p>{{ ls.t('traders.empty') }}</p>
     </div>
   }
 
@@ -43,7 +43,7 @@
               <span class="trader-card__meta">
                 <span class="trader-card__status {{ getStatusClass(trader.status) }}">{{ getStatusLabel(trader.status) }}</span>
                 @if (trader.isVerified) {
-                  <span class="material-symbols-rounded trader-card__verified" title="Верифицирован">verified</span>
+                  <span class="material-symbols-rounded trader-card__verified" [title]="ls.t('traders.verified')">verified</span>
                 }
               </span>
             </div>
@@ -77,28 +77,28 @@
             </div>
             <a routerLink="/live" class="detail__trade-btn">
               <span class="material-symbols-rounded">gavel</span>
-              Торговать
+              {{ ls.t('traders.trade') }}
             </a>
           </div>
 
           <!-- Favorites section -->
           <div class="detail__section">
             <div class="detail__section-header">
-              <h3>Избранные лоты</h3>
+              <h3>{{ ls.t('traders.favorites') }}</h3>
               <button class="detail__add-btn" (click)="openAddModal()">
                 <span class="material-symbols-rounded">add</span>
-                Добавить
+                {{ ls.t('traders.add') }}
               </button>
             </div>
 
             @if (favoritesLoading) {
-              <div class="detail__loading">Загрузка...</div>
+              <div class="detail__loading">{{ ls.t('traders.fav.loading') }}</div>
             }
 
             @if (!favoritesLoading && traderFavorites.length === 0) {
               <div class="detail__empty">
                 <span class="material-symbols-rounded">star_border</span>
-                <p>Нет избранных лотов</p>
+                <p>{{ ls.t('traders.fav.empty') }}</p>
               </div>
             }
 
@@ -118,7 +118,7 @@
                         <span class="fav-card__title">{{ fav.lot.title }}</span>
                         <span class="fav-card__meta">
                           @if (fav.lot.year) { {{ fav.lot.year }} · }
-                          @if (fav.lot.mileage) { {{ fav.lot.mileage | number }} км · }
+                          @if (fav.lot.mileage) { {{ fav.lot.mileage | number }} {{ ls.t('traders.km') }} · }
                           @if (fav.lot.fuelType) { {{ fav.lot.fuelType }} }
                         </span>
                       </div>
@@ -126,7 +126,7 @@
                         <span class="fav-card__price mono">€{{ fav.lot.startingBid | number }}</span>
                       }
                     </a>
-                    <button class="fav-card__remove" (click)="removeFavorite(fav.lotId)" title="Убрать из избранного">
+                    <button class="fav-card__remove" (click)="removeFavorite(fav.lotId)">
                       <span class="material-symbols-rounded">close</span>
                     </button>
                   </div>
@@ -144,7 +144,7 @@
     <div class="modal-overlay" (click)="closeAddModal()">
       <div class="modal" (click)="$event.stopPropagation()">
         <div class="modal__header">
-          <h3>Добавить лот в избранное — {{ getTraderDisplayName(selectedTrader) }}</h3>
+          <h3>{{ ls.t('traders.favorites') }} — {{ getTraderDisplayName(selectedTrader) }}</h3>
           <button class="modal__close" (click)="closeAddModal()">
             <span class="material-symbols-rounded">close</span>
           </button>
@@ -154,16 +154,16 @@
             <span class="material-symbols-rounded">search</span>
             <input
               type="text"
-              placeholder="Поиск по марке, модели..."
+              [placeholder]="ls.t('traders.modal.search')"
               [value]="searchQuery"
               (input)="searchQuery = $any($event.target).value; searchLots()"
             />
           </div>
           @if (searching) {
-            <div class="modal__loading">Поиск...</div>
+            <div class="modal__loading">{{ ls.t('traders.modal.searching') }}</div>
           }
           @if (!searching && searchResults.length === 0 && searchQuery) {
-            <div class="modal__empty">Ничего не найдено</div>
+            <div class="modal__empty">{{ ls.t('traders.modal.empty') }}</div>
           }
           <div class="modal__results">
             @for (lot of searchResults; track lot.id) {
@@ -172,7 +172,7 @@
                   <span class="modal__lot-title">{{ lot.title }}</span>
                   <span class="modal__lot-meta">
                     @if (lot.year) { {{ lot.year }} }
-                    @if (lot.mileage) { · {{ lot.mileage | number }} км }
+                    @if (lot.mileage) { · {{ lot.mileage | number }} {{ ls.t('traders.km') }} }
                   </span>
                 </div>
                 <button class="modal__lot-add" (click)="addToFavorites(lot)">

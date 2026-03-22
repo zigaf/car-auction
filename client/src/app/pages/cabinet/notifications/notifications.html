@@ -1,7 +1,7 @@
 <div class="notifications">
   <div class="notifications__header">
     <h1 class="page-title">
-      Уведомления
+      {{ ls.t('notif.title') }}
       @if (unreadCount > 0) {
         <span class="unread-badge">{{ unreadCount }}</span>
       }
@@ -9,7 +9,7 @@
     @if (unreadCount > 0) {
       <button class="mark-all-btn" (click)="markAllRead()" [disabled]="markingAll">
         <span class="material-symbols-rounded">done_all</span>
-        Прочитать все
+        {{ ls.t('notif.markAll') }}
       </button>
     }
   </div>
@@ -31,7 +31,7 @@
     @if (notifications.length === 0) {
       <div class="empty-state">
         <span class="material-symbols-rounded">notifications_none</span>
-        <p>Уведомлений нет</p>
+        <p>{{ ls.t('notif.empty') }}</p>
       </div>
     } @else {
       <div class="notifications__list">
@@ -60,7 +60,7 @@
             <button
               class="notif-item__delete"
               (click)="deleteNotification(notif.id, $event)"
-              title="Удалить"
+              [title]="ls.t('notif.delete')"
             >
               <span class="material-symbols-rounded">close</span>
             </button>

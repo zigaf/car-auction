@@ -1,12 +1,12 @@
 <div class="balance">
-  <h1 class="page-title">Баланс</h1>
+  <h1 class="page-title">{{ ls.t('balance.title') }}</h1>
 
   @if (isRestrictedCountry) {
     <div class="restriction-banner">
       <span class="material-symbols-rounded">warning</span>
       <div class="restriction-banner__body">
-        <strong>Ограниченный регион</strong>
-        По требованию партнёра <strong>rbmotors.de</strong>, для пользователей из России и Республики Беларусь функционал платформы, включая операции с балансом, может быть ограничен.
+        <strong>{{ ls.t('settings.restricted.title') }}</strong>
+        {{ ls.t('settings.restricted.desc') }}
       </div>
     </div>
   }
@@ -20,26 +20,26 @@
 
   @if (loading) {
     <div class="loading-state">
-      <p>Загрузка...</p>
+      <p>{{ ls.t('balance.loading') }}</p>
     </div>
   }
 
   @if (!loading && !error) {
     <div class="balance__header">
       <div class="balance__current">
-        <span class="balance__label">Текущий баланс</span>
+        <span class="balance__label">{{ ls.t('balance.current') }}</span>
         <span class="balance__amount mono">{{ balance | number: '1.2-2' }} EUR</span>
       </div>
       <div class="balance__actions">
         @if (!isVerified) {
           <div class="verify-notice">
             <span class="material-symbols-rounded">verified_user</span>
-            Пополнение доступно после верификации аккаунта
+            {{ ls.t('balance.verifyNotice') }}
           </div>
         } @else {
           <app-button type="button" variant="primary" (click)="toggleDepositPanel()">
             <span class="material-symbols-rounded">{{ showDepositPanel ? 'close' : 'add' }}</span>
-            {{ showDepositPanel ? 'Закрыть' : 'Пополнить' }}
+            {{ showDepositPanel ? ls.t('balance.close') : ls.t('balance.topUp') }}
           </app-button>
         }
       </div>
@@ -49,14 +49,14 @@
       <div class="deposit-panel">
         <h2 class="deposit-panel__title">
           <span class="material-symbols-rounded">account_balance</span>
-          Пополнение баланса
+          {{ ls.t('balance.deposit.title') }}
         </h2>
         <p class="deposit-panel__desc">
-          Выполните банковский перевод по реквизитам ниже и сообщите менеджеру. Зачисление — в течение 1–2 рабочих дней.
+          {{ ls.t('balance.deposit.desc') }}
         </p>
         <div class="bank-details">
           <div class="bank-detail">
-            <span class="bank-detail__label">Получатель</span>
+            <span class="bank-detail__label">{{ ls.t('balance.deposit.recipient') }}</span>
             <span class="bank-detail__value">RB Motors GmbH</span>
           </div>
           <div class="bank-detail">
@@ -68,35 +68,35 @@
             <span class="bank-detail__value mono">COBADEFFXXX</span>
           </div>
           <div class="bank-detail">
-            <span class="bank-detail__label">Назначение платежа</span>
+            <span class="bank-detail__label">{{ ls.t('balance.deposit.purpose') }}</span>
             <span class="bank-detail__value mono">{{ currentUser?.id }}</span>
           </div>
         </div>
         <p class="deposit-panel__note">
           <span class="material-symbols-rounded">info</span>
-          Укажите ваш ID в назначении платежа — это необходимо для зачисления средств.
+          {{ ls.t('balance.deposit.note') }}
         </p>
       </div>
     }
 
     <div class="balance__table-wrapper">
-      <h2 class="section-title">История операций</h2>
+      <h2 class="section-title">{{ ls.t('balance.history.title') }}</h2>
 
       @if (transactions.length === 0) {
         <div class="empty-state">
           <span class="material-symbols-rounded">receipt_long</span>
-          <p>Операций пока нет</p>
+          <p>{{ ls.t('balance.history.empty') }}</p>
         </div>
       }
 
       @if (transactions.length > 0) {
         <div class="balance__table">
           <div class="table-header">
-            <span>Дата</span>
-            <span>Тип</span>
-            <span>Описание</span>
-            <span class="text-right">Сумма</span>
-            <span class="text-right">Остаток</span>
+            <span>{{ ls.t('balance.history.date') }}</span>
+            <span>{{ ls.t('balance.history.type') }}</span>
+            <span>{{ ls.t('balance.history.desc') }}</span>
+            <span class="text-right">{{ ls.t('balance.history.amount') }}</span>
+            <span class="text-right">{{ ls.t('balance.history.after') }}</span>
           </div>
           @for (tx of transactions; track tx.id) {
             <div class="table-row">

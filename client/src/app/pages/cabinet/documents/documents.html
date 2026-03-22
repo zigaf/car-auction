@@ -1,9 +1,9 @@
 <div class="documents">
   <div class="documents__header">
-    <h1 class="page-title">Документы</h1>
+    <h1 class="page-title">{{ ls.t('docs.title') }}</h1>
     <app-button type="button" variant="primary" (click)="openUploadModal()">
       <span class="material-symbols-rounded">cloud_upload</span>
-      Загрузить документ
+      {{ ls.t('docs.upload') }}
     </app-button>
   </div>
 
@@ -16,7 +16,7 @@
 
   @if (loading) {
     <div class="loading-state">
-      <p>Загрузка...</p>
+      <p>{{ ls.t('docs.loading') }}</p>
     </div>
   }
 
@@ -24,7 +24,7 @@
     <div class="required-docs">
       <h2 class="required-docs__title">
         <span class="material-symbols-rounded">checklist</span>
-        Необходимые документы
+        {{ ls.t('docs.required.title') }}
       </h2>
       <div class="required-docs__list">
         @for (req of requiredDocs; track req.type) {
@@ -39,17 +39,17 @@
             @if (getDocStatus(req.type) === 'none') {
               <button class="req-doc__action" (click)="uploadRequired(req.type)">
                 <span class="material-symbols-rounded">upload</span>
-                Загрузить
+                {{ ls.t('docs.action.upload') }}
               </button>
             } @else if (getDocStatus(req.type) === 'rejected') {
               <button class="req-doc__action req-doc__action--retry" (click)="uploadRequired(req.type)">
                 <span class="material-symbols-rounded">refresh</span>
-                Повторить
+                {{ ls.t('docs.action.retry') }}
               </button>
             } @else if (getDocStatus(req.type) === 'pending') {
-              <span class="req-doc__badge req-doc__badge--pending">На проверке</span>
+              <span class="req-doc__badge req-doc__badge--pending">{{ ls.t('docs.badge.pending') }}</span>
             } @else {
-              <span class="req-doc__badge req-doc__badge--approved">Подтверждён</span>
+              <span class="req-doc__badge req-doc__badge--approved">{{ ls.t('docs.badge.approved') }}</span>
             }
           </div>
         }
@@ -61,10 +61,10 @@
     <div class="documents__table-wrapper">
       <div class="documents__table">
         <div class="doc-table-header">
-          <span>Файл</span>
-          <span>Тип</span>
-          <span>Статус</span>
-          <span>Дата</span>
+          <span>{{ ls.t('docs.table.file') }}</span>
+          <span>{{ ls.t('docs.table.type') }}</span>
+          <span>{{ ls.t('docs.table.status') }}</span>
+          <span>{{ ls.t('docs.table.date') }}</span>
           <span></span>
         </div>
         @for (doc of documents; track doc.id) {
@@ -77,7 +77,7 @@
             <span class="doc-status" [class]="getStatusClass(doc.status)">{{ getStatusLabel(doc.status) }}</span>
             <span class="doc-row__date mono">{{ doc.createdAt | date:'yyyy-MM-dd' }}</span>
             <div class="doc-row__actions">
-              <button class="icon-btn" title="Скачать" (click)="downloadDocument(doc)">
+              <button class="icon-btn" [title]="ls.t('docs.tooltip.download')" (click)="downloadDocument(doc)">
                 <span class="material-symbols-rounded">download</span>
               </button>
             </div>
@@ -90,10 +90,10 @@
   @if (!loading && !error && documents.length === 0) {
     <div class="empty-state">
       <span class="material-symbols-rounded">description</span>
-      <p>У вас пока нет документов</p>
+      <p>{{ ls.t('docs.empty') }}</p>
       <button class="empty-state__btn" (click)="openUploadModal()">
         <span class="material-symbols-rounded">cloud_upload</span>
-        Загрузить первый документ
+        {{ ls.t('docs.empty.btn') }}
       </button>
     </div>
   }
@@ -104,7 +104,7 @@
   <div class="modal-backdrop" (click)="closeUploadModal()"></div>
   <div class="upload-modal">
     <div class="upload-modal__header">
-      <h2>Загрузка документа</h2>
+      <h2>{{ ls.t('docs.modal.title') }}</h2>
       <button class="icon-btn" (click)="closeUploadModal()">
         <span class="material-symbols-rounded">close</span>
       </button>
@@ -112,7 +112,7 @@
 
     <div class="upload-modal__body">
       <div class="upload-field">
-        <label class="upload-field__label">Тип документа</label>
+        <label class="upload-field__label">{{ ls.t('docs.modal.type') }}</label>
         <select class="upload-field__select" [(ngModel)]="uploadType">
           @for (t of documentTypes; track t.value) {
             <option [value]="t.value">{{ t.label }}</option>
@@ -121,7 +121,7 @@
       </div>
 
       <div class="upload-field">
-        <label class="upload-field__label">Файл</label>
+        <label class="upload-field__label">{{ ls.t('docs.modal.file') }}</label>
         <div class="upload-dropzone" (click)="fileInput.click()">
           <input #fileInput type="file" class="upload-dropzone__input"
             accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
@@ -131,8 +131,8 @@
             <span class="upload-dropzone__text">{{ selectedFileName }}</span>
           } @else {
             <span class="material-symbols-rounded upload-dropzone__icon">cloud_upload</span>
-            <span class="upload-dropzone__text">Нажмите для выбора файла</span>
-            <span class="upload-dropzone__hint">PDF, JPG, PNG, DOCX — до 10 МБ</span>
+            <span class="upload-dropzone__text">{{ ls.t('docs.modal.click') }}</span>
+            <span class="upload-dropzone__hint">{{ ls.t('docs.modal.hint') }}</span>
           }
         </div>
       </div>
@@ -146,14 +146,14 @@
     </div>
 
     <div class="upload-modal__footer">
-      <app-button type="button" variant="secondary" (click)="closeUploadModal()">Отмена</app-button>
+      <app-button type="button" variant="secondary" (click)="closeUploadModal()">{{ ls.t('docs.modal.cancel') }}</app-button>
       <app-button type="button" variant="primary" [disabled]="!selectedFile || uploading" (click)="submitUpload()">
         @if (uploading) {
           <span class="material-symbols-rounded spin">progress_activity</span>
-          Загрузка...
+          {{ ls.t('docs.modal.uploading') }}
         } @else {
           <span class="material-symbols-rounded">upload</span>
-          Загрузить
+          {{ ls.t('docs.modal.submit') }}
         }
       </app-button>
     </div>

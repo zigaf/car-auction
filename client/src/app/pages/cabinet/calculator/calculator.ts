@@ -8,6 +8,7 @@ import {
 } from '../../../core/services/calculator.service';
 import { AppButtonComponent } from '../../../shared/components/button/button.component';
 import { AppInputComponent } from '../../../shared/components/input/input.component';
+import { LanguageService } from '../../../core/services/language.service';
 
 interface FuelOption {
   value: FuelTypeCalc;
@@ -22,6 +23,7 @@ interface FuelOption {
   styleUrl: './calculator.scss',
 })
 export class CalculatorComponent {
+  ls = inject(LanguageService);
   private readonly calculatorService = inject(CalculatorService);
 
   // Form
@@ -39,16 +41,18 @@ export class CalculatorComponent {
 
   readonly currentYear = new Date().getFullYear();
 
-  readonly fuelOptions: FuelOption[] = [
-    { value: 'petrol', label: 'Бензин' },
-    { value: 'diesel', label: 'Дизель' },
-    { value: 'hybrid', label: 'Гибрид' },
-    { value: 'electric', label: 'Электро' },
-  ];
+  get fuelOptions(): FuelOption[] {
+    return [
+      { value: 'petrol', label: this.ls.t('fuel.petrol') },
+      { value: 'diesel', label: this.ls.t('fuel.diesel') },
+      { value: 'hybrid', label: this.ls.t('fuel.hybrid') },
+      { value: 'electric', label: this.ls.t('fuel.electric') },
+    ];
+  }
 
   calculate(): void {
     if (!this.carPrice || this.carPrice <= 0) {
-      this.error = 'Введите стоимость автомобиля';
+      this.error = this.ls.t('calc.error.price');
       return;
     }
 
@@ -71,7 +75,7 @@ export class CalculatorComponent {
           this.loading = false;
         },
         error: () => {
-          this.error = 'Ошибка при расчёте. Попробуйте ещё раз.';
+          this.error = this.ls.t('calc.error.calc');
           this.loading = false;
         },
       });
@@ -84,5 +88,9 @@ export class CalculatorComponent {
 
   get isElectric(): boolean {
     return this.fuelType === 'electric';
+  }
+
+  getAgeText(years: number, coeff: number): string {
+    return this.ls.t('calc.result.age').replace('{n}', String(years)).replace('{c}', String(coeff));
   }
 }

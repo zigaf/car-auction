@@ -7,6 +7,7 @@ import { StateService } from '../../../core/services/state.service';
 import { IUser } from '../../../models/user.model';
 import { IFavorite } from '../../../models/favorite.model';
 import { ILot } from '../../../models/lot.model';
+import { LanguageService } from '../../../core/services/language.service';
 
 @Component({
   selector: 'app-traders',
@@ -16,6 +17,7 @@ import { ILot } from '../../../models/lot.model';
   styleUrl: './traders.scss',
 })
 export class TradersComponent implements OnInit {
+  ls = inject(LanguageService);
   private readonly brokerService = inject(BrokerService);
   private readonly lotService = inject(LotService);
   private readonly stateService = inject(StateService);
@@ -51,7 +53,7 @@ export class TradersComponent implements OnInit {
         }
       },
       error: () => {
-        this.error = 'Не удалось загрузить список трейдеров';
+        this.error = this.ls.t('traders.error');
         this.loading = false;
       },
     });
@@ -136,12 +138,12 @@ export class TradersComponent implements OnInit {
   }
 
   getStatusLabel(status: string): string {
-    const map: Record<string, string> = {
-      active: 'Активен',
-      pending: 'Ожидает',
-      blocked: 'Заблокирован',
-    };
-    return map[status] || status;
+    switch (status) {
+      case 'active':   return this.ls.t('traders.status.active');
+      case 'pending':  return this.ls.t('traders.status.pending');
+      case 'blocked':  return this.ls.t('traders.status.blocked');
+      default:         return status;
+    }
   }
 
   getStatusClass(status: string): string {

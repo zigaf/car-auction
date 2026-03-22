@@ -5,6 +5,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { FavoritesService } from '../../../core/services/favorites.service';
 import { IFavorite } from '../../../models/favorite.model';
+import { LanguageService } from '../../../core/services/language.service';
 
 interface CalendarGroup {
   dateKey: string;
@@ -23,6 +24,7 @@ interface CalendarGroup {
   styleUrl: './calendar.scss',
 })
 export class CalendarComponent implements OnInit, OnDestroy {
+  ls = inject(LanguageService);
   private readonly favoritesService = inject(FavoritesService);
   private readonly destroy$ = new Subject<void>();
 
@@ -46,7 +48,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
           this.loading = false;
         },
         error: () => {
-          this.error = 'Не удалось загрузить календарь';
+          this.error = this.ls.t('calendar.error');
           this.loading = false;
         },
       });
@@ -70,8 +72,8 @@ export class CalendarComponent implements OnInit, OnDestroy {
       const date = new Date(dateKey + 'T00:00:00');
       return {
         dateKey,
-        displayDate: this.formatDateRu(date),
-        dayOfWeek: this.getDayOfWeekRu(date),
+        displayDate: this.formatDate(date),
+        dayOfWeek: this.getDayOfWeek(date),
         isToday: dateKey === todayStr,
         isPast: dateKey < todayStr,
         favorites: favs,
@@ -86,17 +88,14 @@ export class CalendarComponent implements OnInit, OnDestroy {
     return `${y}-${m}-${day}`;
   }
 
-  private formatDateRu(d: Date): string {
-    const months = [
-      'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-      'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря',
-    ];
-    return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  private formatDate(d: Date): string {
+    const monthKeys = ['cal.jan','cal.feb','cal.mar','cal.apr','cal.may','cal.jun','cal.jul','cal.aug','cal.sep','cal.oct','cal.nov','cal.dec'];
+    return `${d.getDate()} ${this.ls.t(monthKeys[d.getMonth()])} ${d.getFullYear()}`;
   }
 
-  private getDayOfWeekRu(d: Date): string {
-    const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
-    return days[d.getDay()];
+  private getDayOfWeek(d: Date): string {
+    const dayKeys = ['cal.sun','cal.mon','cal.tue','cal.wed','cal.thu','cal.fri','cal.sat'];
+    return this.ls.t(dayKeys[d.getDay()]);
   }
 
   getAuctionTime(fav: IFavorite): string {

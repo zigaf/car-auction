@@ -7,6 +7,7 @@ import { StateService } from '../../../core/services/state.service';
 import { AppButtonComponent } from '../../../shared/components/button/button.component';
 import { AppInputComponent } from '../../../shared/components/input/input.component';
 import { ToastService } from '../../../core/services/toast.service';
+import { LanguageService } from '../../../core/services/language.service';
 
 @Component({
   selector: 'app-login',
@@ -22,13 +23,14 @@ export class LoginComponent {
   isLoading = false;
   apiUrl = environment.apiUrl;
 
+  ls = inject(LanguageService);
   private router = inject(Router);
   private stateService = inject(StateService);
   private toastService = inject(ToastService);
 
   async onLogin() {
     if (!this.email || !this.password) {
-      this.toastService.warning('Введите email и пароль');
+      this.toastService.warning(this.ls.t('auth.login.emptyFields'));
       return;
     }
 
@@ -43,7 +45,7 @@ export class LoginComponent {
 
       if (!response.ok) {
         const error = await response.json().catch(() => null);
-        throw new Error(error?.message || 'Неверный email или пароль');
+        throw new Error(error?.message || this.ls.t('auth.login.error'));
       }
 
       const data = await response.json();
@@ -58,12 +60,12 @@ export class LoginComponent {
       if (profileResponse.ok) {
         const user = await profileResponse.json();
         this.stateService.setUser(user);
-        this.toastService.success('Вы успешно вошли в систему');
+        this.toastService.success(this.ls.t('auth.login.success'));
       }
 
       this.router.navigate(['/cabinet']);
     } catch (err: any) {
-      this.toastService.error(err.message || 'Ошибка при входе. Попробуйте позже.');
+      this.toastService.error(err.message || this.ls.t('auth.login.errorGeneral'));
     } finally {
       this.isLoading = false;
     }

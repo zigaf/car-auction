@@ -1,9 +1,9 @@
 <div class="dashboard">
-  <h1 class="page-title">Обзор</h1>
+  <h1 class="page-title">{{ ls.t('dash.title') }}</h1>
 
   @if (loading) {
     <div class="loading-state">
-      <p>Загрузка...</p>
+      <p>{{ ls.t('dash.loading') }}</p>
     </div>
   }
 
@@ -22,8 +22,8 @@
         <div class="onboarding__title-row">
           <span class="material-symbols-rounded onboarding__icon">rocket_launch</span>
           <div>
-            <h2 class="onboarding__title">Начало работы</h2>
-            <p class="onboarding__subtitle">Выполните {{ steps.length - completedSteps }} оставшихся шагов для полного доступа</p>
+            <h2 class="onboarding__title">{{ ls.t('dash.onboarding.title') }}</h2>
+            <p class="onboarding__subtitle">{{ remainingStepsText }}</p>
           </div>
         </div>
         <span class="onboarding__counter mono">{{ completedSteps }}/{{ steps.length }}</span>
@@ -32,7 +32,7 @@
         <div class="onboarding__progress-bar" [style.width.%]="(completedSteps / steps.length) * 100"></div>
       </div>
       <div class="onboarding__steps">
-        @for (step of steps; track step.label; let i = $index) {
+        @for (step of steps; track step.key; let i = $index) {
         <div class="onboarding__step" [class.onboarding__step--done]="step.done" [class.onboarding__step--next]="!step.done && (i === 0 || steps[i - 1].done)">
           <div class="onboarding__step-indicator">
             @if (step.done) {
@@ -42,9 +42,9 @@
             }
           </div>
           <div class="onboarding__step-content">
-            <span class="onboarding__step-label">{{ step.label }}</span>
+            <span class="onboarding__step-label">{{ ls.t(step.key) }}</span>
             @if (!step.done && step.link) {
-            <a [routerLink]="step.link" class="onboarding__step-action">Перейти</a>
+            <a [routerLink]="step.link" class="onboarding__step-action">{{ ls.t('dash.onboarding.goTo') }}</a>
             }
           </div>
         </div>
@@ -57,8 +57,8 @@
         <div class="onboarding__title-row">
           <span class="material-symbols-rounded onboarding__icon onboarding__icon--done">verified</span>
           <div>
-            <h2 class="onboarding__title">Вы готовы к торгам</h2>
-            <p class="onboarding__subtitle">Все этапы пройдены — добро пожаловать на аукцион</p>
+            <h2 class="onboarding__title">{{ ls.t('dash.onboarding.complete.title') }}</h2>
+            <p class="onboarding__subtitle">{{ ls.t('dash.onboarding.complete.subtitle') }}</p>
           </div>
         </div>
       </div>
@@ -70,28 +70,28 @@
         <span class="material-symbols-rounded">account_balance_wallet</span>
         <div class="dash-card__content">
           <span class="dash-card__value mono">{{ balance | number }} EUR</span>
-          <span class="dash-card__label">Баланс</span>
+          <span class="dash-card__label">{{ ls.t('dash.card.balance') }}</span>
         </div>
       </div>
       <a routerLink="/cabinet/bids" class="dash-card">
         <span class="material-symbols-rounded">gavel</span>
         <div class="dash-card__content">
           <span class="dash-card__value mono">{{ activeBids }}</span>
-          <span class="dash-card__label">Активные ставки</span>
+          <span class="dash-card__label">{{ ls.t('dash.card.activeBids') }}</span>
         </div>
       </a>
       <a routerLink="/cabinet/watchlist" class="dash-card">
         <span class="material-symbols-rounded">favorite</span>
         <div class="dash-card__content">
           <span class="dash-card__value mono">{{ favoritesCount }}</span>
-          <span class="dash-card__label">Избранное</span>
+          <span class="dash-card__label">{{ ls.t('dash.card.favorites') }}</span>
         </div>
       </a>
       <a routerLink="/cabinet/orders" class="dash-card">
         <span class="material-symbols-rounded">local_shipping</span>
         <div class="dash-card__content">
           <span class="dash-card__value mono">{{ pendingOrders }}</span>
-          <span class="dash-card__label">Текущие заказы</span>
+          <span class="dash-card__label">{{ ls.t('dash.card.orders') }}</span>
         </div>
       </a>
     </div>
@@ -99,15 +99,15 @@
     <div class="dashboard__actions">
       <a routerLink="/catalog" class="action-btn action-btn--primary">
         <span class="material-symbols-rounded">directions_car</span>
-        Каталог
+        {{ ls.t('dash.action.catalog') }}
       </a>
       <a routerLink="/live" class="action-btn action-btn--secondary">
         <span class="material-symbols-rounded">gavel</span>
-        Live торги
+        {{ ls.t('dash.action.live') }}
       </a>
       <a routerLink="/cabinet/documents" class="action-btn action-btn--secondary">
         <span class="material-symbols-rounded">description</span>
-        Документы
+        {{ ls.t('dash.action.documents') }}
       </a>
     </div>
   }

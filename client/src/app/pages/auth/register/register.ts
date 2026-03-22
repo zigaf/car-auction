@@ -6,6 +6,7 @@ import { StateService } from '../../../core/services/state.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AppButtonComponent } from '../../../shared/components/button/button.component';
 import { AppInputComponent } from '../../../shared/components/input/input.component';
+import { LanguageService } from '../../../core/services/language.service';
 
 @Component({
   selector: 'app-register',
@@ -24,23 +25,24 @@ export class RegisterComponent {
   isLoading = false;
   apiUrl = environment.apiUrl;
 
+  ls = inject(LanguageService);
   private router = inject(Router);
   private stateService = inject(StateService);
   private toastService = inject(ToastService);
 
   async onRegister() {
     if (!this.firstName || !this.lastName || !this.email || !this.password) {
-      this.toastService.warning('Заполните все обязательные поля');
+      this.toastService.warning(this.ls.t('auth.register.emptyFields'));
       return;
     }
 
     if (this.password !== this.confirmPassword) {
-      this.toastService.error('Пароли не совпадают');
+      this.toastService.error(this.ls.t('auth.register.passwordMismatch'));
       return;
     }
 
     if (this.password.length < 8) {
-      this.toastService.error('Пароль должен содержать минимум 8 символов');
+      this.toastService.error(this.ls.t('auth.register.passwordTooShort'));
       return;
     }
 
@@ -61,7 +63,7 @@ export class RegisterComponent {
 
       if (!response.ok) {
         const error = await response.json().catch(() => null);
-        throw new Error(error?.message || 'Ошибка регистрации');
+        throw new Error(error?.message || this.ls.t('auth.register.error'));
       }
 
       const data = await response.json();
@@ -77,10 +79,10 @@ export class RegisterComponent {
         this.stateService.setUser(user);
       }
 
-      this.toastService.success('Аккаунт создан! Добро пожаловать.');
+      this.toastService.success(this.ls.t('auth.register.success'));
       this.router.navigate(['/cabinet']);
     } catch (err: any) {
-      this.toastService.error(err.message || 'Ошибка при регистрации. Попробуйте позже.');
+      this.toastService.error(err.message || this.ls.t('auth.register.errorGeneral'));
     } finally {
       this.isLoading = false;
     }
@@ -123,7 +125,7 @@ export class RegisterComponent {
       localStorage.setItem('refreshToken', data.refreshToken);
       this.router.navigate(['/cabinet/dashboard']);
     } catch {
-      this.toastService.error('Ошибка входа через Telegram');
+      this.toastService.error(this.ls.t('auth.register.telegramError'));
     }
   }
 }

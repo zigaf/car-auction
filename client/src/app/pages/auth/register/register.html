@@ -2,17 +2,17 @@
   <div class="auth-card">
     <div class="auth-card__header">
       <span class="material-symbols-rounded auth-card__icon">person_add</span>
-      <h1>Регистрация</h1>
-      <p>Создайте аккаунт для участия в аукционах</p>
+      <h1>{{ ls.t('auth.register.title') }}</h1>
+      <p>{{ ls.t('auth.register.subtitle') }}</p>
     </div>
 
     <form class="auth-form" (ngSubmit)="onRegister()">
       <div class="form-row">
         <div class="form-group">
-          <app-input label="Имя" type="text" placeholder="Ваше имя" icon="person" name="firstName" [(ngModel)]="firstName" [required]="true"></app-input>
+          <app-input [label]="ls.t('auth.register.firstName')" type="text" placeholder="..." icon="person" name="firstName" [(ngModel)]="firstName" [required]="true"></app-input>
         </div>
         <div class="form-group">
-          <app-input label="Фамилия" type="text" placeholder="Ваша фамилия" icon="person" name="lastName" [(ngModel)]="lastName" [required]="true"></app-input>
+          <app-input [label]="ls.t('auth.register.lastName')" type="text" placeholder="..." icon="person" name="lastName" [(ngModel)]="lastName" [required]="true"></app-input>
         </div>
       </div>
 
@@ -21,25 +21,25 @@
       </div>
 
       <div class="form-group">
-        <app-input label="Телефон" type="text" placeholder="+380 __ ___ __ __" icon="phone" name="phone" [(ngModel)]="phone"></app-input>
+        <app-input [label]="ls.t('auth.register.phone')" type="text" placeholder="+380 __ ___ __ __" icon="phone" name="phone" [(ngModel)]="phone"></app-input>
       </div>
 
       <div class="form-group">
-        <app-input label="Пароль" type="password" placeholder="Минимум 8 символов" icon="lock" name="password" [(ngModel)]="password" [required]="true"></app-input>
+        <app-input [label]="ls.t('auth.register.password')" type="password" placeholder="..." icon="lock" name="password" [(ngModel)]="password" [required]="true"></app-input>
       </div>
 
       <div class="form-group">
-        <app-input label="Подтверждение пароля" type="password" placeholder="Повторите пароль" icon="lock" name="confirmPassword" [(ngModel)]="confirmPassword" [required]="true"></app-input>
+        <app-input [label]="ls.t('auth.register.confirm')" type="password" placeholder="..." icon="lock" name="confirmPassword" [(ngModel)]="confirmPassword" [required]="true"></app-input>
       </div>
 
       <app-button type="submit" variant="primary" [fullWidth]="true" [loading]="isLoading" class="auth-form__submit">
-        Зарегистрироваться
+        {{ ls.t('auth.register.submit') }}
       </app-button>
     </form>
 
     <div class="auth-card__footer">
-      <span>Уже есть аккаунт?</span>
-      <a routerLink="/login">Войти</a>
+      <span>{{ ls.t('auth.register.hasAccount') }}</span>
+      <a routerLink="/login">{{ ls.t('auth.register.login') }}</a>
     </div>
   </div>
 </div>

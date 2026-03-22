@@ -7,6 +7,7 @@ import { FavoritesService } from '../../../core/services/favorites.service';
 import { LotService } from '../../../core/services/lot.service';
 import { IWatchlistItem } from '../../../models/watchlist.model';
 import { IFavorite } from '../../../models/favorite.model';
+import { LanguageService } from '../../../core/services/language.service';
 
 @Component({
   selector: 'app-watchlist',
@@ -16,6 +17,7 @@ import { IFavorite } from '../../../models/favorite.model';
   styleUrl: './watchlist.scss',
 })
 export class WatchlistComponent implements OnInit {
+  ls = inject(LanguageService);
   private readonly watchlistService = inject(WatchlistService);
   private readonly favoritesService = inject(FavoritesService);
   private readonly lotService = inject(LotService);
@@ -48,7 +50,7 @@ export class WatchlistComponent implements OnInit {
         this.loading = false;
       },
       error: () => {
-        this.error = 'Не удалось загрузить отслеживаемые';
+        this.error = this.ls.t('watchlist.error');
         this.loading = false;
       },
     });

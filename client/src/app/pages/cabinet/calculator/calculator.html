@@ -1,22 +1,22 @@
 <div class="calculator">
   <div class="calculator__header">
     <div>
-      <h1 class="calculator__title">Калькулятор растаможки</h1>
-      <p class="calculator__subtitle">Расчёт ориентировочных таможенных расходов при ввозе автомобиля в Беларусь</p>
+      <h1 class="calculator__title">{{ ls.t('calc.title') }}</h1>
+      <p class="calculator__subtitle">{{ ls.t('calc.subtitle') }}</p>
     </div>
   </div>
 
   <div class="calculator__body">
     <!-- Form -->
     <div class="calc-form">
-      <h2 class="calc-form__title">Параметры автомобиля</h2>
+      <h2 class="calc-form__title">{{ ls.t('calc.form.title') }}</h2>
 
       <div class="calc-form__grid">
         <div class="calc-field">
-          <label class="calc-label">Стоимость авто (EUR)</label>
+          <label class="calc-label">{{ ls.t('calc.carPrice') }}</label>
           <app-input
             type="number"
-            placeholder="Например: 12000"
+            [placeholder]="ls.t('calc.ph.price')"
             icon="euro"
             [(ngModel)]="carPrice"
             name="carPrice"
@@ -24,10 +24,10 @@
         </div>
 
         <div class="calc-field">
-          <label class="calc-label">Год выпуска</label>
+          <label class="calc-label">{{ ls.t('calc.year') }}</label>
           <app-input
             type="number"
-            placeholder="Например: 2019"
+            [placeholder]="ls.t('calc.ph.year')"
             icon="calendar_today"
             [(ngModel)]="year"
             name="year"
@@ -35,7 +35,7 @@
         </div>
 
         <div class="calc-field">
-          <label class="calc-label">Тип топлива</label>
+          <label class="calc-label">{{ ls.t('calc.fuelType') }}</label>
           <div class="fuel-tabs">
             @for (opt of fuelOptions; track opt.value) {
               <button
@@ -52,10 +52,10 @@
 
         @if (!isElectric) {
           <div class="calc-field">
-            <label class="calc-label">Объём двигателя (см³)</label>
+            <label class="calc-label">{{ ls.t('calc.engine') }}</label>
             <app-input
               type="number"
-              placeholder="Например: 1600"
+              [placeholder]="ls.t('calc.ph.engine')"
               icon="speed"
               [(ngModel)]="engineVolume"
               name="engineVolume"
@@ -64,10 +64,10 @@
         }
 
         <div class="calc-field">
-          <label class="calc-label">Доставка (EUR)</label>
+          <label class="calc-label">{{ ls.t('calc.delivery') }}</label>
           <app-input
             type="number"
-            placeholder="Например: 800"
+            [placeholder]="ls.t('calc.ph.delivery')"
             icon="local_shipping"
             [(ngModel)]="deliveryCost"
             name="deliveryCost"
@@ -75,10 +75,10 @@
         </div>
 
         <div class="calc-field">
-          <label class="calc-label">Комиссия компании (EUR)</label>
+          <label class="calc-label">{{ ls.t('calc.company') }}</label>
           <app-input
             type="number"
-            placeholder="Например: 500"
+            [placeholder]="ls.t('calc.ph.company')"
             icon="business_center"
             [(ngModel)]="companyCost"
             name="companyCost"
@@ -101,7 +101,7 @@
         icon="calculate"
         (click)="calculate()"
       >
-        Рассчитать
+        {{ ls.t('calc.calculate') }}
       </app-button>
     </div>
 
@@ -109,71 +109,70 @@
     @if (result) {
       <div class="calc-result">
         <div class="calc-result__header">
-          <h2 class="calc-result__title">Итоговый расчёт</h2>
+          <h2 class="calc-result__title">{{ ls.t('calc.result.title') }}</h2>
           <span class="calc-result__age">
-            Возраст авто: {{ result.ageYears }} лет (коэфф. ×{{ result.ageCoefficient }})
+            {{ getAgeText(result.ageYears, result.ageCoefficient) }}
           </span>
         </div>
 
         <div class="result-rows">
           <div class="result-row">
-            <span class="result-row__label">Стоимость авто</span>
+            <span class="result-row__label">{{ ls.t('calc.result.carPrice') }}</span>
             <span class="result-row__value">{{ result.carPrice | number:'1.0-0' }} EUR</span>
           </div>
 
-          <div class="result-divider">Таможенные сборы</div>
+          <div class="result-divider">{{ ls.t('calc.result.customs') }}</div>
 
           @if (result.exciseTax > 0) {
             <div class="result-row">
-              <span class="result-row__label">Акцизный сбор</span>
+              <span class="result-row__label">{{ ls.t('calc.result.excise') }}</span>
               <span class="result-row__value result-row__value--tax">{{ result.exciseTax | number:'1.0-0' }} EUR</span>
             </div>
           }
 
           <div class="result-row">
-            <span class="result-row__label">Таможенная пошлина (10%)</span>
+            <span class="result-row__label">{{ ls.t('calc.result.duty') }}</span>
             <span class="result-row__value result-row__value--tax">{{ result.importDuty | number:'1.0-0' }} EUR</span>
           </div>
 
           <div class="result-row">
-            <span class="result-row__label">НДС (20%)</span>
+            <span class="result-row__label">{{ ls.t('calc.result.vat') }}</span>
             <span class="result-row__value result-row__value--tax">{{ result.vat | number:'1.0-0' }} EUR</span>
           </div>
 
           <div class="result-row">
-            <span class="result-row__label">Пенсионный сбор (3%)</span>
+            <span class="result-row__label">{{ ls.t('calc.result.pension') }}</span>
             <span class="result-row__value result-row__value--tax">{{ result.pensionFund | number:'1.0-0' }} EUR</span>
           </div>
 
           <div class="result-row result-row--subtotal">
-            <span class="result-row__label">Итого таможня</span>
+            <span class="result-row__label">{{ ls.t('calc.result.totalCustoms') }}</span>
             <span class="result-row__value">{{ result.totalCustoms | number:'1.0-0' }} EUR</span>
           </div>
 
           @if (result.deliveryCost > 0) {
-            <div class="result-divider">Дополнительные расходы</div>
+            <div class="result-divider">{{ ls.t('calc.result.extra') }}</div>
             <div class="result-row">
-              <span class="result-row__label">Доставка</span>
+              <span class="result-row__label">{{ ls.t('calc.result.delivery') }}</span>
               <span class="result-row__value">{{ result.deliveryCost | number:'1.0-0' }} EUR</span>
             </div>
           }
 
           @if (result.companyCost > 0) {
             <div class="result-row">
-              <span class="result-row__label">Комиссия компании</span>
+              <span class="result-row__label">{{ ls.t('calc.result.company') }}</span>
               <span class="result-row__value">{{ result.companyCost | number:'1.0-0' }} EUR</span>
             </div>
           }
         </div>
 
         <div class="calc-result__total">
-          <span class="calc-result__total-label">Итоговая стоимость</span>
+          <span class="calc-result__total-label">{{ ls.t('calc.result.total') }}</span>
           <span class="calc-result__total-value">{{ result.totalCost | number:'1.0-0' }} EUR</span>
         </div>
 
         <p class="calc-result__disclaimer">
-          * Расчёт является ориентировочным. Точные суммы зависят от актуального курса EUR/BYN и
-          индивидуальных условий ввоза. Обратитесь к менеджеру для точного расчёта.
+          {{ ls.t('calc.result.disclaimer') }}
         </p>
       </div>
     }

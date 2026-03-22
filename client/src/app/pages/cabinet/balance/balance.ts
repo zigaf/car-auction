@@ -5,6 +5,7 @@ import { BalanceService } from '../../../core/services/balance.service';
 import { StateService } from '../../../core/services/state.service';
 import { AppButtonComponent } from '../../../shared/components/button/button.component';
 import { IBalanceTransaction, BalanceTransactionType } from '../../../models/balance.model';
+import { LanguageService } from '../../../core/services/language.service';
 
 const RESTRICTED_FLAGS = ['🇷🇺', '🇧🇾'];
 
@@ -16,6 +17,7 @@ const RESTRICTED_FLAGS = ['🇷🇺', '🇧🇾'];
   styleUrl: './balance.scss',
 })
 export class BalanceComponent implements OnInit {
+  ls = inject(LanguageService);
   private readonly balanceService = inject(BalanceService);
   private readonly stateService = inject(StateService);
 
@@ -53,7 +55,7 @@ export class BalanceComponent implements OnInit {
         this.stateService.updateBalance(res.balance);
       },
       error: () => {
-        this.error = 'Не удалось загрузить баланс';
+        this.error = this.ls.t('balance.error.balance');
         this.loading = false;
       },
     });
@@ -64,7 +66,7 @@ export class BalanceComponent implements OnInit {
         this.loading = false;
       },
       error: () => {
-        this.error = 'Не удалось загрузить историю операций';
+        this.error = this.ls.t('balance.error.history');
         this.loading = false;
       },
     });
@@ -91,15 +93,15 @@ export class BalanceComponent implements OnInit {
 
   getTypeLabel(type: string): string {
     switch (type) {
-      case BalanceTransactionType.DEPOSIT:     return 'Пополнение';
-      case BalanceTransactionType.CAR_PAYMENT: return 'Оплата авто';
-      case BalanceTransactionType.COMMISSION:  return 'Комиссия';
-      case BalanceTransactionType.REFUND:      return 'Возврат';
-      case BalanceTransactionType.DELIVERY:    return 'Доставка';
-      case BalanceTransactionType.CUSTOMS:     return 'Растаможка';
-      case BalanceTransactionType.BID_LOCK:    return 'Блокировка ставки';
-      case BalanceTransactionType.BID_UNLOCK:  return 'Разблокировка ставки';
-      default:                                  return 'Операция';
+      case BalanceTransactionType.DEPOSIT:     return this.ls.t('balance.type.deposit');
+      case BalanceTransactionType.CAR_PAYMENT: return this.ls.t('balance.type.carPayment');
+      case BalanceTransactionType.COMMISSION:  return this.ls.t('balance.type.commission');
+      case BalanceTransactionType.REFUND:      return this.ls.t('balance.type.refund');
+      case BalanceTransactionType.DELIVERY:    return this.ls.t('balance.type.delivery');
+      case BalanceTransactionType.CUSTOMS:     return this.ls.t('balance.type.customs');
+      case BalanceTransactionType.BID_LOCK:    return this.ls.t('balance.type.bidLock');
+      case BalanceTransactionType.BID_UNLOCK:  return this.ls.t('balance.type.bidUnlock');
+      default:                                  return this.ls.t('balance.type.other');
     }
   }
 }

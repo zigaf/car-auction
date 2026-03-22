@@ -7,6 +7,7 @@ import {
   INotification,
   NotificationType,
 } from '../../../core/services/notification.service';
+import { LanguageService } from '../../../core/services/language.service';
 
 const TYPE_ICONS: Record<NotificationType, string> = {
   outbid: 'gavel',
@@ -38,6 +39,7 @@ const TYPE_ICON_CLASS: Record<NotificationType, string> = {
   styleUrl: './notifications.scss',
 })
 export class NotificationsComponent implements OnInit, OnDestroy {
+  ls = inject(LanguageService);
   private readonly notificationService = inject(NotificationService);
   private readonly destroy$ = new Subject<void>();
 
@@ -77,7 +79,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
           this.loading = false;
         },
         error: () => {
-          this.error = 'Не удалось загрузить уведомления';
+          this.error = this.ls.t('notif.error');
           this.loading = false;
         },
       });

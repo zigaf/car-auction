@@ -1,5 +1,5 @@
 <div class="watchlist">
-  <h1 class="page-title">Отслеживаемые</h1>
+  <h1 class="page-title">{{ ls.t('watchlist.title') }}</h1>
 
   @if (error) {
     <div class="error-state">
@@ -10,14 +10,14 @@
 
   @if (loading) {
     <div class="loading-state">
-      <p>Загрузка...</p>
+      <p>{{ ls.t('watchlist.loading') }}</p>
     </div>
   }
 
   @if (!loading && !error) {
     <!-- Watched brands -->
     <div class="watchlist__brands">
-      <h2 class="section-title">Отслеживаемые бренды</h2>
+      <h2 class="section-title">{{ ls.t('watchlist.brands') }}</h2>
       <div class="brand-chips">
         @for (item of brandWatchlist; track item.id) {
           <span class="brand-chip">
@@ -29,7 +29,7 @@
         }
         <button class="brand-chip brand-chip--add" (click)="openBrandModal()">
           <span class="material-symbols-rounded">add</span>
-          Добавить
+          {{ ls.t('watchlist.addBrand') }}
         </button>
       </div>
     </div>
@@ -39,7 +39,7 @@
       <div class="brand-modal-overlay" (click)="closeBrandModal()">
         <div class="brand-modal" (click)="$event.stopPropagation()">
           <div class="brand-modal__header">
-            <h3 class="brand-modal__title">Добавить бренд</h3>
+            <h3 class="brand-modal__title">{{ ls.t('watchlist.modal.title') }}</h3>
             <button class="brand-modal__close" (click)="closeBrandModal()">
               <span class="material-symbols-rounded">close</span>
             </button>
@@ -49,7 +49,7 @@
             <input
               class="brand-modal__input"
               type="text"
-              placeholder="Поиск бренда..."
+              [placeholder]="ls.t('watchlist.modal.search')"
               [(ngModel)]="brandSearch"
             />
           </div>
@@ -57,7 +57,7 @@
             @if (allBrands.length === 0) {
               <div class="brand-modal__loading">
                 <span class="material-symbols-rounded spin">progress_activity</span>
-                Загрузка...
+                {{ ls.t('watchlist.modal.loading') }}
               </div>
             }
             @for (brand of filteredBrands; track brand) {
@@ -72,7 +72,7 @@
               </button>
             }
             @if (allBrands.length > 0 && filteredBrands.length === 0) {
-              <div class="brand-modal__empty">Ничего не найдено</div>
+              <div class="brand-modal__empty">{{ ls.t('watchlist.modal.empty') }}</div>
             }
           </div>
         </div>
@@ -82,11 +82,11 @@
     <!-- Favorite lots -->
     @if (favorites.length > 0) {
       <div class="watchlist__lots">
-        <h2 class="section-title">Избранные лоты ({{ favorites.length }})</h2>
+        <h2 class="section-title">{{ ls.t('watchlist.favorites') }} ({{ favorites.length }})</h2>
         <div class="lot-grid">
           @for (fav of favorites; track fav.lotId) {
             <div class="lot-card">
-              <button class="lot-card__remove" (click)="removeFavorite(fav.lotId)" title="Убрать из избранного">
+              <button class="lot-card__remove" (click)="removeFavorite(fav.lotId)">
                 <span class="material-symbols-rounded">favorite</span>
               </button>
               <div class="lot-card__image">
@@ -102,7 +102,7 @@
                   @if (fav.lot.mileage) {
                     <span class="lot-card__spec">
                       <span class="material-symbols-rounded">speed</span>
-                      {{ fav.lot.mileage | number }} км
+                      {{ fav.lot.mileage | number }} {{ ls.t('watchlist.km') }}
                     </span>
                   }
                   @if (fav.lot.fuelType) {
@@ -115,13 +115,13 @@
                 <div class="lot-card__footer">
                   @if (fav.lot.startingBid) {
                     <div class="lot-card__bid">
-                      <span class="lot-card__bid-label">Стартовая цена</span>
+                      <span class="lot-card__bid-label">{{ ls.t('watchlist.startPrice') }}</span>
                       <span class="lot-card__bid-value mono">{{ fav.lot.startingBid | number }} EUR</span>
                     </div>
                   }
                   <span class="lot-card__watchers">
                     <span class="material-symbols-rounded">visibility</span>
-                    {{ getWatcherCount(fav.lotId) }} отслеживают
+                    {{ getWatcherCount(fav.lotId) }} {{ ls.t('watchlist.watching') }}
                   </span>
                 </div>
               </div>
@@ -134,11 +134,11 @@
     <!-- Watched lots from watchlist -->
     @if (lotWatchlist.length > 0) {
       <div class="watchlist__lots">
-        <h2 class="section-title">Отслеживаемые лоты ({{ lotWatchlist.length }})</h2>
+        <h2 class="section-title">{{ ls.t('watchlist.lots') }} ({{ lotWatchlist.length }})</h2>
         <div class="lot-grid">
           @for (item of lotWatchlist; track item.id) {
             <div class="lot-card">
-              <button class="lot-card__remove" (click)="removeWatchlistItem(item.id)" title="Убрать из отслеживаемых">
+              <button class="lot-card__remove" (click)="removeWatchlistItem(item.id)">
                 <span class="material-symbols-rounded">visibility_off</span>
               </button>
               <div class="lot-card__image">
@@ -154,7 +154,7 @@
                   @if (item.lot!.mileage) {
                     <span class="lot-card__spec">
                       <span class="material-symbols-rounded">speed</span>
-                      {{ item.lot!.mileage | number }} км
+                      {{ item.lot!.mileage | number }} {{ ls.t('watchlist.km') }}
                     </span>
                   }
                   @if (item.lot!.fuelType) {
@@ -167,7 +167,7 @@
                 <div class="lot-card__footer">
                   <span class="lot-card__watchers">
                     <span class="material-symbols-rounded">visibility</span>
-                    {{ getWatcherCount(item.lot!.id) }} отслеживают
+                    {{ getWatcherCount(item.lot!.id) }} {{ ls.t('watchlist.watching') }}
                   </span>
                 </div>
               </div>
@@ -180,7 +180,7 @@
     @if (favorites.length === 0 && lotWatchlist.length === 0 && brandWatchlist.length === 0) {
       <div class="empty-state">
         <span class="material-symbols-rounded">favorite_border</span>
-        <p>Вы ещё не добавили лоты в отслеживаемые</p>
+        <p>{{ ls.t('watchlist.empty') }}</p>
       </div>
     }
   }

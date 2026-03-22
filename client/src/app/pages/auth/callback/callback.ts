@@ -2,6 +2,7 @@ import { Component, inject, afterNextRender } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { StateService } from '../../../core/services/state.service';
 import { environment } from '../../../../environments/environment';
+import { LanguageService } from '../../../core/services/language.service';
 
 @Component({
   selector: 'app-auth-callback',
@@ -12,6 +13,7 @@ import { environment } from '../../../../environments/environment';
 export class AuthCallbackComponent {
   error: string | null = null;
 
+  ls = inject(LanguageService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private stateService = inject(StateService);
@@ -28,8 +30,8 @@ export class AuthCallbackComponent {
     if (params['error']) {
       this.error =
         params['error'] === 'account_blocked'
-          ? 'Аккаунт заблокирован.'
-          : 'Ошибка входа. Попробуйте ещё раз.';
+          ? this.ls.t('auth.callback.blocked')
+          : this.ls.t('auth.callback.error');
       setTimeout(() => this.router.navigate(['/login']), 3000);
       return;
     }
@@ -42,7 +44,7 @@ export class AuthCallbackComponent {
       localStorage.setItem('refreshToken', refreshToken);
       this.loadUserProfile(accessToken);
     } else {
-      this.error = 'Данные авторизации не получены.';
+      this.error = this.ls.t('auth.callback.noData');
       setTimeout(() => this.router.navigate(['/login']), 3000);
     }
   }

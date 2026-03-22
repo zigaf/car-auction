@@ -4,21 +4,21 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { OrderService } from '../../../core/services/order.service';
 import { IOrder, IOrderStatusHistory, OrderStatus } from '../../../models/order.model';
+import { LanguageService } from '../../../core/services/language.service';
 
 interface OrderStep {
   status: OrderStatus;
-  label: string;
 }
 
 const ORDER_STEPS: OrderStep[] = [
-  { status: OrderStatus.PENDING, label: 'Ожидает подтверждения' },
-  { status: OrderStatus.APPROVED, label: 'Подтверждён' },
-  { status: OrderStatus.PAID, label: 'Оплачен' },
-  { status: OrderStatus.DELIVERED_SVH, label: 'Доставлен на СВХ' },
-  { status: OrderStatus.CUSTOMS, label: 'На растаможке' },
-  { status: OrderStatus.CLEARED, label: 'Растаможен' },
-  { status: OrderStatus.DELIVERING, label: 'В доставке' },
-  { status: OrderStatus.COMPLETED, label: 'Завершён' },
+  { status: OrderStatus.PENDING },
+  { status: OrderStatus.APPROVED },
+  { status: OrderStatus.PAID },
+  { status: OrderStatus.DELIVERED_SVH },
+  { status: OrderStatus.CUSTOMS },
+  { status: OrderStatus.CLEARED },
+  { status: OrderStatus.DELIVERING },
+  { status: OrderStatus.COMPLETED },
 ];
 
 @Component({
@@ -29,6 +29,7 @@ const ORDER_STEPS: OrderStep[] = [
   styleUrl: './orders.scss',
 })
 export class OrdersComponent implements OnInit, OnDestroy {
+  ls = inject(LanguageService);
   private readonly orderService = inject(OrderService);
   private readonly destroy$ = new Subject<void>();
 
@@ -57,7 +58,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
           this.loading = false;
         },
         error: () => {
-          this.error = 'Не удалось загрузить заказы';
+          this.error = this.ls.t('orders.error');
           this.loading = false;
         },
       });
@@ -98,29 +99,20 @@ export class OrdersComponent implements OnInit, OnDestroy {
         .filter(v => v != null && v !== '')
         .join(' ');
     }
-    return 'Лот не найден';
+    return this.ls.t('orders.notFound');
   }
 
   getStatusLabel(status: string): string {
     switch (status) {
-      case OrderStatus.PENDING:
-        return 'Ожидает подтверждения';
-      case OrderStatus.APPROVED:
-        return 'Подтверждён';
-      case OrderStatus.PAID:
-        return 'Оплачен';
-      case OrderStatus.DELIVERED_SVH:
-        return 'Доставлен на СВХ';
-      case OrderStatus.CUSTOMS:
-        return 'На растаможке';
-      case OrderStatus.CLEARED:
-        return 'Растаможен';
-      case OrderStatus.DELIVERING:
-        return 'В доставке';
-      case OrderStatus.COMPLETED:
-        return 'Завершён';
-      default:
-        return status;
+      case OrderStatus.PENDING:        return this.ls.t('orders.status.pending');
+      case OrderStatus.APPROVED:       return this.ls.t('orders.status.approved');
+      case OrderStatus.PAID:           return this.ls.t('orders.status.paid');
+      case OrderStatus.DELIVERED_SVH:  return this.ls.t('orders.status.deliveredSvh');
+      case OrderStatus.CUSTOMS:        return this.ls.t('orders.status.customs');
+      case OrderStatus.CLEARED:        return this.ls.t('orders.status.cleared');
+      case OrderStatus.DELIVERING:     return this.ls.t('orders.status.delivering');
+      case OrderStatus.COMPLETED:      return this.ls.t('orders.status.completed');
+      default:                         return status;
     }
   }
 
