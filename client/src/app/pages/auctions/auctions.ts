@@ -1,9 +1,10 @@
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { DecimalPipe, DatePipe } from '@angular/common';
-import { Subject, takeUntil, timer, forkJoin } from 'rxjs';
+import { DecimalPipe } from '@angular/common';
+import { Subject, takeUntil, forkJoin, interval } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { LotService } from '../../core/services/lot.service';
+import { AuctionStateService } from '../../core/services/auction-state.service';
 import { ILot, ImageCategory, LotStatus } from '../../models/lot.model';
 
 interface DayGroup {
@@ -15,26 +16,45 @@ interface DayGroup {
 @Component({
   selector: 'app-auctions',
   standalone: true,
-  imports: [RouterLink, DecimalPipe, DatePipe],
+  imports: [RouterLink, DecimalPipe],
   templateUrl: './auctions.html',
   styleUrl: './auctions.scss',
 })
 export class AuctionsComponent implements OnInit, OnDestroy {
   private readonly lotService = inject(LotService);
+  private readonly auctionState = inject(AuctionStateService);
   private readonly destroy$ = new Subject<void>();
 
   loading = true;
+  now = Date.now();
+
+  // Primary content — currently trading
   liveLots: ILot[] = [];
+
+  // Secondary content — upcoming schedule
   dayGroups: DayGroup[] = [];
-  totalLots = 0;
+  upcomingTotal = 0;
+  scheduleExpanded = false;
 
   ngOnInit(): void {
     this.loadAuctions();
 
-    // Update countdowns every second
-    timer(0, 1000)
+    interval(1000)
       .pipe(takeUntil(this.destroy$))
-      .subscribe();
+      .subscribe(() => { this.now = Date.now(); });
+
+    // Patch live prices from WebSocket feed
+    this.auctionState.priceUpdate$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((update) => {
+        const lot = this.liveLots.find((l) => l.id === update.lotId);
+        if (lot) {
+          lot.currentPrice = update.currentPrice;
+          if (update.auctionEndAt !== undefined) {
+            lot.auctionEndAt = update.auctionEndAt;
+          }
+        }
+      });
   }
 
   ngOnDestroy(): void {
@@ -60,13 +80,12 @@ export class AuctionsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: ({ live, upcoming }) => {
           this.liveLots = live.data || [];
-          this.totalLots = (live.total || 0) + (upcoming.total || 0);
+          this.auctionState.seedFromLots(this.liveLots);
+          this.upcomingTotal = upcoming.total || 0;
           this.dayGroups = this.groupByDay(upcoming.data || []);
           this.loading = false;
         },
-        error: () => {
-          this.loading = false;
-        },
+        error: () => { this.loading = false; },
       });
   }
 
@@ -74,12 +93,8 @@ export class AuctionsComponent implements OnInit, OnDestroy {
     const groups = new Map<string, DayGroup>();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const dayAfter = new Date(today);
-    dayAfter.setDate(dayAfter.getDate() + 2);
 
     for (const lot of lots) {
       const auctionDate = new Date(lot.auctionStartAt || lot.auctionEndAt || lot.createdAt);
@@ -88,45 +103,71 @@ export class AuctionsComponent implements OnInit, OnDestroy {
       if (!groups.has(dateKey)) {
         const lotDay = new Date(dateKey + 'T00:00:00');
         let label: string;
-
-        if (lotDay.getTime() === today.getTime()) {
-          label = 'Сегодня';
-        } else if (lotDay.getTime() === tomorrow.getTime()) {
-          label = 'Завтра';
-        } else {
-          label = this.formatDateLabel(lotDay);
-        }
-
+        if (lotDay.getTime() === today.getTime()) label = 'Сегодня';
+        else if (lotDay.getTime() === tomorrow.getTime()) label = 'Завтра';
+        else label = this.formatDateLabel(lotDay);
         groups.set(dateKey, { date: lotDay, label, lots: [] });
       }
-
       groups.get(dateKey)!.lots.push(lot);
     }
 
-    return Array.from(groups.values()).sort(
-      (a, b) => a.date.getTime() - b.date.getTime(),
-    );
+    return Array.from(groups.values()).sort((a, b) => a.date.getTime() - b.date.getTime());
   }
 
   private formatDateLabel(date: Date): string {
     const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
-    const months = [
-      'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-      'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря',
-    ];
+    const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
     return `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]}`;
   }
 
+  getLivePrice(lot: ILot): number {
+    const p = this.auctionState.getLotPrice(lot.id);
+    if (p !== null) return p;
+    if (lot.currentPrice) return parseFloat(String(lot.currentPrice));
+    if (lot.startingBid) return parseFloat(String(lot.startingBid));
+    return 0;
+  }
+
+  getTimeLeft(lot: ILot): string {
+    const endAt = this.auctionState.getLotEndAt(lot.id) ?? lot.auctionEndAt;
+    if (!endAt) return '--:--';
+    const diff = new Date(endAt).getTime() - this.now;
+    if (diff <= 0) return '0:00';
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  }
+
+  getTimerClass(lot: ILot): string {
+    const endAt = this.auctionState.getLotEndAt(lot.id) ?? lot.auctionEndAt;
+    if (!endAt) return 'timer--green';
+    const diff = new Date(endAt).getTime() - this.now;
+    if (diff < 30000) return 'timer--red';
+    if (diff < 120000) return 'timer--yellow';
+    return 'timer--green';
+  }
+
+  getCountdown(lot: ILot): string {
+    const target = lot.auctionStartAt;
+    if (!target) return '';
+    const diff = new Date(target).getTime() - this.now;
+    if (diff <= 0) return 'Начинается';
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    if (h >= 24) return `${Math.floor(h / 24)}д ${h % 24}ч`;
+    if (h > 0) return `${h}ч ${m}м`;
+    return `${m}м`;
+  }
+
   getMainImage(lot: ILot): string | null {
-    if (lot.images && lot.images.length > 0) {
+    if (lot.images?.length) {
       const main = lot.images.find((img) => img.category === ImageCategory.MAIN);
-      const img = main || lot.images[0];
-      return this.getImageUrl(img.url);
+      return this.getImageUrl((main || lot.images[0]).url);
     }
     if (lot.sourceImageUrl) {
-      return lot.sourceImageUrl.startsWith('//')
-        ? 'https:' + lot.sourceImageUrl
-        : lot.sourceImageUrl;
+      return lot.sourceImageUrl.startsWith('//') ? 'https:' + lot.sourceImageUrl : lot.sourceImageUrl;
     }
     return null;
   }
@@ -135,64 +176,6 @@ export class AuctionsComponent implements OnInit, OnDestroy {
     if (!path) return '';
     if (path.startsWith('http')) return path;
     return `${environment.apiUrl.replace('/api', '')}${path}`;
-  }
-
-  getCountdown(lot: ILot): string {
-    const target = lot.auctionStartAt || lot.auctionEndAt;
-    if (!target) return '';
-
-    const now = Date.now();
-    const end = new Date(target).getTime();
-    const diff = end - now;
-
-    if (diff <= 0) {
-      // If auction has started, show time until end
-      if (lot.auctionEndAt && lot.auctionStartAt) {
-        const endDiff = new Date(lot.auctionEndAt).getTime() - now;
-        if (endDiff > 0) return this.formatDiff(endDiff);
-      }
-      return 'Идёт';
-    }
-
-    return this.formatDiff(diff);
-  }
-
-  private formatDiff(diff: number): string {
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-    if (hours > 24) {
-      const days = Math.floor(hours / 24);
-      const h = hours % 24;
-      return `${days}д ${h}ч ${minutes}м`;
-    }
-
-    if (hours > 0) {
-      return `${hours}ч ${minutes}м ${seconds}с`;
-    }
-
-    return `${minutes}м ${seconds}с`;
-  }
-
-  getCountdownClass(lot: ILot): string {
-    const target = lot.auctionStartAt || lot.auctionEndAt;
-    if (!target) return '';
-
-    const diff = new Date(target).getTime() - Date.now();
-
-    if (diff <= 0) return 'auction-card__countdown--live';
-    if (diff < 60 * 60 * 1000) return 'auction-card__countdown--soon';
-    return '';
-  }
-
-  getStatusLabel(lot: ILot): string {
-    const target = lot.auctionStartAt;
-    if (!target) return 'Запланирован';
-
-    const diff = new Date(target).getTime() - Date.now();
-    if (diff <= 0) return 'Идёт торг';
-    return 'Начало через';
   }
 
   getFuelLabel(fuelType: string): string {
