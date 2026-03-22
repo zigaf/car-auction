@@ -39,7 +39,7 @@ export class AuctionsComponent implements OnInit, OnDestroy {
     private readonly lotService: LotService,
     private readonly cdr: ChangeDetectorRef,
     private readonly router: Router,
-    private readonly ls: LanguageService,
+    readonly ls: LanguageService,
   ) {}
 
   ngOnInit(): void {
