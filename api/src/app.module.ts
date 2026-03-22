@@ -19,6 +19,7 @@ import { BotModule } from './modules/bot/bot.module';
 import { SystemModule } from './modules/system/system.module';
 import { BrokerModule } from './modules/broker/broker.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
+import { EmailModule } from './modules/email/email.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
     SystemModule,
     BrokerModule,
     ReviewsModule,
+    EmailModule,
   ],
 })
 export class AppModule {}
