@@ -7,6 +7,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { LotService } from '../../core/services/lot.service';
+import { LanguageService } from '../../core/services/language.service';
 import { FavoritesService } from '../../core/services/favorites.service';
 import { AuctionStateService } from '../../core/services/auction-state.service';
 import { StateService } from '../../core/services/state.service';
@@ -23,6 +24,7 @@ import { AppBrandIconComponent } from '../../shared/components/brand-icon/brand-
 })
 export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly lotService = inject(LotService);
+  readonly ls = inject(LanguageService);
   private readonly favoritesService = inject(FavoritesService);
   private readonly auctionState = inject(AuctionStateService);
   private readonly stateService = inject(StateService);
@@ -60,14 +62,16 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
     engineCapacityTo: null as number | null,
   };
 
-  sortOptions = [
-    { value: 'date_desc', label: 'Новые' },
-    { value: 'auction_asc', label: 'Ближайшие аукционы' },
-    { value: 'price_asc', label: 'Цена ↑' },
-    { value: 'price_desc', label: 'Цена ↓' },
-    { value: 'year_desc', label: 'Год ↓' },
-    { value: 'mileage_asc', label: 'Пробег ↑' },
-  ];
+  get sortOptions() {
+    return [
+      { value: 'date_desc', label: this.ls.t('sort.new') },
+      { value: 'auction_asc', label: this.ls.t('sort.upcoming') },
+      { value: 'price_asc', label: this.ls.t('sort.priceAsc') },
+      { value: 'price_desc', label: this.ls.t('sort.priceDesc') },
+      { value: 'year_desc', label: this.ls.t('sort.yearDesc') },
+      { value: 'mileage_asc', label: this.ls.t('sort.mileageAsc') },
+    ];
+  }
 
   brands: string[] = [];
   models: string[] = [];
@@ -75,14 +79,7 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
   showModelDropdown = false;
   private previousBrand = '';
   fuelTypes = ['petrol', 'diesel', 'hybrid', 'electric', 'lpg', 'other'];
-  fuelTypeLabels: Record<string, string> = {
-    petrol: 'Бензин', diesel: 'Дизель', hybrid: 'Гибрид',
-    electric: 'Электро', lpg: 'Газ', other: 'Другое',
-  };
   transmissions = ['automatic', 'manual'];
-  transmissionLabels: Record<string, string> = {
-    automatic: 'Автомат', manual: 'Механика',
-  };
 
   lots: ILot[] = [];
 
@@ -263,7 +260,15 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
 
   getFuelLabel(fuelType: string | null): string {
     if (!fuelType) return '-';
-    return this.fuelTypeLabels[fuelType] || fuelType || '-';
+    const key = `fuel.${fuelType}`;
+    const translated = this.ls.t(key);
+    return translated !== key ? translated : fuelType;
+  }
+
+  getTransmissionLabel(trans: string): string {
+    const key = `trans.${trans}`;
+    const translated = this.ls.t(key);
+    return translated !== key ? translated : trans;
   }
 
   resetFilters(): void {
@@ -316,7 +321,7 @@ export class CatalogComponent implements OnInit, OnDestroy, AfterViewInit {
 
   toggleFavorite(lot: ILot): void {
     if (!this.stateService.snapshot.isAuthenticated) {
-      this.toastService.info('Войдите в аккаунт, чтобы добавить в избранное');
+      this.toastService.info(this.ls.t('toast.login.required'));
       return;
     }
 

@@ -5,6 +5,7 @@ import { DecimalPipe } from '@angular/common';
 import { forkJoin } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { LotService } from '../../core/services/lot.service';
+import { LanguageService } from '../../core/services/language.service';
 import { ILot, ILotStats, IBrandCount } from '../../models/lot.model';
 import { AppBrandIconComponent } from '../../shared/components/brand-icon/brand-icon.component';
 
@@ -19,6 +20,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly lotService = inject(LotService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly platformId = inject(PLATFORM_ID);
+  readonly ls = inject(LanguageService);
 
   @ViewChild('recentTrack') recentTrack!: ElementRef<HTMLDivElement>;
   activeRecentDot = 0;
@@ -31,15 +33,17 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   brands: IBrandCount[] = [];
   stats: ILotStats = { totalLots: 0, totalBrands: 0, countries: 0, withPhotos: 0 };
 
-  steps = [
-    { title: 'Регистрация', desc: 'Создайте аккаунт и пройдите верификацию' },
-    { title: 'Пополните баланс', desc: 'Внесите депозит для участия в торгах' },
-    { title: 'Выберите авто', desc: 'Найдите автомобиль в каталоге или на live-торгах' },
-    { title: 'Сделайте ставку', desc: 'Участвуйте в аукционе в реальном времени' },
-    { title: 'Оплатите лот', desc: 'После победы оплатите автомобиль' },
-    { title: 'Доставка и растаможка', desc: 'Мы доставим и растаможим авто для вас' },
-    { title: 'Получите авто', desc: 'Заберите автомобиль по вашему адресу' },
-  ];
+  get steps() {
+    return [
+      { title: this.ls.t('home.step1.title'), desc: this.ls.t('home.step1.desc') },
+      { title: this.ls.t('home.step2.title'), desc: this.ls.t('home.step2.desc') },
+      { title: this.ls.t('home.step3.title'), desc: this.ls.t('home.step3.desc') },
+      { title: this.ls.t('home.step4.title'), desc: this.ls.t('home.step4.desc') },
+      { title: this.ls.t('home.step5.title'), desc: this.ls.t('home.step5.desc') },
+      { title: this.ls.t('home.step6.title'), desc: this.ls.t('home.step6.desc') },
+      { title: this.ls.t('home.step7.title'), desc: this.ls.t('home.step7.desc') },
+    ];
+  }
 
   popularTags = ['Porsche 911', 'BMW M3', 'Mercedes W124', 'Land Cruiser', 'Ferrari'];
 
@@ -155,10 +159,8 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   getFuelLabel(fuelType: string): string {
-    const labels: Record<string, string> = {
-      petrol: 'Бензин', diesel: 'Дизель', hybrid: 'Гибрид',
-      electric: 'Электро', lpg: 'Газ', other: 'Другое',
-    };
-    return labels[fuelType] || fuelType || '-';
+    const key = `fuel.${fuelType}`;
+    const translated = this.ls.t(key);
+    return translated !== key ? translated : fuelType;
   }
 }

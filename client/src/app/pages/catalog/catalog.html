@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="catalog__header">
       <div class="catalog__title-row">
-        <h1 class="catalog__title">Каталог автомобилей</h1>
-        <span class="catalog__count">{{ totalLots }} лотов</span>
+        <h1 class="catalog__title">{{ ls.t('catalog.title') }}</h1>
+        <span class="catalog__count">{{ totalLots }} {{ ls.t('catalog.lots') }}</span>
       </div>
       <div class="catalog__toolbar">
         <div class="catalog__sort">
@@ -30,17 +30,17 @@
       <!-- Filters sidebar -->
       <aside class="catalog__filters">
         <div class="filters__header">
-          <h3>Фильтры</h3>
-          <button class="filters__reset" (click)="resetFilters()">Сбросить</button>
+          <h3>{{ ls.t('catalog.filters') }}</h3>
+          <button class="filters__reset" (click)="resetFilters()">{{ ls.t('catalog.reset') }}</button>
         </div>
 
         <div class="filter-group">
-          <label class="filter-label">Марка</label>
+          <label class="filter-label">{{ ls.t('catalog.brand') }}</label>
           <div class="filter-brands">
             <label class="filter-brands__item" [class.filter-brands__item--active]="filters.brand === ''">
               <input type="radio" name="brandFilter" [(ngModel)]="filters.brand" value=""
                 (ngModelChange)="onBrandChange()" class="filter-brands__radio">
-              <span class="filter-brands__name">Все марки</span>
+              <span class="filter-brands__name">{{ ls.t('catalog.allBrands') }}</span>
             </label>
             @for (b of brands; track b) {
             <label class="filter-brands__item" [class.filter-brands__item--active]="filters.brand === b">
@@ -56,9 +56,9 @@
         </div>
 
         <div class="filter-group filter-group--autocomplete">
-          <label class="filter-label">Модель</label>
+          <label class="filter-label">{{ ls.t('catalog.model') }}</label>
           <div class="filter-autocomplete">
-            <input type="text" [(ngModel)]="filters.model" placeholder="Начните вводить модель..."
+            <input type="text" [(ngModel)]="filters.model" [placeholder]="ls.t('catalog.modelPlaceholder')"
               class="filter-input" (input)="onModelInput()" (focus)="onModelInput()"
               (blur)="hideModelDropdown()" (keydown.enter)="applyFilters()">
             @if (showModelDropdown && filteredModels.length > 0) {
@@ -72,85 +72,85 @@
         </div>
 
         <div class="filter-group">
-          <label class="filter-label">Год выпуска</label>
+          <label class="filter-label">{{ ls.t('catalog.year') }}</label>
           <div class="filter-range">
-            <input type="number" [(ngModel)]="filters.yearFrom" placeholder="От" class="filter-input"
+            <input type="number" [(ngModel)]="filters.yearFrom" [placeholder]="ls.t('catalog.from')" class="filter-input"
               (keydown.enter)="applyFilters()">
             <span class="filter-range__sep">--</span>
-            <input type="number" [(ngModel)]="filters.yearTo" placeholder="До" class="filter-input"
+            <input type="number" [(ngModel)]="filters.yearTo" [placeholder]="ls.t('catalog.to')" class="filter-input"
               (keydown.enter)="applyFilters()">
           </div>
         </div>
 
         <div class="filter-group">
-          <label class="filter-label">Цена, EUR</label>
+          <label class="filter-label">{{ ls.t('catalog.price') }}</label>
           <div class="filter-range">
-            <input type="number" [(ngModel)]="filters.priceFrom" placeholder="От" class="filter-input"
+            <input type="number" [(ngModel)]="filters.priceFrom" [placeholder]="ls.t('catalog.from')" class="filter-input"
               (keydown.enter)="applyFilters()">
             <span class="filter-range__sep">--</span>
-            <input type="number" [(ngModel)]="filters.priceTo" placeholder="До" class="filter-input"
+            <input type="number" [(ngModel)]="filters.priceTo" [placeholder]="ls.t('catalog.to')" class="filter-input"
               (keydown.enter)="applyFilters()">
           </div>
         </div>
 
         <div class="filter-group">
-          <label class="filter-label">Топливо</label>
+          <label class="filter-label">{{ ls.t('catalog.fuel') }}</label>
           <select [(ngModel)]="filters.fuelType" class="filter-select">
-            <option value="">Все</option>
+            <option value="">{{ ls.t('catalog.allFuels') }}</option>
             @for (f of fuelTypes; track f) {
-            <option [value]="f">{{ fuelTypeLabels[f] }}</option>
+            <option [value]="f">{{ getFuelLabel(f) }}</option>
             }
           </select>
         </div>
 
         <div class="filter-group">
-          <label class="filter-label">Коробка передач</label>
+          <label class="filter-label">{{ ls.t('catalog.trans') }}</label>
           <select [(ngModel)]="filters.transmission" class="filter-select">
-            <option value="">Все</option>
+            <option value="">{{ ls.t('catalog.allFuels') }}</option>
             @for (t of transmissions; track t) {
-            <option [value]="t">{{ transmissionLabels[t] }}</option>
+            <option [value]="t">{{ getTransmissionLabel(t) }}</option>
             }
           </select>
         </div>
 
         <div class="filter-group">
-          <label class="filter-label">Пробег, км</label>
+          <label class="filter-label">{{ ls.t('catalog.mileage') }}</label>
           <div class="filter-range">
-            <input type="number" [(ngModel)]="filters.mileageFrom" placeholder="От" class="filter-input"
+            <input type="number" [(ngModel)]="filters.mileageFrom" [placeholder]="ls.t('catalog.from')" class="filter-input"
               (keydown.enter)="applyFilters()">
             <span class="filter-range__sep">--</span>
-            <input type="number" [(ngModel)]="filters.mileageTo" placeholder="До" class="filter-input"
+            <input type="number" [(ngModel)]="filters.mileageTo" [placeholder]="ls.t('catalog.to')" class="filter-input"
               (keydown.enter)="applyFilters()">
           </div>
         </div>
 
         <div class="filter-group">
-          <label class="filter-label">Объём двигателя, см³</label>
+          <label class="filter-label">{{ ls.t('catalog.engine') }}</label>
           <div class="filter-range">
-            <input type="number" [(ngModel)]="filters.engineCapacityFrom" placeholder="От" class="filter-input"
+            <input type="number" [(ngModel)]="filters.engineCapacityFrom" [placeholder]="ls.t('catalog.from')" class="filter-input"
               (keydown.enter)="applyFilters()">
             <span class="filter-range__sep">--</span>
-            <input type="number" [(ngModel)]="filters.engineCapacityTo" placeholder="До" class="filter-input"
+            <input type="number" [(ngModel)]="filters.engineCapacityTo" [placeholder]="ls.t('catalog.to')" class="filter-input"
               (keydown.enter)="applyFilters()">
           </div>
         </div>
 
         <button class="filters__apply" (click)="applyFilters()">
           <span class="material-symbols-rounded">search</span>
-          Найти
+          {{ ls.t('catalog.find') }}
         </button>
       </aside>
 
       <!-- Lot cards grid -->
       <div class="catalog__grid" [class.catalog__grid--list]="viewMode === 'list'">
         @if (loading) {
-        <div class="catalog__loading">Загрузка...</div>
+        <div class="catalog__loading">{{ ls.t('catalog.loading') }}</div>
         }
 
         @if (!loading && lots.length === 0) {
         <div class="catalog__empty">
           <span class="material-symbols-rounded">search_off</span>
-          <p>Лоты не найдены. Попробуйте изменить фильтры или запустить парсинг в настройках.</p>
+          <p>{{ ls.t('catalog.notFound') }}</p>
         </div>
         }
 
@@ -188,21 +188,21 @@
             <h3 class="lot-card__title">{{ lot.title }}</h3>
             <div class="lot-card__specs">
               @if (lot.year) { <span>{{ lot.year }}</span><span class="dot"></span> }
-              @if (lot.mileage) { <span>{{ lot.mileage | number }} км</span><span class="dot"></span> }
+              @if (lot.mileage) { <span>{{ lot.mileage | number }} {{ ls.t('catalog.km') }}</span><span class="dot"></span> }
               <span>{{ getFuelLabel(lot.fuelType) }}</span>
-              @if (lot.enginePowerPs) { <span class="dot"></span><span>{{ lot.enginePowerPs }} л.с.</span> }
+              @if (lot.enginePowerPs) { <span class="dot"></span><span>{{ lot.enginePowerPs }} {{ ls.t('catalog.ps') }}</span> }
             </div>
 
             <div class="lot-card__auction">
               <div class="lot-card__price">
                 @if (isLiveLot(lot)) {
-                <span class="lot-card__price-label">Текущая ставка</span>
+                <span class="lot-card__price-label">{{ ls.t('catalog.currentBid') }}</span>
                 <span class="lot-card__price-value lot-card__price-value--live mono">{{ getLivePrice(lot) | number }} EUR</span>
                 } @else if (lot.startingBid) {
-                <span class="lot-card__price-label">Стартовая цена</span>
+                <span class="lot-card__price-label">{{ ls.t('catalog.startingPrice') }}</span>
                 <span class="lot-card__price-value mono">{{ lot.startingBid | number }} EUR</span>
                 } @else {
-                <span class="lot-card__price-label">{{ lot.saleChannel || 'Аукцион' }}</span>
+                <span class="lot-card__price-label">{{ lot.saleChannel || ls.t('nav.auctions') }}</span>
                 <span class="lot-card__price-value mono">{{ lot.saleName }}</span>
                 }
               </div>
@@ -223,11 +223,11 @@
           @if (loadingMore) {
           <div class="catalog__loading-more">
             <span class="material-symbols-rounded spinning">progress_activity</span>
-            Загрузка...
+            {{ ls.t('catalog.loadingMore') }}
           </div>
           }
           @if (!loading && !loadingMore && lots.length > 0 && !hasMore) {
-          <div class="catalog__end">Все лоты загружены</div>
+          <div class="catalog__end">{{ ls.t('catalog.allLoaded') }}</div>
           }
         </div>
       </div>

@@ -6,6 +6,7 @@ import { Subject, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { LotService } from '../../core/services/lot.service';
+import { LanguageService } from '../../core/services/language.service';
 import { AuctionService } from '../../core/services/auction.service';
 import { FavoritesService } from '../../core/services/favorites.service';
 import { BrokerService } from '../../core/services/broker.service';
@@ -40,6 +41,7 @@ export type GalleryTab = 'all' | 'exterior' | 'interior' | 'damage';
 export class LotDetailComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly lotService = inject(LotService);
+  readonly ls = inject(LanguageService);
   private readonly auctionService = inject(AuctionService);
   private readonly favoritesService = inject(FavoritesService);
   private readonly brokerService = inject(BrokerService);
@@ -295,7 +297,7 @@ export class LotDetailComponent implements OnInit, OnDestroy {
     if (!this.lot || !this.customBidAmount || this.bidding) return;
     const minBid = this.getMinBid(this.lot);
     if (this.customBidAmount < minBid) {
-      this.bidError = `Минимальная ставка: €${minBid.toLocaleString()}`;
+      this.bidError = this.ls.t('lot.minBidError').replace('{n}', minBid.toLocaleString());
       return;
     }
     this.lastBidWasPreBid = false;
@@ -306,7 +308,7 @@ export class LotDetailComponent implements OnInit, OnDestroy {
     this.bidTimeoutTimer = setTimeout(() => {
       if (this.bidding) {
         this.bidding = false;
-        this.bidError = 'Нет ответа от сервера. Попробуйте снова.';
+        this.bidError = this.ls.t('lot.noResponse');
         setTimeout(() => { this.bidError = null; }, 4000);
       }
     }, 15000);
@@ -318,7 +320,7 @@ export class LotDetailComponent implements OnInit, OnDestroy {
     if (!this.lot || !this.maxAutoBidAmount || this.bidding) return;
     const minBid = this.getMinBid(this.lot);
     if (this.maxAutoBidAmount < minBid) {
-      this.bidError = `Авто-ставка должна быть не менее €${minBid.toLocaleString()}`;
+      this.bidError = this.ls.t('lot.minAutoBidError').replace('{n}', minBid.toLocaleString());
       return;
     }
     this.lastBidWasPreBid = true;
@@ -333,7 +335,7 @@ export class LotDetailComponent implements OnInit, OnDestroy {
         this.bidding = false;
         this.activeAutoBidMax = null;
         this.activeAutoBidLotId = null;
-        this.bidError = 'Нет ответа от сервера. Попробуйте снова.';
+        this.bidError = this.ls.t('lot.noResponse');
         setTimeout(() => { this.bidError = null; }, 4000);
       }
     }, 15000);
@@ -448,11 +450,9 @@ export class LotDetailComponent implements OnInit, OnDestroy {
   }
 
   getFuelLabel(fuelType: string): string {
-    const map: Record<string, string> = {
-      petrol: 'Бензин', diesel: 'Дизель', hybrid: 'Гибрид',
-      electric: 'Электро', lpg: 'Газ', other: 'Другое',
-    };
-    return map[fuelType] || fuelType || '-';
+    const key = `fuel.${fuelType}`;
+    const translated = this.ls.t(key);
+    return translated !== key ? translated : fuelType;
   }
 
   // ─── Specs from lot._sections ─────────────────────────────────────────────

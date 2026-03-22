@@ -1,23 +1,23 @@
 <div class="lot-detail">
   <div class="container">
     @if (loading) {
-    <div class="lot-detail__loading">Загрузка...</div>
+    <div class="lot-detail__loading">{{ ls.t('lot.loading') }}</div>
     }
 
     @if (!loading && !lot) {
     <div class="lot-detail__not-found">
       <span class="material-symbols-rounded">error_outline</span>
-      <h2>Лот не найден</h2>
-      <a routerLink="/catalog">Вернуться в каталог</a>
+      <h2>{{ ls.t('lot.notFound') }}</h2>
+      <a routerLink="/catalog">{{ ls.t('lot.backToCatalog') }}</a>
     </div>
     }
 
     @if (lot) {
     <!-- Breadcrumb -->
     <nav class="breadcrumb">
-      <a routerLink="/">Главная</a>
+      <a routerLink="/">{{ ls.t('lot.home') }}</a>
       <span class="material-symbols-rounded">chevron_right</span>
-      <a routerLink="/catalog">Каталог</a>
+      <a routerLink="/catalog">{{ ls.t('lot.catalog') }}</a>
       <span class="material-symbols-rounded">chevron_right</span>
       <span>{{ lot.title }}</span>
     </nav>
@@ -34,7 +34,7 @@
             } @else {
             <div class="gallery__empty">
               <span class="material-symbols-rounded">directions_car</span>
-              <span>Нет фото</span>
+              <span>{{ ls.t('lot.noPhoto') }}</span>
             </div>
             }
 
@@ -51,13 +51,13 @@
 
           <!-- Tabs -->
           <div class="gallery__tabs">
-            <button [class.active]="activeGalleryTab === 'all'" (click)="setGalleryTab('all')">Все фото</button>
+            <button [class.active]="activeGalleryTab === 'all'" (click)="setGalleryTab('all')">{{ ls.t('lot.gallery.all') }}</button>
             <button [class.active]="activeGalleryTab === 'exterior'"
-              (click)="setGalleryTab('exterior')">Экстерьер</button>
+              (click)="setGalleryTab('exterior')">{{ ls.t('lot.gallery.exterior') }}</button>
             <button [class.active]="activeGalleryTab === 'interior'"
-              (click)="setGalleryTab('interior')">Интерьер</button>
+              (click)="setGalleryTab('interior')">{{ ls.t('lot.gallery.interior') }}</button>
             <button [class.active]="activeGalleryTab === 'damage'"
-              (click)="setGalleryTab('damage')">Повреждения</button>
+              (click)="setGalleryTab('damage')">{{ ls.t('lot.gallery.damage') }}</button>
           </div>
 
           <!-- Scrollable thumbnails -->
@@ -66,7 +66,7 @@
             @for (img of filteredImages; track img.url; let i = $index) {
             <div class="gallery__thumb" [class.gallery__thumb--active]="selectedImageIndex === i"
               (click)="selectImage(i)">
-              <img [src]="getImageUrl(img.url)" [alt]="'Фото ' + (i + 1)">
+              <img [src]="getImageUrl(img.url)" [alt]="ls.t('lot.gallery.all') + ' ' + (i + 1)">
             </div>
             }
           </div>
@@ -75,17 +75,17 @@
 
         <!-- Specs -->
         <div class="specs-section">
-          <h2 class="section-title">Характеристики</h2>
+          <h2 class="section-title">{{ ls.t('lot.specs') }}</h2>
           @if (hasSpecs) {
           <div class="specs-grid">
             @if (lot.enginePowerPs || lot.enginePowerKw) {
             <div class="spec-item">
               <span class="material-symbols-rounded spec-item__icon">speed</span>
               <div class="spec-item__content">
-                <span class="spec-item__label">Мощность</span>
+                <span class="spec-item__label">{{ ls.t('spec.power') }}</span>
                 <span class="spec-item__value">
-                  @if (lot.enginePowerPs) { {{ lot.enginePowerPs }} л.с. }
-                  @if (lot.enginePowerKw) { ({{ lot.enginePowerKw }} кВт) }
+                  @if (lot.enginePowerPs) { {{ lot.enginePowerPs }} {{ ls.t('spec.ps') }} }
+                  @if (lot.enginePowerKw) { ({{ lot.enginePowerKw }} {{ ls.t('spec.kw') }}) }
                 </span>
               </div>
             </div>
@@ -94,7 +94,7 @@
             <div class="spec-item">
               <span class="material-symbols-rounded spec-item__icon">local_gas_station</span>
               <div class="spec-item__content">
-                <span class="spec-item__label">Топливо</span>
+                <span class="spec-item__label">{{ ls.t('spec.fuel') }}</span>
                 <span class="spec-item__value">{{ getFuelLabel(lot.fuelType) }}</span>
               </div>
             </div>
@@ -103,8 +103,8 @@
             <div class="spec-item">
               <span class="material-symbols-rounded spec-item__icon">speed</span>
               <div class="spec-item__content">
-                <span class="spec-item__label">Пробег</span>
-                <span class="spec-item__value">{{ lot.mileage | number }} км</span>
+                <span class="spec-item__label">{{ ls.t('spec.mileage') }}</span>
+                <span class="spec-item__value">{{ lot.mileage | number }} {{ ls.t('spec.km') }}</span>
               </div>
             </div>
             }
@@ -112,7 +112,7 @@
             <div class="spec-item">
               <span class="material-symbols-rounded spec-item__icon">calendar_month</span>
               <div class="spec-item__content">
-                <span class="spec-item__label">Год</span>
+                <span class="spec-item__label">{{ ls.t('spec.year') }}</span>
                 <span class="spec-item__value">{{ lot.year }}</span>
               </div>
             </div>
@@ -121,7 +121,7 @@
             <div class="spec-item">
               <span class="material-symbols-rounded spec-item__icon">settings</span>
               <div class="spec-item__content">
-                <span class="spec-item__label">КПП</span>
+                <span class="spec-item__label">{{ ls.t('spec.transmission') }}</span>
                 <span class="spec-item__value">{{ lot.transmission }}</span>
               </div>
             </div>
@@ -130,7 +130,7 @@
             <div class="spec-item">
               <span class="material-symbols-rounded spec-item__icon">palette</span>
               <div class="spec-item__content">
-                <span class="spec-item__label">Цвет</span>
+                <span class="spec-item__label">{{ ls.t('spec.color') }}</span>
                 <span class="spec-item__value">{{ lot.exteriorColor }}</span>
               </div>
             </div>
@@ -139,7 +139,7 @@
             <div class="spec-item">
               <span class="material-symbols-rounded spec-item__icon">directions_car</span>
               <div class="spec-item__content">
-                <span class="spec-item__label">Тип</span>
+                <span class="spec-item__label">{{ ls.t('spec.type') }}</span>
                 <span class="spec-item__value">{{ lot.vehicleType }}</span>
               </div>
             </div>
@@ -148,7 +148,7 @@
             <div class="spec-item">
               <span class="material-symbols-rounded spec-item__icon">meeting_room</span>
               <div class="spec-item__content">
-                <span class="spec-item__label">Двери</span>
+                <span class="spec-item__label">{{ ls.t('spec.doors') }}</span>
                 <span class="spec-item__value">{{ lot.numberOfDoors }}</span>
               </div>
             </div>
@@ -157,7 +157,7 @@
             <div class="spec-item">
               <span class="material-symbols-rounded spec-item__icon">airline_seat_recline_normal</span>
               <div class="spec-item__content">
-                <span class="spec-item__label">Места</span>
+                <span class="spec-item__label">{{ ls.t('spec.seats') }}</span>
                 <span class="spec-item__value">{{ lot.numberOfSeats }}</span>
               </div>
             </div>
@@ -166,7 +166,7 @@
             <div class="spec-item">
               <span class="material-symbols-rounded spec-item__icon">account_tree</span>
               <div class="spec-item__content">
-                <span class="spec-item__label">Передачи</span>
+                <span class="spec-item__label">{{ ls.t('spec.gears') }}</span>
                 <span class="spec-item__value">{{ lot.numberOfGears }}</span>
               </div>
             </div>
@@ -175,7 +175,7 @@
             <div class="spec-item">
               <span class="material-symbols-rounded spec-item__icon">local_gas_station</span>
               <div class="spec-item__content">
-                <span class="spec-item__label">Объем</span>
+                <span class="spec-item__label">{{ ls.t('spec.volume') }}</span>
                 <span class="spec-item__value">{{ lot.engineCapacityCc }} CC</span>
               </div>
             </div>
@@ -184,7 +184,7 @@
             <div class="spec-item">
               <span class="material-symbols-rounded spec-item__icon">eco</span>
               <div class="spec-item__content">
-                <span class="spec-item__label">Эмиссия</span>
+                <span class="spec-item__label">{{ ls.t('spec.emission') }}</span>
                 <span class="spec-item__value">{{ lot.emissionClass }}</span>
               </div>
             </div>
@@ -202,7 +202,7 @@
             <div class="spec-item">
               <span class="material-symbols-rounded spec-item__icon">person</span>
               <div class="spec-item__content">
-                <span class="spec-item__label">Владельцев</span>
+                <span class="spec-item__label">{{ ls.t('spec.owners') }}</span>
                 <span class="spec-item__value">{{ lot.numberOfOwners }}</span>
               </div>
             </div>
@@ -211,7 +211,7 @@
             <div class="spec-item">
               <span class="material-symbols-rounded spec-item__icon">key</span>
               <div class="spec-item__content">
-                <span class="spec-item__label">Ключей</span>
+                <span class="spec-item__label">{{ ls.t('spec.keys') }}</span>
                 <span class="spec-item__value">{{ lot.numberOfKeys }}</span>
               </div>
             </div>
@@ -220,7 +220,7 @@
           } @else {
           <div class="placeholder-stub">
             <span class="material-symbols-rounded">hourglass_top</span>
-            <span>Лот осматривается экспертами, информация появится позже</span>
+            <span>{{ ls.t('lot.pending') }}</span>
           </div>
           }
 
@@ -237,7 +237,7 @@
         <div class="info-section">
           <h2 class="section-title">
             <span class="material-symbols-rounded section-title__icon">checklist</span>
-            Комплектация
+            {{ ls.t('lot.equipment') }}
           </h2>
           <ul class="equipment-list">
             @for (item of visibleEquipment; track item) {
@@ -249,7 +249,7 @@
           </ul>
           @if (lot.equipment.length > 10) {
           <button class="show-more-btn" (click)="toggleEquipment()">
-            {{ equipmentExpanded ? 'Скрыть' : 'Показать все (' + lot.equipment.length + ')' }}
+            {{ equipmentExpanded ? ls.t('lot.showLess') : ls.t('lot.showAll').replace('{n}', '' + lot.equipment.length) }}
             <span class="material-symbols-rounded">{{ equipmentExpanded ? 'expand_less' : 'expand_more' }}</span>
           </button>
           }
@@ -258,11 +258,11 @@
         <div class="info-section">
           <h2 class="section-title">
             <span class="material-symbols-rounded section-title__icon">checklist</span>
-            Комплектация
+            {{ ls.t('lot.equipment') }}
           </h2>
           <div class="placeholder-stub">
             <span class="material-symbols-rounded">hourglass_top</span>
-            <span>Лот осматривается экспертами, информация появится позже</span>
+            <span>{{ ls.t('lot.pending') }}</span>
           </div>
         </div>
         }
@@ -272,14 +272,14 @@
         <div class="info-section">
           <h2 class="section-title">
             <span class="material-symbols-rounded section-title__icon">history</span>
-            История обслуживания
+            {{ ls.t('lot.serviceHistory') }}
           </h2>
           <div class="tires-table"> <!-- Reuse tires-table styles for history -->
             <div class="tires-table__header">
-              <span>Дата</span>
-              <span>Пробег</span>
-              <span>Описание</span>
-              <span>Компания</span>
+              <span>{{ ls.t('lot.historyDate') }}</span>
+              <span>{{ ls.t('lot.historyMileage') }}</span>
+              <span>{{ ls.t('lot.historyDesc') }}</span>
+              <span>{{ ls.t('lot.historyCompany') }}</span>
             </div>
             @for (record of lot.serviceHistory; track record) {
             <div class="tires-table__row">
@@ -299,18 +299,18 @@
         <div class="info-section info-section--warning">
           <h2 class="section-title">
             <span class="material-symbols-rounded section-title__icon section-title__icon--warning">warning</span>
-            Авария / Повреждения
+            {{ ls.t('lot.accident') }}
           </h2>
           <p class="info-text">{{ accidentInfo }}</p>
 
           <!-- Damage photos in accident section -->
           @if (damageImages.length > 0) {
           <div class="damage-photos">
-            <h3 class="damage-photos__title">Фото повреждений</h3>
+            <h3 class="damage-photos__title">{{ ls.t('lot.damagePhotos') }}</h3>
             <div class="damage-photos__grid">
               @for (img of damageImages; track img.url) {
               <div class="damage-photos__item" (click)="goToImageInAllPhotos(img)">
-                <img [src]="getImageUrl(img.url)" [alt]="'Повреждение'">
+                <img [src]="getImageUrl(img.url)" [alt]="ls.t('lot.gallery.damage')">
                 <div class="damage-photos__overlay">
                   <span class="material-symbols-rounded">zoom_in</span>
                 </div>
@@ -327,7 +327,7 @@
         <div class="info-section">
           <h2 class="section-title">
             <span class="material-symbols-rounded section-title__icon">directions_car</span>
-            Кузов
+            {{ ls.t('lot.body') }}
           </h2>
           <div class="condition-table">
             @for (item of bodyCondition; track item.part) {
@@ -349,11 +349,11 @@
           <!-- Damage photos in body section (if no accident section is shown) -->
           @if (!accidentInfo && damageImages.length > 0) {
           <div class="damage-photos">
-            <h3 class="damage-photos__title">Фото повреждений</h3>
+            <h3 class="damage-photos__title">{{ ls.t('lot.damagePhotos') }}</h3>
             <div class="damage-photos__grid">
               @for (img of damageImages; track img.url) {
               <div class="damage-photos__item" (click)="goToImageInAllPhotos(img)">
-                <img [src]="getImageUrl(img.url)" [alt]="'Повреждение'">
+                <img [src]="getImageUrl(img.url)" [alt]="ls.t('lot.gallery.damage')">
                 <div class="damage-photos__overlay">
                   <span class="material-symbols-rounded">zoom_in</span>
                 </div>
@@ -370,7 +370,7 @@
         <div class="info-section">
           <h2 class="section-title">
             <span class="material-symbols-rounded section-title__icon">airline_seat_recline_normal</span>
-            Салон
+            {{ ls.t('lot.interior') }}
           </h2>
           <div class="condition-table">
             @for (item of interiorCondition; track item.part) {
@@ -396,13 +396,13 @@
         <div class="info-section">
           <h2 class="section-title">
             <span class="material-symbols-rounded section-title__icon">tire_repair</span>
-            Шины / Колесные диски
+            {{ ls.t('lot.tires') }}
           </h2>
           <div class="tires-table">
             <div class="tires-table__header">
-              <span>Позиция</span>
-              <span>Глубина протектора</span>
-              <span>Размер</span>
+              <span>{{ ls.t('lot.tiresPosition') }}</span>
+              <span>{{ ls.t('lot.tiresDepth') }}</span>
+              <span>{{ ls.t('lot.tiresSize') }}</span>
             </div>
             @for (tire of tires; track tire.position) {
             <div class="tires-table__row">
@@ -420,7 +420,7 @@
         <div class="info-section">
           <h2 class="section-title">
             <span class="material-symbols-rounded section-title__icon">grain</span>
-            Сколы / Ветровое стекло
+            {{ ls.t('lot.stoneChips') }}
           </h2>
           <div class="condition-table">
             @for (item of stoneChips; track item.part) {
@@ -446,7 +446,7 @@
         <div class="info-section">
           <h2 class="section-title">
             <span class="material-symbols-rounded section-title__icon">event_seat</span>
-            Сиденья
+            {{ ls.t('lot.seats') }}
           </h2>
           <p class="info-text">{{ seatsInfo }}</p>
         </div>
@@ -457,7 +457,7 @@
         <div class="info-section">
           <h2 class="section-title">
             <span class="material-symbols-rounded section-title__icon">info</span>
-            Общая информация
+            {{ ls.t('lot.general') }}
           </h2>
           <p class="info-text">{{ generalInfo }}</p>
         </div>
@@ -468,7 +468,7 @@
         <div class="info-section">
           <h2 class="section-title">
             <span class="material-symbols-rounded section-title__icon">local_parking</span>
-            Стоянка
+            {{ ls.t('lot.parking') }}
           </h2>
           <p class="info-text">{{ parkingFee }}</p>
         </div>
@@ -479,11 +479,11 @@
         <div class="info-section">
           <h2 class="section-title">
             <span class="material-symbols-rounded section-title__icon">fact_check</span>
-            Состояние
+            {{ ls.t('lot.condition') }}
           </h2>
           <div class="placeholder-stub">
             <span class="material-symbols-rounded">hourglass_top</span>
-            <span>Лот осматривается экспертами, информация появится позже</span>
+            <span>{{ ls.t('lot.pending') }}</span>
           </div>
         </div>
         }
@@ -528,7 +528,7 @@
               [disabled]="favoriteLoading" (click)="toggleFavorite()">
               <span class="material-symbols-rounded">{{ favoriteLoading ? 'progress_activity' : (isFavorite ?
                 'favorite' : 'favorite_border') }}</span>
-              <span class="auction-panel__fav-label">{{ isFavorite ? 'В избранном' : 'В избранное' }}</span>
+              <span class="auction-panel__fav-label">{{ isFavorite ? ls.t('lot.inFavorite') : ls.t('lot.addFavorite') }}</span>
             </button>
           </div>
 
@@ -536,12 +536,12 @@
           <div class="auction-panel__price-row">
             <div class="auction-panel__price">
               @if (lot.startingBid) {
-              <span class="auction-panel__price-label">Стартовая цена</span>
+              <span class="auction-panel__price-label">{{ ls.t('lot.startingPrice') }}</span>
               <span class="auction-panel__price-value mono">{{ lot.startingBid | number }} {{ lot.originalCurrency ||
                 'EUR' }}</span>
               } @else {
-              <span class="auction-panel__price-label">Стартовая цена</span>
-              <span class="auction-panel__price-value auction-panel__price-value--pending">Ожидается</span>
+              <span class="auction-panel__price-label">{{ ls.t('lot.startingPrice') }}</span>
+              <span class="auction-panel__price-value auction-panel__price-value--pending">{{ ls.t('lot.pricePending') }}</span>
               }
             </div>
           </div>
@@ -549,7 +549,7 @@
           <!-- Buy Now -->
           @if (lot.buyNowPrice) {
           <div class="auction-panel__buynow">
-            <span class="auction-panel__price-label">Цена выкупа</span>
+            <span class="auction-panel__price-label">{{ ls.t('lot.buyNow') }}</span>
             <span class="auction-panel__price-value mono">{{ lot.buyNowPrice | number }} {{ lot.originalCurrency ||
               'EUR' }}</span>
           </div>
@@ -563,7 +563,7 @@
             <div class="live-panel__header">
               <div class="live-panel__price-block">
                 <span class="live-panel__badge">LIVE</span>
-                <span class="live-panel__price-label">Текущая ставка</span>
+                <span class="live-panel__price-label">{{ ls.t('lot.currentBid') }}</span>
                 <span class="live-panel__price-value mono">{{ getCurrentPrice(lot) | number }} {{ lot.originalCurrency
                   || 'EUR' }}</span>
               </div>
@@ -577,7 +577,7 @@
             @if (watcherCount > 0) {
             <div class="live-panel__meta">
               <span class="material-symbols-rounded">visibility</span>
-              <span>{{ watcherCount }} наблюдают</span>
+              <span>{{ watcherCount }} {{ ls.t('lot.watching') }}</span>
             </div>
             }
 
@@ -585,7 +585,7 @@
             @if (auctionEnded) {
             <div class="live-panel__ended">
               <span class="material-symbols-rounded">gavel</span>
-              Торги завершены
+              {{ ls.t('lot.ended') }}
             </div>
             }
 
@@ -593,13 +593,13 @@
             @if (!auctionEnded && isWinning) {
             <div class="live-panel__status live-panel__status--winning">
               <span class="material-symbols-rounded">emoji_events</span>
-              Вы лидируете!
+              {{ ls.t('lot.winning') }}
             </div>
             }
             @if (!auctionEnded && isOutbid) {
             <div class="live-panel__status live-panel__status--outbid">
               <span class="material-symbols-rounded">trending_up</span>
-              Ваша ставка перебита
+              {{ ls.t('lot.outbid') }}
             </div>
             }
 
@@ -607,7 +607,7 @@
             @if (activeAutoBidMax && activeAutoBidLotId === lot.id) {
             <div class="live-panel__autobid">
               <span class="material-symbols-rounded">smart_toy</span>
-              Авто-ставка до {{ activeAutoBidMax | number }} {{ lot.originalCurrency || 'EUR' }}
+              {{ ls.t('lot.autobidActive').replace('{n}', '' + activeAutoBidMax).replace('{cur}', lot.originalCurrency || 'EUR') }}
               <button class="live-panel__autobid-clear" (click)="clearAutoBid()">✕</button>
             </div>
             }
@@ -616,7 +616,7 @@
             @if (bidSuccess) {
             <div class="live-panel__msg live-panel__msg--success">
               <span class="material-symbols-rounded">check_circle</span>
-              Ставка принята!
+              {{ ls.t('lot.bidSuccess') }}
             </div>
             }
             @if (bidError) {
@@ -630,7 +630,7 @@
             @if (isAuthenticated && isClient && !auctionEnded) {
             <div class="live-panel__client-notice">
               <span class="material-symbols-rounded">info</span>
-              <p>Торги ведёт ваш брокер. Добавьте лот в избранное — брокер сделает ставку.</p>
+              <p>{{ ls.t('lot.brokerNotice') }}</p>
             </div>
             }
 
@@ -641,9 +641,9 @@
               <!-- Trader picker (brokers only) -->
               @if (isBroker) {
               <div class="live-panel__trader-picker">
-                <label class="live-panel__trader-label">Торгую за:</label>
+                <label class="live-panel__trader-label">{{ ls.t('lot.tradingFor') }}</label>
                 <select class="live-panel__trader-select" [(ngModel)]="selectedTraderId">
-                  <option [ngValue]="null">— Выберите клиента —</option>
+                  <option [ngValue]="null">{{ ls.t('lot.selectTrader') }}</option>
                   @for (trader of traders; track trader.id) {
                   <option [ngValue]="trader.id">{{ trader.firstName }} {{ trader.lastName }} ({{ trader.email }})
                   </option>
@@ -660,20 +660,20 @@
                 }
               </div>
               <div class="live-panel__custom-bid">
-                <input type="number" [(ngModel)]="customBidAmount" [placeholder]="'Мин. ' + (getMinBid(lot) | number)"
+                <input type="number" [(ngModel)]="customBidAmount" [placeholder]="'Min. ' + (getMinBid(lot) | number)"
                   class="live-panel__bid-input mono" [disabled]="bidding" />
                 <button class="live-panel__bid-btn"
                   [disabled]="bidding || !customBidAmount || (isBroker && !selectedTraderId)"
                   (click)="placeBid()">
                   @if (bidding) {
                   <span class="material-symbols-rounded spinning">progress_activity</span>
-                  Обработка...
+                  {{ ls.t('lot.processing') }}
                   } @else {
                   <span class="material-symbols-rounded">gavel</span>
                   @if (selectedTrader) {
-                  Ставка за {{ selectedTrader.firstName }}
+                  {{ ls.t('lot.bidFor').replace('{name}', selectedTrader.firstName) }}
                   } @else {
-                  Сделать ставку
+                  {{ ls.t('lot.makeBid') }}
                   }
                   }
                 </button>
@@ -683,20 +683,20 @@
               <details class="live-panel__prebid">
                 <summary class="live-panel__prebid-toggle">
                   <span class="material-symbols-rounded">smart_toy</span>
-                  Авто-ставка (Pre-bid)
+                  {{ ls.t('lot.autoBidLabel') }}
                 </summary>
                 <div class="live-panel__prebid-body">
                   <p class="live-panel__prebid-hint">
-                    Система автоматически перебивает конкурентов до указанного лимита.
+                    {{ ls.t('lot.autoBidHint') }}
                   </p>
                   <div class="live-panel__custom-bid">
                     <input type="number" [(ngModel)]="maxAutoBidAmount"
-                      [placeholder]="'Лимит от ' + (getMinBid(lot) | number)" class="live-panel__bid-input mono"
+                      [placeholder]="ls.t('lot.autoBidPlaceholder').replace('{n}', '' + getMinBid(lot))" class="live-panel__bid-input mono"
                       [disabled]="bidding" />
                     <button class="live-panel__prebid-btn"
                       [disabled]="bidding || !maxAutoBidAmount || (isBroker && !selectedTraderId)"
                       (click)="placePreBid()">
-                      Установить
+                      {{ ls.t('lot.autoBidSet') }}
                     </button>
                   </div>
                 </div>
@@ -707,20 +707,20 @@
             @if (!isAuthenticated && !auctionEnded) {
             <div class="live-panel__auth-prompt">
               <span class="material-symbols-rounded">lock</span>
-              <a routerLink="/auth/login">Войдите</a>, чтобы сделать ставку
+              <a routerLink="/auth/login">{{ ls.t('lot.loginLink') }}</a> {{ ls.t('lot.loginPrompt') }}
             </div>
             }
 
             <!-- Recent bid history -->
             @if (bidHistory.length > 0) {
             <div class="live-panel__history">
-              <h4 class="live-panel__history-title">Последние ставки</h4>
+              <h4 class="live-panel__history-title">{{ ls.t('lot.bidHistory') }}</h4>
               <div class="live-panel__history-list">
                 @for (bid of bidHistory; track bid.createdAt) {
                 <div class="live-panel__history-row" [class.live-panel__history-row--mine]="isMyBid(bid)">
                   <span class="live-panel__bidder mono">{{ bid.bidderFlag || 'bidder-????' }}</span>
                   @if (bid.isPreBid) {
-                  <span class="material-symbols-rounded" title="Авто-ставка" style="font-size:14px">smart_toy</span>
+                  <span class="material-symbols-rounded" [title]="ls.t('lot.autoBidTooltip')" style="font-size:14px">smart_toy</span>
                   }
                   <span class="live-panel__bid-amount mono">{{ bid.amount | number }} {{ lot.originalCurrency || 'EUR'
                     }}</span>
@@ -738,7 +738,7 @@
           <div class="auction-panel__min-payment">
             <span class="material-symbols-rounded">payments</span>
             <div>
-              <span class="auction-panel__min-label">Минимальный платёж</span>
+              <span class="auction-panel__min-label">{{ ls.t('lot.minPayment') }}</span>
               <span class="auction-panel__min-value mono">{{ minPayment | number }} {{ lot.originalCurrency || 'EUR'
                 }}</span>
             </div>
@@ -769,13 +769,13 @@
             @if (lot.originCountry) {
             <div class="auction-panel__info-row">
               <span class="material-symbols-rounded">public</span>
-              <span>Производство: {{ lot.originCountry }}</span>
+              <span>{{ ls.t('lot.origin') }} {{ lot.originCountry }}</span>
             </div>
             }
             @if (lot.sellerName) {
             <div class="auction-panel__info-row">
               <span class="material-symbols-rounded">storefront</span>
-              <span>Продавец: {{ lot.sellerName }}</span>
+              <span>{{ ls.t('lot.seller') }} {{ lot.sellerName }}</span>
             </div>
             }
             @if (lot.vatTypeCode) {

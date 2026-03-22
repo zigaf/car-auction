@@ -2,12 +2,12 @@
 <section class="hero">
   <div class="container">
     <div class="hero__content">
-      <h1 class="hero__title">Найдите автомобиль мечты</h1>
+      <h1 class="hero__title">{{ ls.t('home.hero.title') }}</h1>
       <p class="hero__subtitle">
         @if (stats.totalLots > 0) {
-        Более {{ stats.totalLots | number }} автомобилей с европейских аукционов
+        {{ ls.t('home.hero.subtitleCount').replace('{n}', stats.totalLots.toLocaleString()) }}
         } @else {
-        Автомобили с европейских аукционов BCA Europe
+        {{ ls.t('home.hero.subtitle') }}
         }
       </p>
 
@@ -15,12 +15,12 @@
         <div class="hero__search-actions">
           <a routerLink="/catalog" class="hero__btn hero__btn--primary hero__btn--wide">
             <span class="material-symbols-rounded">search</span>
-            Смотреть каталог
+            {{ ls.t('home.hero.browse') }}
           </a>
         </div>
 
         <div class="hero__tags">
-          <span class="hero__tags-label">Популярное:</span>
+          <span class="hero__tags-label">{{ ls.t('home.popular') }}</span>
           @for (tag of popularTags; track tag) {
           <a routerLink="/catalog" class="hero__tag">{{ tag }}</a>
           }
@@ -36,15 +36,15 @@
   <div class="container">
     <div class="auctions__header">
       <div>
-        <h2 class="auctions__title">Автомобили на аукционе</h2>
-        <p class="auctions__count">{{ stats.totalLots | number }} автомобилей в каталоге</p>
+        <h2 class="auctions__title">{{ ls.t('home.auctions.title') }}</h2>
+        <p class="auctions__count">{{ stats.totalLots | number }} {{ ls.t('catalog.lots') }}</p>
       </div>
     </div>
     <div class="auctions__layout">
       @if (brands.length > 0) {
       <aside class="auctions__sidebar">
         <div class="auctions__sidebar-section">
-          <h3 class="auctions__sidebar-title">Популярные марки</h3>
+          <h3 class="auctions__sidebar-title">{{ ls.t('home.brands') }}</h3>
           <ul class="auctions__brands">
             @for (brand of brands; track brand.brand) {
             <li>
@@ -78,14 +78,14 @@
             <a [routerLink]="['/catalog', lot.id]" class="auctions__card-title">{{ lot.title }}</a>
             <div class="auctions__card-specs">
               @if (lot.year) { <span>{{ lot.year }}</span> }
-              @if (lot.mileage) { <span>{{ lot.mileage | number }} км</span> }
+              @if (lot.mileage) { <span>{{ lot.mileage | number }} {{ ls.t('home.km') }}</span> }
               @if (lot.fuelType) { <span>{{ getFuelLabel(lot.fuelType) }}</span> }
               @if (lot.saleCountry) { <span>{{ lot.saleCountry }}</span> }
             </div>
             <div class="auctions__card-footer">
               <div class="auctions__card-bid">
                 @if (lot.startingBid) {
-                <span class="auctions__card-bid-label">Стартовая цена</span>
+                <span class="auctions__card-bid-label">{{ ls.t('home.startingPrice') }}</span>
                 <span class="auctions__card-bid-value">{{ lot.startingBid | number }} {{ lot.originalCurrency || 'EUR'
                   }}</span>
                 } @else if (lot.buyNowPrice) {
@@ -93,7 +93,7 @@
                 <span class="auctions__card-bid-value">{{ lot.buyNowPrice | number }} {{ lot.originalCurrency || 'EUR'
                   }}</span>
                 } @else {
-                <span class="auctions__card-bid-label">{{ lot.saleChannel || 'Аукцион' }}</span>
+                <span class="auctions__card-bid-label">{{ lot.saleChannel || ls.t('nav.auctions') }}</span>
                 <span class="auctions__card-bid-value">{{ lot.saleName || '-' }}</span>
                 }
               </div>
@@ -105,7 +105,7 @@
     </div>
     <div class="auctions__more">
       <a routerLink="/catalog" class="auctions__more-btn">
-        Смотреть все автомобили
+        {{ ls.t('home.seeAll') }}
         <span class="material-symbols-rounded">arrow_forward</span>
       </a>
     </div>
@@ -121,12 +121,12 @@
       <div class="ending-soon__header-left">
         <span class="material-symbols-rounded ending-soon__header-icon">new_releases</span>
         <div>
-          <h2 class="ending-soon__title">Недавно добавленные</h2>
-          <p class="ending-soon__subtitle">Новые лоты из BCA Europe</p>
+          <h2 class="ending-soon__title">{{ ls.t('home.recent') }}</h2>
+          <p class="ending-soon__subtitle">{{ ls.t('home.recentSub') }}</p>
         </div>
       </div>
       <a routerLink="/catalog" class="ending-soon__all">
-        Все автомобили
+        {{ ls.t('home.seeAllCars') }}
         <span class="material-symbols-rounded">arrow_forward</span>
       </a>
     </div>
@@ -158,14 +158,14 @@
             <div class="ending-soon__bottom">
               <div class="ending-soon__price">
                 @if (lot.startingBid) {
-                <span class="ending-soon__price-label">Стартовая цена</span>
+                <span class="ending-soon__price-label">{{ ls.t('home.startingPrice') }}</span>
                 <span class="ending-soon__price-value">{{ lot.startingBid | number }} {{ lot.originalCurrency || 'EUR'
                   }}</span>
                 } @else {
-                <span class="ending-soon__price-label">{{ lot.saleChannel || 'Аукцион' }}</span>
+                <span class="ending-soon__price-label">{{ lot.saleChannel || ls.t('nav.auctions') }}</span>
                 }
               </div>
-              <a [routerLink]="['/catalog', lot.id]" class="ending-soon__bid-btn">Подробнее</a>
+              <a [routerLink]="['/catalog', lot.id]" class="ending-soon__bid-btn">{{ ls.t('home.details') }}</a>
             </div>
           </div>
         </div>
@@ -190,7 +190,7 @@
   <div class="container">
     <div class="auctions__header">
       <div>
-        <h2 class="auctions__title">Загрузка...</h2>
+        <h2 class="auctions__title">{{ ls.t('home.loading') }}</h2>
       </div>
     </div>
   </div>
@@ -203,8 +203,8 @@
   <div class="container">
     <div class="auctions__header">
       <div>
-        <h2 class="auctions__title">Автомобили на аукционе</h2>
-        <p class="auctions__count">Пока нет лотов в базе.</p>
+        <h2 class="auctions__title">{{ ls.t('home.auctions.title') }}</h2>
+        <p class="auctions__count">{{ ls.t('home.noLots') }}</p>
       </div>
     </div>
   </div>
@@ -216,30 +216,30 @@
   <div class="container">
     <div class="cta-banner__card">
       <div class="cta-banner__content">
-        <h2 class="cta-banner__title">Готовы купить авто<br>с европейского аукциона?</h2>
-        <p class="cta-banner__desc">Зарегистрируйтесь, пополните баланс и начните торговаться уже сегодня. Мы возьмём на себя доставку и растаможку.</p>
+        <h2 class="cta-banner__title">{{ ls.t('home.cta.title') }}</h2>
+        <p class="cta-banner__desc">{{ ls.t('home.cta.desc') }}</p>
         <div class="cta-banner__actions">
           <a routerLink="/register" class="cta-banner__btn cta-banner__btn--primary">
             <span class="material-symbols-rounded">person_add</span>
-            Создать аккаунт
+            {{ ls.t('home.cta.create') }}
           </a>
           <a routerLink="/catalog" class="cta-banner__btn cta-banner__btn--secondary">
-            Смотреть каталог
+            {{ ls.t('home.cta.browse') }}
             <span class="material-symbols-rounded">arrow_forward</span>
           </a>
         </div>
         <div class="cta-banner__icon-group">
           <div class="cta-banner__icon-item">
             <span class="material-symbols-rounded">directions_car</span>
-            <span>Проверенные авто</span>
+            <span>{{ ls.t('home.cta.verified') }}</span>
           </div>
           <div class="cta-banner__icon-item">
             <span class="material-symbols-rounded">verified_user</span>
-            <span>Гарантия сделки</span>
+            <span>{{ ls.t('home.cta.guarantee') }}</span>
           </div>
           <div class="cta-banner__icon-item">
             <span class="material-symbols-rounded">local_shipping</span>
-            <span>Доставка под ключ</span>
+            <span>{{ ls.t('home.cta.delivery') }}</span>
           </div>
         </div>
       </div>
@@ -250,7 +250,7 @@
 <!-- Как это работает -->
 <section class="section section--gray">
   <div class="container">
-    <h2 class="section__title">Как это работает</h2>
+    <h2 class="section__title">{{ ls.t('home.how') }}</h2>
     <div class="steps">
       <svg class="steps__connector" viewBox="0 0 700 140" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path
