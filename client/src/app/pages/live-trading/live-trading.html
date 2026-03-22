@@ -16,7 +16,7 @@
         <p class="live__no-auctions__sub">Загрузка расписания...</p>
       } @else if (nextLot) {
         <p class="live__no-auctions__sub">
-          Следующий аукцион — <strong>{{ getNextLotLabel() }}</strong>
+          Следующий аукцион — <strong>{{ nextLotLabel }}</strong>
         </p>
         <p class="live__no-auctions__car">{{ nextLot.title }}</p>
       } @else {

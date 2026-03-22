@@ -42,6 +42,7 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
 
   nextLot: ILot | null = null;
   nextLotLoading = false;
+  nextLotLabel = '';
 
   // UI state
   loading = true;
@@ -142,10 +143,12 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
           this.stats.activeAuctions = lots.length;
           this.loading = false;
           lots.forEach(lot => this.lotTitleMap.set(lot.id, lot.title));
-          if (lots.length > 0 && !this.activeLot) {
-            this.selectLot(lots[0]);
-          }
-          if (lots.length === 0) {
+          if (lots.length > 0) {
+            this.nextLot = null;
+            if (!this.activeLot) {
+              this.selectLot(lots[0]);
+            }
+          } else if (!this.nextLot) {
             this.loadNextLot();
           }
           this.cdr.markForCheck();
@@ -165,6 +168,7 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (res) => {
           this.nextLot = res.data[0] ?? null;
+          this.nextLotLabel = this.computeNextLotLabel();
           this.nextLotLoading = false;
           this.cdr.markForCheck();
         },
@@ -664,7 +668,7 @@ export class LiveTradingComponent implements OnInit, OnDestroy {
     return this.currentUserId === userId;
   }
 
-  getNextLotLabel(): string {
+  private computeNextLotLabel(): string {
     if (!this.nextLot) return '';
     const target = this.nextLot.auctionStartAt ?? this.nextLot.auctionEndAt;
     if (!target) return '';
