@@ -3,6 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Notification } from '../../db/entities/notification.entity';
 import { NotificationType } from '../../common/enums/notification-type.enum';
+import { User } from '../../db/entities/user.entity';
+import { EmailService } from '../email/email.service';
+import { EmailEventType } from '../../common/enums/email-event-type.enum';
 
 export interface CreateNotificationData {
   userId: string;
@@ -27,6 +30,8 @@ export class NotificationService {
   constructor(
     @InjectRepository(Notification)
     private readonly notificationRepository: Repository<Notification>,
+    @InjectRepository(User) private readonly userRepository: Repository<User>,
+    private readonly emailService: EmailService,
   ) {}
 
   async create(dto: CreateNotificationData): Promise<Notification> {
@@ -106,6 +111,15 @@ export class NotificationService {
     this.logger.log(
       `[CustomEmail] to=${userId} subject="${subject}" message="${message.slice(0, 80)}..."`,
     );
+
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (user) {
+      this.emailService.send(EmailEventType.CUSTOM, user.email, user.preferredLanguage, {
+        firstName: user.firstName,
+        subject,
+        message,
+      }).catch(() => {});
+    }
 
     return this.create({
       userId,

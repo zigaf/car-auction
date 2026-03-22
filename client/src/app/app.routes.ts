@@ -115,6 +115,16 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/auth/callback/callback').then((m) => m.AuthCallbackComponent),
   },
   {
+    path: 'reset-password',
+    loadComponent: () =>
+      import('./pages/auth/reset-password/reset-password').then((m) => m.ResetPasswordComponent),
+  },
+  {
+    path: 'verify-email',
+    loadComponent: () =>
+      import('./pages/auth/verify-email/verify-email').then((m) => m.VerifyEmailComponent),
+  },
+  {
     path: '**',
     redirectTo: '',
   },

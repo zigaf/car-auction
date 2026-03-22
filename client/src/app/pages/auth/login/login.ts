@@ -23,6 +23,17 @@ export class LoginComponent {
   isLoading = false;
   apiUrl = environment.apiUrl;
 
+  // Forgot password state
+  showForgotForm = false;
+  forgotEmail = '';
+  forgotSent = false;
+  forgotLoading = false;
+
+  // Pending email verification banner
+  showPendingBanner = false;
+  pendingEmail = '';
+  resendSent = false;
+
   ls = inject(LanguageService);
   private router = inject(Router);
   private stateService = inject(StateService);
@@ -45,7 +56,13 @@ export class LoginComponent {
 
       if (!response.ok) {
         const error = await response.json().catch(() => null);
-        throw new Error(error?.message || this.ls.t('auth.login.error'));
+        if (error?.code === 'EMAIL_NOT_VERIFIED') {
+          this.showPendingBanner = true;
+          this.pendingEmail = this.email;
+        } else {
+          this.toastService.error(error?.message || this.ls.t('auth.login.error'));
+        }
+        return;
       }
 
       const data = await response.json();
@@ -64,8 +81,8 @@ export class LoginComponent {
       }
 
       this.router.navigate(['/cabinet']);
-    } catch (err: any) {
-      this.toastService.error(err.message || this.ls.t('auth.login.errorGeneral'));
+    } catch {
+      this.toastService.error(this.ls.t('auth.login.errorGeneral'));
     } finally {
       this.isLoading = false;
     }
@@ -99,6 +116,31 @@ export class LoginComponent {
         },
       },
     };
+  }
+
+  async sendForgot(): Promise<void> {
+    if (!this.forgotEmail) return;
+    this.forgotLoading = true;
+    try {
+      await fetch(`${environment.apiUrl}/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: this.forgotEmail }),
+      });
+      this.forgotSent = true;
+    } finally {
+      this.forgotLoading = false;
+    }
+  }
+
+  async resendVerification(): Promise<void> {
+    if (!this.pendingEmail) return;
+    await fetch(`${environment.apiUrl}/auth/resend-verification`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: this.pendingEmail }),
+    });
+    this.resendSent = true;
   }
 
   private async handleTelegramAuth(user: any) {

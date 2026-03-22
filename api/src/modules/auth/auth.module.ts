@@ -11,6 +11,7 @@ import { OAuthService } from './oauth/oauth.service';
 import { TelegramAuthService } from './oauth/telegram-auth.service';
 import { User } from '../../db/entities/user.entity';
 import { RefreshToken } from '../../db/entities/refresh-token.entity';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { RefreshToken } from '../../db/entities/refresh-token.entity';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({}),
     HttpModule,
+    EmailModule,
   ],
   controllers: [AuthController, OAuthController],
   providers: [AuthService, JwtStrategy, OAuthService, TelegramAuthService],

@@ -3,6 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { BalanceTransaction } from '../../db/entities/balance-transaction.entity';
 import { BalanceTransactionType } from '../../common/enums/balance-transaction-type.enum';
+import { User } from '../../db/entities/user.entity';
+import { EmailService } from '../email/email.service';
+import { EmailEventType } from '../../common/enums/email-event-type.enum';
 
 @Injectable()
 export class BalanceService {
@@ -10,6 +13,8 @@ export class BalanceService {
     @InjectRepository(BalanceTransaction)
     private readonly transactionRepository: Repository<BalanceTransaction>,
     private readonly dataSource: DataSource,
+    @InjectRepository(User) private readonly userRepository: Repository<User>,
+    private readonly emailService: EmailService,
   ) {}
 
   async getBalance(userId: string): Promise<{ balance: number }> {
@@ -77,6 +82,18 @@ export class BalanceService {
 
       const saved = await queryRunner.manager.save(transaction);
       await queryRunner.commitTransaction();
+
+      // Fire-and-forget email (outside transaction)
+      const user = await this.userRepository.findOneBy({ id: userId });
+      if (user) {
+        const eventType = amount > 0 ? EmailEventType.BALANCE_TOPPED_UP : EmailEventType.BALANCE_WITHDRAWN;
+        this.emailService.send(eventType, user.email, user.preferredLanguage, {
+          firstName: user.firstName,
+          amount: Math.abs(amount).toString(),
+          currency: 'EUR',
+          newBalance: balanceAfter.toString(),
+        }).catch(() => {});
+      }
 
       return saved;
     } catch (error) {
