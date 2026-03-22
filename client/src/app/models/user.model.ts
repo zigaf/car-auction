@@ -12,14 +12,13 @@ export enum UserStatus {
 
 export enum Language {
   RU = 'ru',
-  UA = 'ua',
-  EN = 'en',
+  BY = 'by',
 }
 
 export enum Currency {
   EUR = 'EUR',
   USD = 'USD',
-  UAH = 'UAH',
+  BYN = 'BYN',
 }
 
 export interface IUser {

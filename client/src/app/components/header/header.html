@@ -5,26 +5,32 @@
     </a>
 
     <nav class="header__nav">
-      <a routerLink="/catalog" routerLinkActive="active" class="header__nav-link">Каталог</a>
-      <a routerLink="/auctions" routerLinkActive="active" class="header__nav-link">Аукционы</a>
-      <a routerLink="/about" routerLinkActive="active" class="header__nav-link">О нас</a>
-      <a routerLink="/reviews" routerLinkActive="active" class="header__nav-link">Отзывы</a>
+      <a routerLink="/catalog" routerLinkActive="active" class="header__nav-link">{{ ls.t('nav.catalog') }}</a>
+      <a routerLink="/auctions" routerLinkActive="active" class="header__nav-link">{{ ls.t('nav.auctions') }}</a>
+      <a routerLink="/about" routerLinkActive="active" class="header__nav-link">{{ ls.t('nav.about') }}</a>
+      <a routerLink="/reviews" routerLinkActive="active" class="header__nav-link">{{ ls.t('nav.reviews') }}</a>
     </nav>
 
     <div class="header__spacer"></div>
 
     <div class="header__search">
       <span class="material-symbols-rounded header__search-icon">search</span>
-      <input type="text" placeholder="Поиск по марке, модели..." class="header__search-input">
+      <input type="text" [placeholder]="ls.t('header.search')" class="header__search-input">
     </div>
 
     <div class="header__actions">
-      <button class="header__icon-btn header__theme-toggle" (click)="themeService.toggle()" [attr.aria-label]="themeService.isDark() ? 'Светлая тема' : 'Тёмная тема'">
+      <div class="header__lang-switcher">
+        <button class="header__lang-btn" [class.header__lang-btn--active]="ls.lang() === 'ru'" (click)="ls.setLang('ru')">RU</button>
+        <span class="header__lang-sep"></span>
+        <button class="header__lang-btn" [class.header__lang-btn--active]="ls.lang() === 'by'" (click)="ls.setLang('by')">BY</button>
+      </div>
+
+      <button class="header__icon-btn header__theme-toggle" (click)="themeService.toggle()" [attr.aria-label]="themeService.isDark() ? ls.t('header.theme.light') : ls.t('header.theme.dark')">
         <span class="material-symbols-rounded">{{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}</span>
       </button>
 
       @if (appState$ | async; as state) {
-        <a routerLink="/cabinet/notifications" class="header__icon-btn" aria-label="Уведомления">
+        <a routerLink="/cabinet/notifications" class="header__icon-btn" [attr.aria-label]="ls.t('header.notifications')">
           <span class="material-symbols-rounded">notifications</span>
           @if (state.notifications > 0) {
             <span class="header__icon-badge">{{ state.notifications > 99 ? '99+' : state.notifications }}</span>
@@ -32,7 +38,7 @@
         </a>
       }
 
-      <button class="header__icon-btn" aria-label="Избранное" (click)="onFavoritesClick()">
+      <button class="header__icon-btn" [attr.aria-label]="ls.t('header.favorites')" (click)="onFavoritesClick()">
         <span class="material-symbols-rounded">favorite</span>
       </button>
 
@@ -40,16 +46,18 @@
         @if (state.isAuthenticated && state.user) {
           <div class="header__user-menu">
             <a routerLink="/cabinet" class="header__user-btn">
-              <img *ngIf="state.user.countryFlag" [src]="state.user.countryFlag" alt="Flag" class="header__user-flag">
-              <span class="header__user-name">{{ state.user.firstName || 'Профиль' }}</span>
+              @if (state.user.countryFlag) {
+                <img [src]="state.user.countryFlag" alt="Flag" class="header__user-flag">
+              }
+              <span class="header__user-name">{{ state.user.firstName || ls.t('header.profile') }}</span>
             </a>
-            <app-button variant="ghost" size="sm" icon="logout" (click)="logout()" aria-label="Выйти"
+            <app-button variant="ghost" size="sm" icon="logout" (click)="logout()" [attr.aria-label]="ls.t('header.logout')"
               class="header__logout-btn"></app-button>
           </div>
         } @else {
           <a routerLink="/login" class="header__login-btn">
             <span class="material-symbols-rounded">person</span>
-            <span>Войти</span>
+            <span>{{ ls.t('header.login') }}</span>
           </a>
         }
       }
@@ -67,31 +75,38 @@
 <aside class="drawer" [class.drawer--open]="menuOpen()">
   <div class="drawer__header">
     <img src="assets/images/logo.svg" alt="RB Motors" class="drawer__logo">
-    <button class="header__icon-btn header__theme-toggle" (click)="themeService.toggle()" [attr.aria-label]="themeService.isDark() ? 'Светлая тема' : 'Тёмная тема'">
-      <span class="material-symbols-rounded">{{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}</span>
-    </button>
+    <div class="drawer__header-actions">
+      <div class="header__lang-switcher">
+        <button class="header__lang-btn" [class.header__lang-btn--active]="ls.lang() === 'ru'" (click)="ls.setLang('ru')">RU</button>
+        <span class="header__lang-sep"></span>
+        <button class="header__lang-btn" [class.header__lang-btn--active]="ls.lang() === 'by'" (click)="ls.setLang('by')">BY</button>
+      </div>
+      <button class="header__icon-btn header__theme-toggle" (click)="themeService.toggle()" [attr.aria-label]="themeService.isDark() ? ls.t('header.theme.light') : ls.t('header.theme.dark')">
+        <span class="material-symbols-rounded">{{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}</span>
+      </button>
+    </div>
   </div>
 
   <nav class="drawer__nav">
     <a routerLink="/" [routerLinkActiveOptions]="{ exact: true }" routerLinkActive="active" class="drawer__link" (click)="menuOpen.set(false)">
       <span class="material-symbols-rounded">home</span>
-      Главная
+      {{ ls.t('nav.home') }}
     </a>
     <a routerLink="/catalog" routerLinkActive="active" class="drawer__link" (click)="menuOpen.set(false)">
       <span class="material-symbols-rounded">directions_car</span>
-      Каталог
+      {{ ls.t('nav.catalog') }}
     </a>
     <a routerLink="/auctions" routerLinkActive="active" class="drawer__link" (click)="menuOpen.set(false)">
       <span class="material-symbols-rounded">gavel</span>
-      Аукционы
+      {{ ls.t('nav.auctions') }}
     </a>
     <a routerLink="/about" routerLinkActive="active" class="drawer__link" (click)="menuOpen.set(false)">
       <span class="material-symbols-rounded">info</span>
-      О нас
+      {{ ls.t('nav.about') }}
     </a>
     <a routerLink="/reviews" routerLinkActive="active" class="drawer__link" (click)="menuOpen.set(false)">
       <span class="material-symbols-rounded">rate_review</span>
-      Отзывы
+      {{ ls.t('nav.reviews') }}
     </a>
   </nav>
 
@@ -103,11 +118,11 @@
     </div>
     <div class="drawer__user-info">
       <span class="drawer__user-name">{{ state.user.firstName }} {{ state.user.lastName }}</span>
-      <span class="drawer__user-status">{{ state.user.isVerified ? 'Верифицирован' : 'Не верифицирован' }}</span>
+      <span class="drawer__user-status">{{ state.user.isVerified ? ls.t('user.verified') : ls.t('user.notVerified') }}</span>
     </div>
   </div>
   <nav class="drawer__nav">
-    @for (item of cabinetNavItems; track item.path) {
+    @for (item of cabinetNavItems(); track item.path) {
     <a [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.exact }"
       class="drawer__link" (click)="menuOpen.set(false)">
       <span class="material-symbols-rounded">{{ item.icon }}</span>
@@ -118,17 +133,17 @@
   <div class="drawer__divider"></div>
   <button class="drawer__link drawer__link--danger" (click)="logout()">
     <span class="material-symbols-rounded">logout</span>
-    Выйти
+    {{ ls.t('header.logout') }}
   </button>
   } @else {
   <div class="drawer__divider"></div>
   <a routerLink="/login" class="drawer__link" (click)="menuOpen.set(false)">
     <span class="material-symbols-rounded">person</span>
-    Войти
+    {{ ls.t('header.login') }}
   </a>
   <a routerLink="/register" class="drawer__link" (click)="menuOpen.set(false)">
     <span class="material-symbols-rounded">person_add</span>
-    Регистрация
+    {{ ls.t('header.register') }}
   </a>
   }
 </aside>

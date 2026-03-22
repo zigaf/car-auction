@@ -10,6 +10,7 @@ import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { StateService } from './core/services/state.service';
 import { TimeService } from './core/services/time.service';
 import { ThemeService } from './core/services/theme.service';
+import { LanguageService } from './core/services/language.service';
 import { environment } from '../environments/environment';
 
 function initializeAuth(platformId: object, stateService: StateService): () => Promise<void> {
@@ -105,6 +106,12 @@ export const appConfig: ApplicationConfig = {
       provide: APP_INITIALIZER,
       useFactory: (themeService: ThemeService) => () => themeService.init(),
       deps: [ThemeService],
+      multi: true,
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: (languageService: LanguageService) => () => languageService.init(),
+      deps: [LanguageService],
       multi: true,
     },
   ],
