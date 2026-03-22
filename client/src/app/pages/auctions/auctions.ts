@@ -1,204 +1,114 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { DecimalPipe, SlicePipe } from '@angular/common';
-import { Subject, takeUntil, forkJoin, interval } from 'rxjs';
+import { DecimalPipe, DatePipe } from '@angular/common';
+import { Subject, takeUntil } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { LotService } from '../../core/services/lot.service';
-import { AuctionStateService } from '../../core/services/auction-state.service';
-import { WebsocketService } from '../../core/services/websocket.service';
-import { ILot, ImageCategory, LotStatus } from '../../models/lot.model';
-import { IFeedUpdate } from '../../models/auction.model';
+import { ILot, ImageCategory } from '../../models/lot.model';
 
-interface DayGroup {
+interface CalendarCell {
   date: Date;
-  label: string;
-  lots: ILot[];
-}
-
-interface BidDelta {
-  amount: number;
-  delta: number;
-  bidderFlag: string;
-  timestamp: string;
+  dateKey: string; // 'YYYY-MM-DD'
+  inMonth: boolean;
+  isPast: boolean;
+  lotCount: number;
 }
 
 @Component({
   selector: 'app-auctions',
   standalone: true,
-  imports: [RouterLink, DecimalPipe, SlicePipe],
+  imports: [RouterLink, DecimalPipe, DatePipe],
   templateUrl: './auctions.html',
   styleUrl: './auctions.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AuctionsComponent implements OnInit, OnDestroy {
-  private readonly lotService = inject(LotService);
-  private readonly auctionState = inject(AuctionStateService);
-  private readonly wsService = inject(WebsocketService);
   private readonly destroy$ = new Subject<void>();
+  private readonly cache = new Map<string, ILot[]>();
 
-  loading = true;
-  now = Date.now();
+  loading = false;
+  viewDate = new Date(); // current month being viewed
+  cells: CalendarCell[] = [];
+  selectedDateKey: string | null = null;
+  selectedLots: ILot[] = [];
 
-  liveLots: ILot[] = [];
-  featuredIndex = 0;
-  dayGroups: DayGroup[] = [];
-  upcomingTotal = 0;
+  readonly weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+  readonly skeletonCells = Array.from({ length: 35 }, (_, i) => i);
+  readonly monthNames = [
+    'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+    'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь',
+  ];
 
-  bidFeed: IFeedUpdate[] = [];
-  recentDeltas: BidDelta[] = [];
-  pricePulsingId: string | null = null;
-  private pricePulseTimer: ReturnType<typeof setTimeout> | null = null;
-  private watchedIds = new Set<string>();
+  constructor(
+    private readonly lotService: LotService,
+    private readonly cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
-    this.loadAuctions();
-
-    interval(1000)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => { this.now = Date.now(); });
-
-    this.auctionState.priceUpdate$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((update) => {
-        const lot = this.liveLots.find((l) => l.id === update.lotId);
-        if (!lot) return;
-
-        const prev = this.getLivePrice(lot);
-        const delta = update.currentPrice - prev;
-
-        if (this.liveLots[this.featuredIndex]?.id === update.lotId && delta > 0) {
-          this.recentDeltas = [
-            { amount: update.currentPrice, delta, bidderFlag: '🏁', timestamp: new Date().toISOString() },
-            ...this.recentDeltas,
-          ].slice(0, 4);
-        }
-
-        this.pricePulsingId = update.lotId;
-        if (this.pricePulseTimer) clearTimeout(this.pricePulseTimer);
-        this.pricePulseTimer = setTimeout(() => { this.pricePulsingId = null; }, 750);
-
-        lot.currentPrice = update.currentPrice;
-        if (update.auctionEndAt !== undefined) lot.auctionEndAt = update.auctionEndAt;
-      });
-
-    this.wsService.feedUpdate$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((entry) => {
-        this.bidFeed = [entry, ...this.bidFeed].slice(0, 40);
-      });
+    this.loadMonth(this.viewDate);
   }
 
   ngOnDestroy(): void {
-    if (this.pricePulseTimer) clearTimeout(this.pricePulseTimer);
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  private loadAuctions(): void {
-    this.loading = true;
-
-    const now = new Date();
-    const endDate = new Date(now);
-    endDate.setDate(endDate.getDate() + 3);
-    endDate.setHours(23, 59, 59, 999);
-
-    forkJoin({
-      live: this.lotService.getAll({ status: LotStatus.TRADING, limit: 50 }),
-      upcoming: this.lotService.getAll({
-        dateFrom: now.toISOString(),
-        dateTo: endDate.toISOString(),
-        limit: 200,
-        sort: 'auction_asc',
-      }),
-    })
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: ({ live, upcoming }) => {
-          this.liveLots = live.data || [];
-          this.auctionState.seedFromLots(this.liveLots);
-          this.upcomingTotal = upcoming.total || 0;
-          this.dayGroups = this.groupByDay(upcoming.data || []);
-          this.loading = false;
-        },
-        error: () => { this.loading = false; },
-      });
+  get monthLabel(): string {
+    return `${this.monthNames[this.viewDate.getMonth()]} ${this.viewDate.getFullYear()}`;
   }
 
-  private groupByDay(lots: ILot[]): DayGroup[] {
-    const groups = new Map<string, DayGroup>();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+  prevMonth(): void {
+    const d = new Date(this.viewDate);
+    d.setDate(1);
+    d.setMonth(d.getMonth() - 1);
+    this.viewDate = d;
+    this.selectedDateKey = null;
+    this.selectedLots = [];
+    this.loadMonth(d);
+  }
 
-    for (const lot of lots) {
-      const auctionDate = new Date(lot.auctionStartAt || lot.auctionEndAt || lot.createdAt);
-      const dateKey = auctionDate.toISOString().split('T')[0];
+  nextMonth(): void {
+    const d = new Date(this.viewDate);
+    d.setDate(1);
+    d.setMonth(d.getMonth() + 1);
+    this.viewDate = d;
+    this.selectedDateKey = null;
+    this.selectedLots = [];
+    this.loadMonth(d);
+  }
 
-      if (!groups.has(dateKey)) {
-        const lotDay = new Date(dateKey + 'T00:00:00');
-        let label: string;
-        if (lotDay.getTime() === today.getTime()) label = 'Сегодня';
-        else if (lotDay.getTime() === tomorrow.getTime()) label = 'Завтра';
-        else label = this.formatDateLabel(lotDay);
-        groups.set(dateKey, { date: lotDay, label, lots: [] });
-      }
-      groups.get(dateKey)!.lots.push(lot);
+  selectDay(cell: CalendarCell): void {
+    if (cell.isPast || cell.lotCount === 0) return;
+    if (this.selectedDateKey === cell.dateKey) {
+      this.selectedDateKey = null;
+      this.selectedLots = [];
+      return;
     }
-
-    return Array.from(groups.values()).sort((a, b) => a.date.getTime() - b.date.getTime());
+    this.selectedDateKey = cell.dateKey;
+    const cacheKey = this.monthKey(this.viewDate);
+    const lots = this.cache.get(cacheKey) ?? [];
+    this.selectedLots = lots.filter(lot => {
+      const d = new Date(lot.auctionStartAt ?? lot.auctionEndAt ?? lot.createdAt);
+      return this.toDateKey(d) === cell.dateKey;
+    });
+    this.cdr.markForCheck();
   }
 
-  private formatDateLabel(date: Date): string {
-    const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
-    const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
-    return `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]}`;
-  }
-
-  getLivePrice(lot: ILot): number {
-    const p = this.auctionState.getLotPrice(lot.id);
-    if (p !== null) return p;
-    if (lot.currentPrice) return parseFloat(String(lot.currentPrice));
-    if (lot.startingBid) return parseFloat(String(lot.startingBid));
-    return 0;
-  }
-
-  getTimeLeft(lot: ILot): string {
-    const endAt = this.auctionState.getLotEndAt(lot.id) ?? lot.auctionEndAt;
-    if (!endAt) return '--:--';
-    const diff = new Date(endAt).getTime() - this.now;
-    if (diff <= 0) return '0:00';
-    const h = Math.floor(diff / 3600000);
-    const m = Math.floor((diff % 3600000) / 60000);
-    const s = Math.floor((diff % 60000) / 1000);
-    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    return `${m}:${String(s).padStart(2, '0')}`;
-  }
-
-  getTimerClass(lot: ILot): string {
-    const endAt = this.auctionState.getLotEndAt(lot.id) ?? lot.auctionEndAt;
-    if (!endAt) return 'timer--green';
-    const diff = new Date(endAt).getTime() - this.now;
-    if (diff < 30000) return 'timer--red';
-    if (diff < 120000) return 'timer--yellow';
-    return 'timer--green';
-  }
-
-  getCountdown(lot: ILot): string {
-    const target = lot.auctionStartAt;
-    if (!target) return '';
-    const diff = new Date(target).getTime() - this.now;
-    if (diff <= 0) return 'Начинается';
-    const h = Math.floor(diff / 3600000);
-    const m = Math.floor((diff % 3600000) / 60000);
-    if (h >= 24) return `${Math.floor(h / 24)}д ${h % 24}ч`;
-    if (h > 0) return `${h}ч ${m}м`;
-    return `${m}м`;
+  isLotActive(lot: ILot): boolean {
+    const now = Date.now();
+    const start = lot.auctionStartAt ? new Date(lot.auctionStartAt).getTime() : null;
+    const end = lot.auctionEndAt ? new Date(lot.auctionEndAt).getTime() : null;
+    if (start && end) return now >= start && now <= end;
+    if (start) return now >= start;
+    return false;
   }
 
   getMainImage(lot: ILot): string | null {
     if (lot.images?.length) {
-      const main = lot.images.find((img) => img.category === ImageCategory.MAIN);
-      return this.getImageUrl((main || lot.images[0]).url);
+      const main = lot.images.find(img => img.category === ImageCategory.MAIN) ?? lot.images[0];
+      const url = main.url;
+      if (url.startsWith('http')) return url;
+      return `${environment.apiUrl.replace('/api', '')}${url}`;
     }
     if (lot.sourceImageUrl) {
       return lot.sourceImageUrl.startsWith('//') ? 'https:' + lot.sourceImageUrl : lot.sourceImageUrl;
@@ -206,39 +116,92 @@ export class AuctionsComponent implements OnInit, OnDestroy {
     return null;
   }
 
-  getImageUrl(path: string): string {
-    if (!path) return '';
-    if (path.startsWith('http')) return path;
-    return `${environment.apiUrl.replace('/api', '')}${path}`;
+  getLotTime(lot: ILot): string {
+    const target = lot.auctionStartAt ?? lot.auctionEndAt;
+    if (!target) return '';
+    return new Date(target).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
   }
 
-  getFuelLabel(fuelType: string): string {
-    const labels: Record<string, string> = {
-      petrol: 'Бензин', diesel: 'Дизель', hybrid: 'Гибрид',
-      electric: 'Электро', lpg: 'Газ', other: 'Другое',
-    };
-    return labels[fuelType] || fuelType || '-';
+  private loadMonth(date: Date): void {
+    const key = this.monthKey(date);
+    if (this.cache.has(key)) {
+      this.buildGrid(date, this.cache.get(key)!);
+      return;
+    }
+
+    this.loading = true;
+    this.cdr.markForCheck();
+
+    const start = new Date(date.getFullYear(), date.getMonth(), 1);
+    const end = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    this.lotService.getAll({
+      dateFrom: start.toISOString(),
+      dateTo: end.toISOString(),
+      limit: 500,
+      sort: 'date_asc',
+    }).pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          const lots = res.data ?? [];
+          this.cache.set(key, lots);
+          this.buildGrid(date, lots);
+          this.loading = false;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.buildGrid(date, []);
+          this.loading = false;
+          this.cdr.markForCheck();
+        },
+      });
   }
 
-  getRelativeTime(dateStr: string): string {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    if (diff < 60000) return `${Math.floor(diff / 1000)}с`;
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}м`;
-    return `${Math.floor(diff / 3600000)}ч`;
+  private buildGrid(date: Date, lots: ILot[]): void {
+    const countMap = new Map<string, number>();
+    for (const lot of lots) {
+      const d = new Date(lot.auctionStartAt ?? lot.auctionEndAt ?? lot.createdAt);
+      const key = this.toDateKey(d);
+      countMap.set(key, (countMap.get(key) ?? 0) + 1);
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const firstOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+    const lastOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
+    const startOffset = (firstOfMonth.getDay() + 6) % 7;
+    const gridStart = new Date(firstOfMonth);
+    gridStart.setDate(gridStart.getDate() - startOffset);
+
+    const endOffset = (6 - (lastOfMonth.getDay() + 6) % 7);
+    const gridEnd = new Date(lastOfMonth);
+    gridEnd.setDate(gridEnd.getDate() + endOffset);
+
+    const cells: CalendarCell[] = [];
+    const cursor = new Date(gridStart);
+    while (cursor <= gridEnd) {
+      const dateKey = this.toDateKey(cursor);
+      cells.push({
+        date: new Date(cursor),
+        dateKey,
+        inMonth: cursor.getMonth() === date.getMonth(),
+        isPast: cursor < today,
+        lotCount: countMap.get(dateKey) ?? 0,
+      });
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    this.cells = cells;
+    this.cdr.markForCheck();
   }
 
-  selectFeatured(index: number): void {
-    if (index === this.featuredIndex) return;
-    this.featuredIndex = index;
-    this.recentDeltas = [];
+  private monthKey(date: Date): string {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
   }
 
-  isWatching(lot: ILot): boolean {
-    return this.watchedIds.has(lot.id);
-  }
-
-  toggleWatch(lot: ILot): void {
-    if (this.watchedIds.has(lot.id)) this.watchedIds.delete(lot.id);
-    else this.watchedIds.add(lot.id);
+  private toDateKey(date: Date): string {
+    return date.toISOString().split('T')[0];
   }
 }
