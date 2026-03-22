@@ -95,55 +95,50 @@
     <!-- ═══ UPCOMING SCHEDULE — secondary ═══ -->
     @if (!loading && dayGroups.length > 0) {
       <div class="schedule">
-        <button class="schedule__toggle" (click)="scheduleExpanded = !scheduleExpanded">
+        <div class="schedule__header">
           <span class="material-symbols-rounded">calendar_month</span>
           Расписание аукционов
           <span class="schedule__count">{{ upcomingTotal }} лотов</span>
-          <span class="material-symbols-rounded schedule__chevron" [class.schedule__chevron--open]="scheduleExpanded">
-            expand_more
-          </span>
-        </button>
+        </div>
 
-        @if (scheduleExpanded) {
-          <div class="schedule__body">
-            @for (group of dayGroups; track group.date) {
-              <div class="schedule-group">
-                <div class="schedule-group__header">
-                  <span class="material-symbols-rounded">calendar_today</span>
-                  <span class="schedule-group__label">{{ group.label }}</span>
-                  <span class="schedule-group__count">{{ group.lots.length }}</span>
-                </div>
-                <div class="schedule-group__list">
-                  @for (lot of group.lots; track lot.id) {
-                    <a [routerLink]="['/catalog', lot.id]" class="schedule-item">
-                      <div class="schedule-item__image">
-                        @if (getMainImage(lot)) {
-                          <img [src]="getMainImage(lot)" [alt]="lot.title" loading="lazy">
-                        } @else {
-                          <span class="material-symbols-rounded">directions_car</span>
-                        }
-                      </div>
-                      <div class="schedule-item__info">
-                        <span class="schedule-item__title">{{ lot.title }}</span>
-                        <span class="schedule-item__specs">
-                          @if (lot.year) { {{ lot.year }} · }
-                          @if (lot.mileage) { {{ lot.mileage | number }} км · }
-                          @if (lot.fuelType) { {{ getFuelLabel(lot.fuelType) }} }
-                        </span>
-                      </div>
-                      <div class="schedule-item__right">
-                        @if (lot.startingBid) {
-                          <span class="schedule-item__price">{{ lot.startingBid | number }} {{ lot.originalCurrency || 'EUR' }}</span>
-                        }
-                        <span class="schedule-item__countdown">{{ getCountdown(lot) }}</span>
-                      </div>
-                    </a>
-                  }
-                </div>
+        <div class="schedule__body">
+          @for (group of dayGroups; track group.date) {
+            <div class="schedule-group">
+              <div class="schedule-group__header">
+                <span class="material-symbols-rounded">calendar_today</span>
+                <span class="schedule-group__label">{{ group.label }}</span>
+                <span class="schedule-group__count">{{ group.lots.length }}</span>
               </div>
-            }
-          </div>
-        }
+              <div class="schedule-group__list">
+                @for (lot of group.lots; track lot.id) {
+                  <a [routerLink]="['/catalog', lot.id]" class="schedule-item">
+                    <div class="schedule-item__image">
+                      @if (getMainImage(lot)) {
+                        <img [src]="getMainImage(lot)" [alt]="lot.title" loading="lazy">
+                      } @else {
+                        <span class="material-symbols-rounded">directions_car</span>
+                      }
+                    </div>
+                    <div class="schedule-item__info">
+                      <span class="schedule-item__title">{{ lot.title }}</span>
+                      <span class="schedule-item__specs">
+                        @if (lot.year) { {{ lot.year }} · }
+                        @if (lot.mileage) { {{ lot.mileage | number }} км · }
+                        @if (lot.fuelType) { {{ getFuelLabel(lot.fuelType) }} }
+                      </span>
+                    </div>
+                    <div class="schedule-item__right">
+                      @if (lot.startingBid) {
+                        <span class="schedule-item__price">{{ lot.startingBid | number }} {{ lot.originalCurrency || 'EUR' }}</span>
+                      }
+                      <span class="schedule-item__countdown">{{ getCountdown(lot) }}</span>
+                    </div>
+                  </a>
+                }
+              </div>
+            </div>
+          }
+        </div>
       </div>
     }
 

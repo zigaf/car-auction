@@ -93,9 +93,7 @@
   font-size: 24px;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 // ─── No live ────────────────────────────────────────────────────────────────
 
@@ -120,9 +118,7 @@
     margin: 0;
   }
 
-  span {
-    font-size: $fs-sm;
-  }
+  span { font-size: $fs-sm; }
 }
 
 // ─── Empty state ─────────────────────────────────────────────────────────────
@@ -213,9 +209,7 @@
     transition: transform 0.3s ease;
   }
 
-  .live-card:hover & img {
-    transform: scale(1.04);
-  }
+  .live-card:hover & img { transform: scale(1.04); }
 }
 
 .live-card__placeholder {
@@ -226,10 +220,7 @@
   justify-content: center;
   background: $bg-elevated;
 
-  .material-symbols-rounded {
-    font-size: 48px;
-    color: $text-tertiary;
-  }
+  .material-symbols-rounded { font-size: 48px; color: $text-tertiary; }
 }
 
 .live-card__status-badge {
@@ -276,9 +267,7 @@
   }
 }
 
-.live-card__timer-icon {
-  font-size: 16px;
-}
+.live-card__timer-icon { font-size: 16px; }
 
 @keyframes flash-red {
   0%, 100% { opacity: 1; }
@@ -367,9 +356,7 @@
 
   .material-symbols-rounded { font-size: 18px; }
 
-  .live-card:hover & {
-    background: $accent-hover;
-  }
+  .live-card:hover & { background: $accent-hover; }
 }
 
 // ─── Schedule (upcoming) ─────────────────────────────────────────────────────
@@ -380,28 +367,19 @@
   overflow: hidden;
 }
 
-.schedule__toggle {
+.schedule__header {
   display: flex;
   align-items: center;
   gap: $space-sm;
-  width: 100%;
   padding: $space-md $space-lg;
   background: $bg-secondary;
-  border: none;
-  cursor: pointer;
   color: $text-primary;
   font-size: $fs-base;
   font-weight: $fw-semibold;
-  text-align: left;
-  transition: background $transition-fast;
 
   .material-symbols-rounded:first-child {
     font-size: 20px;
     color: $accent;
-  }
-
-  &:hover {
-    background: $bg-elevated;
   }
 }
 
@@ -412,17 +390,6 @@
   font-weight: $fw-regular;
 }
 
-.schedule__chevron {
-  font-size: 20px;
-  color: $text-tertiary;
-  transition: transform $transition-fast;
-  margin-left: $space-xs;
-
-  &--open {
-    transform: rotate(180deg);
-  }
-}
-
 .schedule__body {
   border-top: 1px solid $border-color;
 }
@@ -430,9 +397,7 @@
 // ─── Schedule Group ──────────────────────────────────────────────────────────
 
 .schedule-group {
-  & + & {
-    border-top: 1px solid $border-color;
-  }
+  & + & { border-top: 1px solid $border-color; }
 }
 
 .schedule-group__header {
@@ -442,10 +407,7 @@
   padding: $space-sm $space-lg;
   background: $bg-panel;
 
-  .material-symbols-rounded {
-    font-size: 16px;
-    color: $accent;
-  }
+  .material-symbols-rounded { font-size: 16px; color: $accent; }
 }
 
 .schedule-group__label {
@@ -480,13 +442,8 @@
   border-top: 1px solid $border-color;
   transition: background $transition-fast;
 
-  &:first-child {
-    border-top: none;
-  }
-
-  &:hover {
-    background: $bg-elevated;
-  }
+  &:first-child { border-top: none; }
+  &:hover { background: $bg-elevated; }
 
   @include mobile {
     padding: $space-sm $space-md;
@@ -505,16 +462,8 @@
   align-items: center;
   justify-content: center;
 
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .material-symbols-rounded {
-    font-size: 22px;
-    color: $text-tertiary;
-  }
+  img { width: 100%; height: 100%; object-fit: cover; }
+  .material-symbols-rounded { font-size: 22px; color: $text-tertiary; }
 }
 
 .schedule-item__info {
