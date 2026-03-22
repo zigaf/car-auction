@@ -51,14 +51,15 @@
     <div class="schedule__lots">
       <div class="schedule__lots-header">
         <span class="material-symbols-rounded">calendar_today</span>
-        <span>{{ selectedLots.length }} лотов</span>
+        <span>{{ getLotCountLabel(selectedLots.length) }}</span>
       </div>
       <div class="schedule__lots-list">
         @for (lot of selectedLots; track lot.id) {
           <a [routerLink]="['/catalog', lot.id]" class="lot-row">
             <div class="lot-row__thumb">
-              @if (getMainImage(lot)) {
-                <img [src]="getMainImage(lot)" [alt]="lot.title" loading="lazy" class="lot-row__img">
+              @let imgUrl = getMainImage(lot);
+              @if (imgUrl) {
+                <img [src]="imgUrl" [alt]="lot.title" loading="lazy" class="lot-row__img">
               } @else {
                 <span class="material-symbols-rounded">directions_car</span>
               }
@@ -88,10 +89,10 @@
               }
             </div>
             @if (isLotActive(lot)) {
-              <a [routerLink]="['/live']" class="lot-row__join" (click)="$event.stopPropagation()">
+              <button class="lot-row__join" (click)="navigateToLive($event)">
                 <span class="material-symbols-rounded">gavel</span>
                 В торги
-              </a>
+              </button>
             }
           </a>
         }

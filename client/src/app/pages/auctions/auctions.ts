@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { DecimalPipe, DatePipe } from '@angular/common';
+import { Router, RouterLink } from '@angular/router';
+import { DecimalPipe } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { LotService } from '../../core/services/lot.service';
@@ -17,7 +17,7 @@ interface CalendarCell {
 @Component({
   selector: 'app-auctions',
   standalone: true,
-  imports: [RouterLink, DecimalPipe, DatePipe],
+  imports: [RouterLink, DecimalPipe],
   templateUrl: './auctions.html',
   styleUrl: './auctions.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -42,6 +42,7 @@ export class AuctionsComponent implements OnInit, OnDestroy {
   constructor(
     private readonly lotService: LotService,
     private readonly cdr: ChangeDetectorRef,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -58,6 +59,11 @@ export class AuctionsComponent implements OnInit, OnDestroy {
   }
 
   prevMonth(): void {
+    const now = new Date();
+    if (
+      this.viewDate.getFullYear() === now.getFullYear() &&
+      this.viewDate.getMonth() === now.getMonth()
+    ) return;
     const d = new Date(this.viewDate);
     d.setDate(1);
     d.setMonth(d.getMonth() - 1);
@@ -92,6 +98,20 @@ export class AuctionsComponent implements OnInit, OnDestroy {
       return this.toDateKey(d) === cell.dateKey;
     });
     this.cdr.markForCheck();
+  }
+
+  navigateToLive(event: MouseEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.router.navigate(['/live']);
+  }
+
+  getLotCountLabel(count: number): string {
+    const mod10 = count % 10;
+    const mod100 = count % 100;
+    if (mod10 === 1 && mod100 !== 11) return `${count} лот`;
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return `${count} лота`;
+    return `${count} лотов`;
   }
 
   isLotActive(lot: ILot): boolean {
@@ -202,6 +222,9 @@ export class AuctionsComponent implements OnInit, OnDestroy {
   }
 
   private toDateKey(date: Date): string {
-    return date.toISOString().split('T')[0];
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
   }
 }
