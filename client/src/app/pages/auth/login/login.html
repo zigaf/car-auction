@@ -6,6 +6,17 @@
       <p>{{ ls.t('auth.login.subtitle') }}</p>
     </div>
 
+    @if (showPendingBanner) {
+      <div class="login__pending-banner">
+        <p>Пожалуйста, подтвердите email перед входом.</p>
+        @if (!resendSent) {
+          <button type="button" (click)="resendVerification()">Отправить письмо повторно</button>
+        } @else {
+          <span>Письмо отправлено!</span>
+        }
+      </div>
+    }
+
     <form class="auth-form" (ngSubmit)="onLogin()">
       <div class="form-group">
         <app-input label="Email" type="email" placeholder="your@email.com" icon="mail" name="email" [(ngModel)]="email"
@@ -24,6 +35,29 @@
       <app-button type="submit" variant="primary" [fullWidth]="true" [loading]="isLoading" class="auth-form__submit">
         {{ ls.t('auth.login.submit') }}
       </app-button>
+
+      <button class="login__forgot" type="button" (click)="showForgotForm = !showForgotForm">
+        Забыли пароль?
+      </button>
+
+      @if (showForgotForm) {
+        <div class="login__forgot-form">
+          @if (!forgotSent) {
+            <input
+              type="email"
+              [(ngModel)]="forgotEmail"
+              name="forgotEmail"
+              placeholder="Введите ваш email"
+              class="login__forgot-input"
+            />
+            <button type="button" (click)="sendForgot()" [disabled]="forgotLoading">
+              {{ forgotLoading ? 'Отправка...' : 'Отправить ссылку' }}
+            </button>
+          } @else {
+            <p>Письмо со ссылкой отправлено на {{ forgotEmail }}</p>
+          }
+        </div>
+      }
     </form>
 
     <div class="auth-card__footer">

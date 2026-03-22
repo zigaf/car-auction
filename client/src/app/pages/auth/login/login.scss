@@ -165,6 +165,74 @@
   }
 }
 
+.login__pending-banner {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid #ef4444;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #fca5a5;
+
+  button {
+    background: transparent;
+    border: 1px solid #ef4444;
+    color: #ef4444;
+    border-radius: 6px;
+    padding: 6px 12px;
+    cursor: pointer;
+    margin-top: 8px;
+    font-size: 13px;
+
+    &:hover { background: rgba(239, 68, 68, 0.1); }
+  }
+}
+
+.login__forgot {
+  background: transparent;
+  border: none;
+  color: $accent;
+  font-size: $fs-sm;
+  cursor: pointer;
+  padding: 0;
+  margin-top: $space-xs;
+
+  &:hover { text-decoration: underline; }
+}
+
+.login__forgot-form {
+  margin-top: $space-base;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid $border-color;
+    border-radius: $radius-base;
+    color: $text-primary;
+    padding: 10px 14px;
+    font-size: $fs-sm;
+
+    &:focus { outline: none; border-color: $accent; }
+  }
+
+  button {
+    background: $accent;
+    color: #fff;
+    border: none;
+    border-radius: $radius-base;
+    padding: 10px;
+    font-size: $fs-sm;
+    cursor: pointer;
+
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+    &:hover:not(:disabled) { background: #0052cc; }
+  }
+
+  p { color: $text-tertiary; font-size: $fs-sm; }
+}
+
 .auth-card__footer {
   text-align: center;
   margin-top: $space-lg;
