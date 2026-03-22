@@ -65,18 +65,6 @@
   &.active {
     color: var(--accent);
     background: $accent-muted;
-
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: -1px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 20px;
-      height: 2px;
-      background: var(--accent);
-      border-radius: 1px;
-    }
   }
 }
 

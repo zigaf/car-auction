@@ -1,7 +1,7 @@
 <header class="header">
   <div class="header__inner">
     <a routerLink="/" class="header__logo">
-      <img src="assets/images/logo.svg" alt="RB Motors" class="header__logo-img">
+      <img [src]="themeService.isDark() ? 'assets/images/logo-dark.svg' : 'assets/images/logo.svg'" alt="RB Motors" class="header__logo-img">
     </a>
 
     <nav class="header__nav">
@@ -74,7 +74,7 @@
 <div class="drawer-backdrop" [class.drawer-backdrop--open]="menuOpen()" (click)="toggleMenu()"></div>
 <aside class="drawer" [class.drawer--open]="menuOpen()">
   <div class="drawer__header">
-    <img src="assets/images/logo.svg" alt="RB Motors" class="drawer__logo">
+    <img [src]="themeService.isDark() ? 'assets/images/logo-dark.svg' : 'assets/images/logo.svg'" alt="RB Motors" class="drawer__logo">
     <div class="drawer__header-actions">
       <div class="header__lang-switcher">
         <button class="header__lang-btn" [class.header__lang-btn--active]="ls.lang() === 'ru'" (click)="ls.setLang('ru')">RU</button>
