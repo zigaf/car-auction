@@ -79,6 +79,18 @@ export class User {
   @Column({ name: 'referral_code', unique: true })
   referralCode: string;
 
+  @Column({ name: 'email_verification_token', type: 'varchar', nullable: true })
+  emailVerificationToken: string | null;
+
+  @Column({ name: 'email_verification_expires', type: 'timestamp', nullable: true })
+  emailVerificationExpires: Date | null;
+
+  @Column({ name: 'password_reset_token', type: 'varchar', nullable: true })
+  passwordResetToken: string | null;
+
+  @Column({ name: 'password_reset_expires', type: 'timestamp', nullable: true })
+  passwordResetExpires: Date | null;
+
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'referred_by' })
   referredBy: User | null;
