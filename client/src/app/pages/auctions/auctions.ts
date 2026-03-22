@@ -1,10 +1,10 @@
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe, DatePipe } from '@angular/common';
-import { Subject, takeUntil, timer } from 'rxjs';
+import { Subject, takeUntil, timer, forkJoin } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { LotService } from '../../core/services/lot.service';
-import { ILot, ImageCategory } from '../../models/lot.model';
+import { ILot, ImageCategory, LotStatus } from '../../models/lot.model';
 
 interface DayGroup {
   date: Date;
@@ -24,6 +24,7 @@ export class AuctionsComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
   loading = true;
+  liveLots: ILot[] = [];
   dayGroups: DayGroup[] = [];
   totalLots = 0;
 
@@ -46,19 +47,21 @@ export class AuctionsComponent implements OnInit, OnDestroy {
 
     const now = new Date();
     const dateFrom = now.toISOString();
-
     const endDate = new Date(now);
     endDate.setDate(endDate.getDate() + 3);
     endDate.setHours(23, 59, 59, 999);
     const dateTo = endDate.toISOString();
 
-    this.lotService
-      .getAll({ dateFrom, dateTo, limit: 200, sort: 'date_asc' })
+    forkJoin({
+      live: this.lotService.getAll({ status: LotStatus.TRADING, limit: 50 }),
+      upcoming: this.lotService.getAll({ dateFrom, dateTo, limit: 200, sort: 'auction_asc' }),
+    })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (res) => {
-          this.totalLots = res.total;
-          this.dayGroups = this.groupByDay(res.data || []);
+        next: ({ live, upcoming }) => {
+          this.liveLots = live.data || [];
+          this.totalLots = (live.total || 0) + (upcoming.total || 0);
+          this.dayGroups = this.groupByDay(upcoming.data || []);
           this.loading = false;
         },
         error: () => {

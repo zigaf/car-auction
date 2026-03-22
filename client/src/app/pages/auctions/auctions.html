@@ -23,7 +23,7 @@
     }
 
     <!-- Empty state -->
-    @if (!loading && dayGroups.length === 0) {
+    @if (!loading && dayGroups.length === 0 && liveLots.length === 0) {
       <div class="auctions-page__empty">
         <span class="material-symbols-rounded auctions-page__empty-icon">event_busy</span>
         <h3 class="auctions-page__empty-title">Нет запланированных аукционов</h3>
@@ -33,6 +33,62 @@
           Перейти в каталог
         </a>
       </div>
+    }
+
+    <!-- Live now section -->
+    @if (!loading && liveLots.length > 0) {
+      <section class="day-group day-group--live">
+        <div class="day-group__header">
+          <div class="day-group__date">
+            <span class="auction-card__live-dot day-group__live-dot"></span>
+            <span class="day-group__label">Идёт сейчас</span>
+          </div>
+          <span class="day-group__count">{{ liveLots.length }} лотов</span>
+        </div>
+        <div class="day-group__grid">
+          @for (lot of liveLots; track lot.id) {
+            <a [routerLink]="['/catalog', lot.id]" class="auction-card">
+              <div class="auction-card__image">
+                @if (getMainImage(lot)) {
+                  <img [src]="getMainImage(lot)" [alt]="lot.title" loading="lazy">
+                } @else {
+                  <div class="auction-card__placeholder">
+                    <span class="material-symbols-rounded">directions_car</span>
+                  </div>
+                }
+                <div class="auction-card__countdown auction-card__countdown--live">
+                  <span class="auction-card__live-dot"></span>
+                  <span>{{ getCountdown(lot) || 'Идёт' }}</span>
+                </div>
+              </div>
+              <div class="auction-card__body">
+                <h3 class="auction-card__title">{{ lot.title }}</h3>
+                <div class="auction-card__specs">
+                  @if (lot.year) { <span>{{ lot.year }}</span> }
+                  @if (lot.mileage) { <span>{{ lot.mileage | number }} км</span> }
+                  @if (lot.fuelType) { <span>{{ getFuelLabel(lot.fuelType) }}</span> }
+                </div>
+                <div class="auction-card__footer">
+                  <div class="auction-card__price">
+                    @if (lot.currentPrice) {
+                      <span class="auction-card__price-label">Текущая ставка</span>
+                      <span class="auction-card__price-value auction-card__price-value--accent">
+                        {{ lot.currentPrice | number }} {{ lot.originalCurrency || 'EUR' }}
+                      </span>
+                    } @else if (lot.startingBid) {
+                      <span class="auction-card__price-label">Стартовая цена</span>
+                      <span class="auction-card__price-value">{{ lot.startingBid | number }} {{ lot.originalCurrency || 'EUR' }}</span>
+                    }
+                  </div>
+                  @if (lot.saleCountry) {
+                    <span class="auction-card__country">{{ lot.saleCountry }}</span>
+                  }
+                </div>
+              </div>
+            </a>
+          }
+        </div>
+      </section>
     }
 
     <!-- Day groups -->

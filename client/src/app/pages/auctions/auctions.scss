@@ -118,6 +118,23 @@
   margin-bottom: $space-xl;
 
   &:last-child { margin-bottom: 0; }
+
+  &--live .day-group__header {
+    border-bottom-color: $status-red;
+  }
+
+  &--live .day-group__label {
+    color: $status-red;
+  }
+}
+
+.day-group__live-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: $status-red;
+  animation: pulse-dot 1.2s ease-in-out infinite;
+  flex-shrink: 0;
 }
 
 .day-group__header {
