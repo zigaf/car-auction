@@ -1,0 +1,38 @@
+<div class="verify-email">
+  @if (state === 'loading') {
+    <div class="verify-email__box">
+      <p>Подтверждаем ваш email...</p>
+    </div>
+  }
+
+  @if (state === 'success') {
+    <div class="verify-email__box verify-email__box--success">
+      <div class="verify-email__icon">✓</div>
+      <h2>Email подтверждён!</h2>
+      <p>Аккаунт активирован. Перенаправляем в личный кабинет...</p>
+    </div>
+  }
+
+  @if (state === 'error') {
+    <div class="verify-email__box verify-email__box--error">
+      <h2>Ссылка недействительна</h2>
+      <p>Ссылка для подтверждения недействительна или истекла.</p>
+
+      @if (!resendSent) {
+        <div class="verify-email__resend">
+          <p>Отправить письмо повторно:</p>
+          <input
+            class="verify-email__input"
+            type="email"
+            [(ngModel)]="resendEmail"
+            placeholder="Введите ваш email"
+          />
+          <button class="verify-email__btn" (click)="resend()">Отправить</button>
+          @if (resendError) { <p class="verify-email__err">{{ resendError }}</p> }
+        </div>
+      } @else {
+        <p class="verify-email__success-msg">Письмо отправлено, проверьте почту.</p>
+      }
+    </div>
+  }
+</div>

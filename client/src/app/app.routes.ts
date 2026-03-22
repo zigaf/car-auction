@@ -120,6 +120,11 @@ export const routes: Routes = [
       import('./pages/auth/reset-password/reset-password').then((m) => m.ResetPasswordComponent),
   },
   {
+    path: 'verify-email',
+    loadComponent: () =>
+      import('./pages/auth/verify-email/verify-email').then((m) => m.VerifyEmailComponent),
+  },
+  {
     path: '**',
     redirectTo: '',
   },
