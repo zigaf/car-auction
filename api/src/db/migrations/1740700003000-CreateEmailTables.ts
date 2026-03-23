@@ -3,14 +3,14 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
 export class CreateEmailTables1740700003000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
-      CREATE TABLE "email_settings" (
+      CREATE TABLE IF NOT EXISTS "email_settings" (
         "event_type" VARCHAR PRIMARY KEY,
         "is_enabled" BOOLEAN NOT NULL DEFAULT true
       )
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "email_templates" (
+      CREATE TABLE IF NOT EXISTS "email_templates" (
         "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         "event_type" VARCHAR NOT NULL,
         "language" VARCHAR NOT NULL,
@@ -39,7 +39,7 @@ export class CreateEmailTables1740700003000 implements MigrationInterface {
 
     for (const event of events) {
       await queryRunner.query(
-        `INSERT INTO "email_settings" ("event_type", "is_enabled") VALUES ($1, true)`,
+        `INSERT INTO "email_settings" ("event_type", "is_enabled") VALUES ($1, true) ON CONFLICT DO NOTHING`,
         [event],
       );
     }

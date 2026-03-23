@@ -6,8 +6,8 @@ export class AddLotPauseFields1740700001000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
       ALTER TABLE "lots"
-        ADD COLUMN "is_paused" boolean NOT NULL DEFAULT false,
-        ADD COLUMN "paused_remaining_ms" bigint NULL
+        ADD COLUMN IF NOT EXISTS "is_paused" boolean NOT NULL DEFAULT false,
+        ADD COLUMN IF NOT EXISTS "paused_remaining_ms" bigint NULL
     `);
   }
 

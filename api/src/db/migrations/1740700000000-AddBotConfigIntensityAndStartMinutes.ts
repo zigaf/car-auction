@@ -8,8 +8,8 @@ export class AddBotConfigIntensityAndStartMinutes1740700000000
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
       ALTER TABLE "auction_bot_configs"
-        ADD COLUMN "intensity" numeric(4,2) NOT NULL DEFAULT 1.0,
-        ADD COLUMN "start_minutes_before_end" integer NULL
+        ADD COLUMN IF NOT EXISTS "intensity" numeric(4,2) NOT NULL DEFAULT 1.0,
+        ADD COLUMN IF NOT EXISTS "start_minutes_before_end" integer NULL
     `);
   }
 
