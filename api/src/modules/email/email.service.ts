@@ -11,7 +11,7 @@ import { EmailEventType } from '../../common/enums/email-event-type.enum';
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
-  private readonly resend: Resend;
+  private readonly resend: Resend | null = null;
   private readonly from = 'RB Import <support@rbimport.com>';
 
   constructor(
@@ -22,7 +22,11 @@ export class EmailService {
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
   ) {
-    this.resend = new Resend(process.env.RESEND_API_KEY);
+    if (process.env.RESEND_API_KEY) {
+      this.resend = new Resend(process.env.RESEND_API_KEY);
+    } else {
+      this.logger.warn('RESEND_API_KEY is not set — email sending is disabled');
+    }
   }
 
   async send(
@@ -53,6 +57,10 @@ export class EmailService {
       const subject = Handlebars.compile(template.subject)(variables);
       const html = Handlebars.compile(template.bodyHtml)(variables);
 
+      if (!this.resend) {
+        this.logger.warn(`Email skipped (no RESEND_API_KEY): event=${eventType} to=${to}`);
+        return;
+      }
       await this.resend.emails.send({ from: this.from, to, subject, html });
     } catch (err) {
       this.logger.warn(`Email send failed event=${eventType} to=${to}: ${err?.message}`);
