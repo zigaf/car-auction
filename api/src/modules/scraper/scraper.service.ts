@@ -122,73 +122,109 @@ export class ScraperService {
     try {
       await this.ecarsTradeBrowser.initialize();
 
-      // Get list of cars. In a real scenario you'd paginate, but their list is huge.
-      const carLinks = await this.ecarsTradeBrowser.getLiveAuctions();
-      const limit = maxPages ? maxPages * 20 : carLinks.length; // rough max pages equivalent
-      const linksToProcess = carLinks.slice(0, limit);
+      // Fetch first page to determine total pages
+      const firstPage = await this.ecarsTradeBrowser.getSearchPage(1);
+      const totalPages = firstPage.totalPages || 1;
 
-      run.totalPages = 1;
-      run.lotsFound = carLinks.length;
+      const configMaxPages = parseInt(process.env.SCRAPER_MAX_PAGES || '0', 10);
+      const pagesToScrape = maxPages
+        ? Math.min(maxPages, totalPages)
+        : configMaxPages > 0
+          ? Math.min(configMaxPages, totalPages)
+          : totalPages;
+
+      run.totalPages = pagesToScrape;
+      run.lotsFound = totalPages * 20;
       await this.scraperRunRepository.save(run);
 
-      this.log(`Found ${carLinks.length} total vehicles. Processing ${linksToProcess.length}...`);
+      this.log(`eCarsTrade: ${totalPages} total pages (~${totalPages * 20} vehicles). Scraping ${pagesToScrape} pages.`);
 
-      for (let i = 0; i < linksToProcess.length; i++) {
+      // Process page 1
+      let lotIndex = 0;
+      await this.processEcarsTradeLinks(firstPage.carLinks, run, lotIndex, pagesToScrape);
+      lotIndex += firstPage.carLinks.length;
+      run.pagesScraped = 1;
+      await this.scraperRunRepository.save(run);
+
+      // Process remaining pages
+      for (let page = 2; page <= pagesToScrape; page++) {
         if (this.stopRequested) {
-          this.log(`Парсер остановлен пользователем на автомобиле ${i + 1}/${linksToProcess.length}.`);
+          this.log(`Парсер остановлен пользователем на странице ${page}/${pagesToScrape}.`);
           run.status = ScraperRunStatus.FAILED;
           run.errorLog = 'Stopped by user';
           break;
         }
 
-        const url = linksToProcess[i];
-        const vehicleIdMatch = url.match(/\/cars\/(\d+)$/);
-        const vehicleId = vehicleIdMatch ? vehicleIdMatch[1] : `ecars_${i}`;
-
-        this.log(`[${i + 1}/${linksToProcess.length}] Processing lot ${vehicleId}`);
+        await this.crawlDelay(5000, 10000);
 
         try {
-          // Check if already updated recently
-          const existingLot = await this.lotRepository.findOne({
-            where: { sourceId: `ecars_${vehicleId}` },
-            relations: ['images'],
-          });
-
-          if (existingLot && this.isRecentlyUpdated(existingLot, 12)) {
-            run.lotsUpdated++;
-            this.log(`Skipping recently updated lot: ${vehicleId}`);
-            continue;
-          }
-
-          await this.crawlDelay(2000, 5000); // Shorter delay for eCarsTrade internal pages
-
-          const detail = await this.ecarsTradeBrowser.scrapeVehicleDetail(url, vehicleId);
-          if (!detail) continue;
-
-          const lotData = this.ecarsTradeMapper.mapVehicleToLot(detail, vehicleId, url);
-          const categorizedImages = (lotData as any)._categorizedImages || [];
-          delete (lotData as any)._categorizedImages;
-
-          if (existingLot) {
-            await this.lotRepository.update(existingLot.id, lotData as any);
-            run.lotsUpdated++;
-            if (!existingLot.images || existingLot.images.length === 0) {
-              await this.saveCategorizedImagesFromExternal(existingLot, categorizedImages, run);
-            }
-          } else {
-            let newLot = this.lotRepository.create(lotData);
-            newLot = await this.lotRepository.save(newLot);
-            run.lotsCreated++;
-            await this.saveCategorizedImagesFromExternal(newLot, categorizedImages, run);
-          }
+          const pageData = await this.ecarsTradeBrowser.getSearchPage(page);
+          await this.processEcarsTradeLinks(pageData.carLinks, run, lotIndex, pagesToScrape);
+          lotIndex += pageData.carLinks.length;
         } catch (error) {
           run.errorsCount++;
-          this.log(`Error processing ${vehicleId}: ${error.message}`);
+          this.log(`Failed to process page ${page}: ${error.message}`);
         }
+
+        run.pagesScraped = page;
+        await this.scraperRunRepository.save(run);
       }
-      run.pagesScraped = 1;
     } finally {
       await this.ecarsTradeBrowser.destroy();
+    }
+  }
+
+  private async processEcarsTradeLinks(
+    carLinks: string[],
+    run: ScraperRun,
+    startIndex: number,
+    totalPages: number,
+  ): Promise<void> {
+    for (let i = 0; i < carLinks.length; i++) {
+      if (this.stopRequested) break;
+
+      const url = carLinks[i];
+      const vehicleIdMatch = url.match(/\/cars\/(\d+)/);
+      const vehicleId = vehicleIdMatch ? vehicleIdMatch[1] : `ecars_${startIndex + i}`;
+
+      this.log(`[${startIndex + i + 1}] Processing lot ${vehicleId}`);
+
+      try {
+        const existingLot = await this.lotRepository.findOne({
+          where: { sourceId: `ecars_${vehicleId}` },
+          relations: ['images'],
+        });
+
+        if (existingLot && this.isRecentlyUpdated(existingLot, 12)) {
+          run.lotsUpdated++;
+          continue;
+        }
+
+        await this.crawlDelay(2000, 5000);
+
+        const detail = await this.ecarsTradeBrowser.scrapeVehicleDetail(url, vehicleId);
+        if (!detail) continue;
+
+        const lotData = this.ecarsTradeMapper.mapVehicleToLot(detail, vehicleId, url);
+        const categorizedImages = (lotData as any)._categorizedImages || [];
+        delete (lotData as any)._categorizedImages;
+
+        if (existingLot) {
+          await this.lotRepository.update(existingLot.id, lotData as any);
+          run.lotsUpdated++;
+          if (!existingLot.images || existingLot.images.length === 0) {
+            await this.saveCategorizedImagesFromExternal(existingLot, categorizedImages, run);
+          }
+        } else {
+          let newLot = this.lotRepository.create(lotData);
+          newLot = await this.lotRepository.save(newLot);
+          run.lotsCreated++;
+          await this.saveCategorizedImagesFromExternal(newLot, categorizedImages, run);
+        }
+      } catch (error) {
+        run.errorsCount++;
+        this.log(`Error processing ${vehicleId}: ${error.message}`);
+      }
     }
   }
 

@@ -13,6 +13,11 @@ export class EcarsTradeDataMapperService {
         'Hybrid': FuelType.HYBRID,
         'LPG': FuelType.LPG,
         'CNG': FuelType.CNG,
+        'Бензин': FuelType.PETROL,
+        'Дизель': FuelType.DIESEL,
+        'Электро': FuelType.ELECTRIC,
+        'Гибрид': FuelType.HYBRID,
+        'Газ': FuelType.LPG,
     };
 
     mapVehicleToLot(
@@ -20,115 +25,135 @@ export class EcarsTradeDataMapperService {
         vehicleId: string,
         detailUrl: string
     ): Partial<Lot> & { _categorizedImages?: { url: string; category: string }[] } {
-        // extractedData contains jsonLd, title, specs, images, price, equipment, serviceHistory
-        const { jsonLd, title, specs, images, price, equipment, serviceHistory } = sourceData;
+        const {
+            jsonLd, title, specs, images, prices, vatType,
+            equipment, equipmentByCategory, remarks, auctionInfo,
+            pickupLocation, pickupReadiness, sellerName,
+            conditionReportUrl, documentsType, documentCountry, serviceHistory,
+        } = sourceData;
 
-        // Extract from JSON-LD if available
+        const getSpec = (keywords: string[]): string | null => {
+            if (!specs) return null;
+            const specKeys = Object.keys(specs);
+            const key = specKeys.find(k => keywords.some(kw => k.toLowerCase().includes(kw.toLowerCase())));
+            return key ? specs[key] : null;
+        };
+
+        // --- Brand & Model ---
         let brand = jsonLd?.brand?.name || undefined;
         let model = undefined;
-        let year = undefined;
-        let mileage = undefined;
-        let fuelType = null;
-        let power = { kw: null as number | null, ps: null as number | null };
-        let startingBid = this.parseGermanPrice(price);
 
-        // Extended specs
-        let transmission = undefined;
-        let numberOfGears = undefined;
-        let numberOfDoors = undefined;
-        let numberOfSeats = undefined;
-        let engineCapacityCc = undefined;
-        let emissionClass = undefined;
-        let co2Emissions = undefined;
-        let originCountry = undefined;
-        let sellerName = undefined;
-        let vin = undefined;
-
-        if (jsonLd) {
-            year = jsonLd.dateVehicleFirstRegistered ? parseInt(jsonLd.dateVehicleFirstRegistered.split('/').pop() || '', 10) : undefined;
-            if (jsonLd.mileageFromOdometer?.value) {
-                mileage = this.parseGermanInt(jsonLd.mileageFromOdometer.value);
-            }
-            if (jsonLd.fuelType) {
-                fuelType = this.mapFuelType(jsonLd.fuelType);
-            }
-        }
-
-        // Fallback or override with specs grid
-        if (specs) {
-            const specKeys = Object.keys(specs);
-            const getSpec = (keywords: string[]) => {
-                const key = specKeys.find(k => keywords.some(kw => k.toLowerCase().includes(kw)));
-                return key ? specs[key] : null;
-            };
-
-            const specYear = getSpec(['год', 'registration', 'jahr', 'year']);
-            if (specYear && !year) {
-                const yearMatch = specYear.match(/\b20\d{2}\b/);
-                if (yearMatch) year = parseInt(yearMatch[0], 10);
-            }
-
-            const specMileage = getSpec(['пробег', 'mileage', 'kilometer', 'km']);
-            if (specMileage && !mileage) mileage = this.parseGermanInt(specMileage);
-
-            const specFuel = getSpec(['топливо', 'fuel', 'kraftstoff']);
-            if (specFuel && !fuelType) fuelType = this.mapFuelType(specFuel);
-
-            const specPower = getSpec(['мощность', 'power', 'leistung']);
-            if (specPower) power = this.parsePower(specPower);
-
-            const specTransmission = getSpec(['коробка', 'transmission', 'getriebe']);
-            if (specTransmission) transmission = specTransmission;
-
-            const specGears = getSpec(['передач', 'gears', 'gänge']);
-            if (specGears) numberOfGears = this.parseGermanInt(specGears);
-
-            const specDoors = getSpec(['дверей', 'doors', 'türen']);
-            if (specDoors) numberOfDoors = this.parseGermanInt(specDoors);
-
-            const specSeats = getSpec(['мест', 'seats', 'sitze']);
-            if (specSeats) numberOfSeats = this.parseGermanInt(specSeats);
-
-            const specEngine = getSpec(['объем', 'двигатель', 'engine', 'hubraum', 'capacity']);
-            if (specEngine) engineCapacityCc = this.parseGermanInt(specEngine);
-
-            const specEmission = getSpec(['эмиссии', 'emission']);
-            if (specEmission) emissionClass = specEmission;
-
-            const specCo2 = getSpec(['co2', 'co_2']);
-            if (specCo2) co2Emissions = specCo2;
-
-            const specOrigin = getSpec(['производства', 'origin', 'herkunft']);
-            if (specOrigin) originCountry = specOrigin;
-
-            const specSeller = getSpec(['продавец', 'seller', 'verkäufer']);
-            if (specSeller) sellerName = specSeller;
-
-            const specVin = getSpec(['vin', 'номер блока']);
-            if (specVin) vin = specVin;
-        }
-
-        // Fallback extraction from title "Brand Model Derivative"
-        if (!brand) {
-            const titleParts = title ? title.split(' ') : [];
+        const specBrandModel = getSpec(['Марка и модель', 'Make and model']);
+        if (specBrandModel) {
+            const parts = specBrandModel.split(' ');
+            if (!brand) brand = parts[0];
+            model = parts.slice(1).join(' ') || undefined;
+        } else if (brand && title) {
+            model = title.replace(new RegExp(`^${brand}\\s*`, 'i'), '').split(' ').slice(0, 3).join(' ') || undefined;
+        } else if (title) {
+            const titleParts = title.split(' ');
             brand = titleParts[0];
-            model = titleParts.slice(1, 3).join(' ');
-        } else {
-            // Strip brand from title to get model
-            model = title?.replace(new RegExp(`^${brand}\\s*`, 'i'), '').split(' ').slice(0, 2).join(' ') || undefined;
+            model = titleParts.slice(1, 4).join(' ');
         }
 
-        // Categorize Images
-        const categorizedImages: { url: string, category: string }[] = [];
+        // --- Year ---
+        let year: number | undefined = undefined;
+        const regDateStr = getSpec(['первой регистрации', 'first registration']);
+        if (regDateStr) {
+            const yearMatch = regDateStr.match(/\b(19|20)\d{2}\b/);
+            if (yearMatch) year = parseInt(yearMatch[0], 10);
+        }
+        if (!year && jsonLd?.dateVehicleFirstRegistered) {
+            const yMatch = jsonLd.dateVehicleFirstRegistered.match(/\b(19|20)\d{2}\b/);
+            if (yMatch) year = parseInt(yMatch[0], 10);
+        }
+
+        // --- Registration Date ---
+        const registrationDate = this.parseRegistrationDate(regDateStr || jsonLd?.dateVehicleFirstRegistered);
+
+        // --- Mileage ---
+        let mileage: number | null = null;
+        const specMileage = getSpec(['Пробег', 'Mileage', 'mileage']);
+        if (specMileage) mileage = this.parseGermanInt(specMileage);
+        if (!mileage && jsonLd?.mileageFromOdometer?.value) {
+            mileage = this.parseGermanInt(jsonLd.mileageFromOdometer.value);
+        }
+
+        // --- Fuel Type ---
+        let fuelType: FuelType | null = null;
+        const specFuel = getSpec(['Тип топлива', 'Fuel type', 'fuel']);
+        if (specFuel) fuelType = this.mapFuelType(specFuel);
+        if (!fuelType && jsonLd?.fuelType) fuelType = this.mapFuelType(jsonLd.fuelType);
+
+        // --- Power ---
+        const specPower = getSpec(['Мощность', 'Power', 'power']);
+        const power = this.parsePower(specPower);
+
+        // --- Transmission ---
+        const transmission = getSpec(['Тип коробки передач', 'Transmission type', 'Gearbox type', 'transmission']);
+        const numberOfGears = this.parseGermanInt(getSpec(['Коробка передач', 'Gearbox', 'gears']));
+
+        // --- Dimensions ---
+        const numberOfDoors = this.parseGermanInt(getSpec(['Дверей', 'Doors', 'doors']));
+        const numberOfSeats = this.parseGermanInt(getSpec(['Мест', 'Seats', 'Number of places', 'seats']));
+        const engineCapacityCc = this.parseGermanInt(getSpec(['Объем двигателя', 'Engine capacity', 'Engine size', 'capacity']));
+
+        // --- Emission ---
+        const emissionClass = getSpec(['Класс эмиссии', 'Emission class', 'emission']);
+        const co2Emissions = getSpec(['CO₂', 'CO2', 'co2']);
+
+        // --- Color ---
+        const exteriorColor = getSpec(['Цвет', 'Color', 'Colour', 'color']);
+
+        // --- Vehicle Type / Category ---
+        const vehicleType = getSpec(['Категория', 'Category', 'category']);
+
+        // --- Origin Country ---
+        const originCountry = getSpec(['Страна производства', 'Country of production', 'origin']);
+
+        // --- VIN (validate 17 chars alphanumeric) ---
+        let vin: string | undefined = undefined;
+        const specVin = getSpec(['VIN']);
+        if (specVin && /^[A-HJ-NPR-Z0-9]{17}$/i.test(specVin.trim())) {
+            vin = specVin.trim().toUpperCase();
+        }
+
+        // --- Lot Number (Номер блока / Unit N°) ---
+        const lotNumber = getSpec(['Номер блока', 'Block number', 'Unit N']);
+
+        // --- Prices ---
+        const startingBid = this.parseGermanPrice(prices?.oldPrice) || this.parseGermanPrice(prices?.buyNowPrice);
+        const buyNowPrice = this.parseGermanPrice(prices?.buyNowPrice);
+
+        // --- Auction Type ---
+        let auctionType = AuctionType.TIMED;
+        if (auctionInfo) {
+            if (auctionInfo.includes('Наш сток') || auctionInfo.includes('Our stock') || auctionInfo.includes('Fixed')) {
+                auctionType = AuctionType.BUY_NOW;
+            }
+        }
+
+        // --- Categorize Images ---
+        const categorizedImages: { url: string; category: string }[] = [];
         if (images && Array.isArray(images)) {
-            images.forEach((url, i) => {
+            images.forEach((url: string, i: number) => {
                 let category = 'exterior';
                 if (i === 0) category = 'main';
-                else if (i > 15) category = 'damage'; // rough heuristic if no clear labels
-
+                else if (url.includes('interior') || url.includes('_int')) category = 'interior';
+                else if (url.includes('damage') || url.includes('_dmg')) category = 'damage';
                 categorizedImages.push({ url, category });
             });
         }
+
+        // --- Specs JSONB (store all extra data) ---
+        const specsJsonb: Record<string, any> = { ...specs };
+        if (equipmentByCategory && Object.keys(equipmentByCategory).length > 0) {
+            specsJsonb.equipmentByCategory = equipmentByCategory;
+        }
+        if (pickupReadiness) specsJsonb.pickupReadiness = pickupReadiness;
+        if (prices?.totalPrice) specsJsonb.totalPrice = prices.totalPrice;
+        if (documentsType) specsJsonb.documentsType = documentsType;
+        if (documentCountry) specsJsonb.documentCountry = documentCountry;
 
         return {
             sourceId: `ecars_${vehicleId}`,
@@ -139,7 +164,7 @@ export class EcarsTradeDataMapperService {
             model: model || undefined,
             year,
             mileage,
-            fuelType: fuelType,
+            fuelType,
             enginePowerKw: power.kw,
             enginePowerPs: power.ps,
             engineCapacityCc,
@@ -149,19 +174,28 @@ export class EcarsTradeDataMapperService {
             numberOfSeats,
             emissionClass,
             co2Emissions,
+            exteriorColor,
+            vehicleType,
             originCountry,
-            sellerName,
             vin,
+            lotNumber,
+            sellerName: sellerName || undefined,
+            saleName: auctionInfo || undefined,
+            vehicleLocation: pickupLocation || undefined,
+            vatTypeCode: vatType || undefined,
+            conditionReportUrl: conditionReportUrl || undefined,
+            registrationDate,
             saleCountry: 'EU',
             startingBid,
+            buyNowPrice,
             originalCurrency: 'EUR',
             sourceImageUrl: categorizedImages.length > 0 ? categorizedImages[0].url : null,
             sourceUrl: detailUrl,
-            description: jsonLd ? JSON.stringify(jsonLd) : null,
+            description: remarks || null,
             equipment: equipment && equipment.length > 0 ? equipment : undefined,
             serviceHistory: serviceHistory && serviceHistory.length > 0 ? serviceHistory : undefined,
-            specs: specs || undefined,
-            auctionType: AuctionType.TIMED,
+            specs: Object.keys(specsJsonb).length > 0 ? specsJsonb : undefined,
+            auctionType,
             status: LotStatus.IMPORTED,
             _categorizedImages: categorizedImages.length > 0 ? categorizedImages : undefined,
         } as Partial<Lot> & { _categorizedImages?: { url: string; category: string }[] };
@@ -173,6 +207,8 @@ export class EcarsTradeDataMapperService {
         for (const [key, value] of Object.entries(this.fuelTypeMap)) {
             if (lower.includes(key.toLowerCase())) return value;
         }
+        if (lower.includes('бензин') && lower.includes('электр')) return FuelType.HYBRID;
+        if (lower.includes('plug')) return FuelType.HYBRID;
         return FuelType.OTHER;
     }
 
@@ -196,10 +232,17 @@ export class EcarsTradeDataMapperService {
     private parsePower(str: string | null): { kw: number | null; ps: number | null } {
         if (!str) return { kw: null, ps: null };
         const kwMatch = str.match(/(\d+)\s*kW/i);
-        const psMatch = str.match(/(\d+)\s*PS/i);
+        const psMatch = str.match(/(\d+)\s*(?:PS|Hp|HP|hp|л\.?\s?с\.?)/i);
         return {
             kw: kwMatch ? parseInt(kwMatch[1], 10) : null,
             ps: psMatch ? parseInt(psMatch[1], 10) : null,
         };
+    }
+
+    private parseRegistrationDate(str: string | null): Date | null {
+        if (!str) return null;
+        const match = str.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (!match) return null;
+        return new Date(parseInt(match[3]), parseInt(match[2]) - 1, parseInt(match[1]));
     }
 }
