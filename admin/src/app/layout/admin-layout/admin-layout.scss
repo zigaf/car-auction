@@ -16,6 +16,7 @@
   flex-direction: column;
   padding: $space-base 0;
   box-shadow: $shadow-xs;
+  overflow: hidden;
 }
 
 .sidebar__logo {
@@ -39,6 +40,8 @@
   flex-direction: column;
   gap: 2px;
   padding: 0 $space-sm;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .nav-item {
