@@ -5,7 +5,10 @@
     @for (row of rows; track row.setting.eventType) {
       <div class="event-row" [class.event-row--expanded]="row.expanded">
         <div class="event-row__header">
-          <span class="event-row__label">{{ row.label }}</span>
+          <div class="event-row__info">
+            <div class="event-row__label">{{ row.label }}</div>
+            <div class="event-row__description">{{ row.description }}</div>
+          </div>
           <div class="event-row__actions">
             <mat-slide-toggle
               [(ngModel)]="row.setting.isEnabled"

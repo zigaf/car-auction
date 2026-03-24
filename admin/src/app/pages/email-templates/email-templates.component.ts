@@ -14,6 +14,7 @@ import {
 interface EventRow {
   setting: EmailSetting;
   label: string;
+  description: string;
   variables: string[];
   expanded: boolean;
   templates: EmailTemplate[];
@@ -24,6 +25,17 @@ interface EventRow {
   saving: boolean;
   loadingTemplates: boolean;
 }
+
+const EVENT_DESCRIPTIONS: Record<string, string> = {
+  EMAIL_VERIFICATION: 'Отправляется при регистрации для подтверждения email адреса',
+  PASSWORD_RESET: 'Отправляется при запросе восстановления пароля',
+  AUCTION_WON: 'Отправляется победителю после завершения аукциона',
+  AUCTION_STARTING: 'Отправляется подписчикам перед началом аукциона',
+  ORDER_STATUS_CHANGED: 'Отправляется при изменении статуса заказа (оплата, доставка и т.д.)',
+  BALANCE_TOPPED_UP: 'Отправляется при зачислении средств на баланс',
+  BALANCE_WITHDRAWN: 'Отправляется при списании средств с баланса',
+  CUSTOM: 'Ручная рассылка — произвольное письмо пользователям',
+};
 
 const AVAILABLE_LANGUAGES = ['ru', 'en', 'ua'];
 
@@ -50,6 +62,7 @@ export class EmailTemplatesComponent implements OnInit {
       this.rows = settings.map((s) => ({
         setting: s,
         label: EVENT_LABELS[s.eventType] ?? s.eventType,
+        description: EVENT_DESCRIPTIONS[s.eventType] ?? '',
         variables: EVENT_VARIABLES[s.eventType] ?? [],
         expanded: false,
         templates: [],

@@ -1,151 +1,216 @@
+@use 'styles/variables' as *;
+
 .email-templates {
-  padding: 24px;
+  padding: $space-xl $space-lg;
+  max-width: 900px;
 
   &__title {
-    font-size: 22px;
-    font-weight: 600;
-    margin-bottom: 24px;
+    font-size: $fs-xl;
+    font-weight: $fw-bold;
+    color: $text-primary;
+    margin-bottom: $space-lg;
   }
 
   &__list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: $space-sm;
   }
 }
 
 .event-row {
-  border: 1px solid #2a3a4a;
-  border-radius: 8px;
+  background: $bg-panel;
+  border: 1px solid $border-color;
+  border-radius: $radius-lg;
   overflow: hidden;
+  transition: box-shadow $transition-fast;
+
+  &:hover {
+    box-shadow: $shadow-xs;
+  }
 
   &__header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 20px;
-    background: #121e2a;
-    cursor: pointer;
+    padding: $space-md $space-lg;
+    gap: $space-md;
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
   }
 
   &__label {
-    font-weight: 500;
-    font-size: 14px;
+    font-weight: $fw-semibold;
+    font-size: $fs-base;
+    color: $text-primary;
+  }
+
+  &__description {
+    font-size: $fs-xs;
+    color: $text-tertiary;
+    margin-top: 2px;
   }
 
   &__actions {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: $space-md;
+    flex-shrink: 0;
   }
 
   &__edit-btn {
     background: transparent;
-    border: 1px solid #0066ff;
-    color: #0066ff;
-    border-radius: 6px;
-    padding: 6px 14px;
-    font-size: 13px;
+    border: 1px solid $accent;
+    color: $accent;
+    border-radius: $radius-base;
+    padding: $space-xs $space-md;
+    font-size: $fs-sm;
+    font-family: $font-ui;
     cursor: pointer;
+    transition: all $transition-fast;
 
-    &:hover { background: rgba(0, 102, 255, 0.1); }
+    &:hover {
+      background: $accent-muted;
+    }
   }
 
   &__editor {
-    padding: 20px;
-    background: #0c1926;
-    border-top: 1px solid #2a3a4a;
+    padding: $space-lg;
+    background: $bg-secondary;
+    border-top: 1px solid $border-color;
   }
 }
 
 .lang-tabs {
   display: flex;
-  gap: 8px;
-  margin-bottom: 20px;
+  gap: $space-xs;
+  margin-bottom: $space-lg;
 }
 
 .lang-tab {
-  padding: 6px 16px;
-  border-radius: 6px;
-  border: 1px solid #2a3a4a;
-  background: transparent;
-  color: #fff;
-  font-size: 13px;
+  padding: $space-xs $space-md;
+  border-radius: $radius-base;
+  border: 1px solid $border-color;
+  background: $bg-panel;
+  color: $text-secondary;
+  font-size: $fs-sm;
+  font-family: $font-ui;
   cursor: pointer;
+  transition: all $transition-fast;
 
-  &--active { border-color: #0066ff; background: rgba(0, 102, 255, 0.15); color: #0066ff; }
-  &--missing { border-color: #f59e0b; color: #f59e0b; }
+  &--active {
+    border-color: $accent;
+    background: $accent-muted;
+    color: $accent;
+    font-weight: $fw-semibold;
+  }
+
+  &--missing {
+    border-color: $status-yellow;
+    color: $status-yellow;
+  }
 }
 
 .editor-fields {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: $space-md;
 }
 
 .editor-label {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: 13px;
-  color: #94a3b8;
+  gap: $space-xs;
+  font-size: $fs-sm;
+  font-weight: $fw-medium;
+  color: $text-secondary;
 }
 
 .editor-input,
 .editor-textarea {
-  background: #121e2a;
-  border: 1px solid #2a3a4a;
-  border-radius: 6px;
-  color: #fff;
-  padding: 10px 12px;
-  font-size: 13px;
-  font-family: monospace;
+  background: $bg-panel;
+  border: 1px solid $border-color;
+  border-radius: $radius-base;
+  color: $text-primary;
+  padding: $space-sm $space-md;
+  font-size: $fs-sm;
+  font-family: $font-mono;
   resize: vertical;
+  transition: border-color $transition-fast;
 
-  &:focus { outline: none; border-color: #0066ff; }
+  &:focus {
+    outline: none;
+    border-color: $accent;
+    box-shadow: 0 0 0 3px $accent-muted;
+  }
 }
 
 .editor-vars {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: $space-xs;
   align-items: center;
-  font-size: 12px;
-  color: #94a3b8;
+  font-size: $fs-xs;
+  color: $text-tertiary;
 }
 
 .var-chip {
-  background: #1e2d3d;
-  border-radius: 4px;
-  padding: 2px 8px;
-  font-size: 12px;
-  color: #60a5fa;
+  background: $accent-light;
+  border-radius: $radius-sm;
+  padding: 2px $space-sm;
+  font-size: $fs-xs;
+  color: $accent;
+  font-family: $font-mono;
 }
 
 .editor-actions {
   display: flex;
-  gap: 12px;
+  gap: $space-sm;
   justify-content: flex-end;
 }
 
 .btn {
-  padding: 8px 20px;
-  border-radius: 6px;
+  padding: $space-sm $space-lg;
+  border-radius: $radius-base;
   border: none;
-  font-size: 13px;
+  font-size: $fs-sm;
+  font-family: $font-ui;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: $fw-semibold;
+  transition: all $transition-fast;
 
-  &--primary { background: #0066ff; color: #fff; &:hover { background: #0052cc; } }
-  &--secondary { background: #1e2d3d; color: #fff; border: 1px solid #2a3a4a; }
-  &--danger { background: #ef4444; color: #fff; }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  &--primary {
+    background: $accent;
+    color: #fff;
+    &:hover { background: $accent-hover; }
+  }
+
+  &--secondary {
+    background: $bg-panel;
+    color: $text-secondary;
+    border: 1px solid $border-color;
+    &:hover { background: $bg-panel-hover; }
+  }
+
+  &--danger {
+    background: $status-red;
+    color: #fff;
+    &:hover { opacity: 0.9; }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 .preview-wrapper {
-  margin-top: 16px;
-  border: 1px solid #2a3a4a;
-  border-radius: 6px;
+  margin-top: $space-md;
+  border: 1px solid $border-color;
+  border-radius: $radius-base;
   overflow: hidden;
 }
 
