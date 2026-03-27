@@ -96,6 +96,47 @@
   }
 }
 
+// ── Select ───────────────────────────────────────────────────────────────────
+.calc-select {
+  width: 100%;
+  padding: $space-sm $space-md;
+  background: $bg-elevated;
+  border: 1px solid $border-color;
+  border-radius: $radius-base;
+  color: $text-primary;
+  font-family: $font-ui;
+  font-size: $fs-sm;
+  cursor: pointer;
+  transition: border-color $transition-fast;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right $space-md center;
+  padding-right: $space-xl;
+
+  &:focus {
+    outline: none;
+    border-color: $accent;
+  }
+
+  option {
+    background: $bg-elevated;
+    color: $text-primary;
+  }
+}
+
+// ── Form divider ─────────────────────────────────────────────────────────────
+.calc-divider {
+  font-size: $fs-xs;
+  font-weight: $fw-semibold;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: $text-tertiary;
+  padding: $space-sm 0 0;
+  border-top: 1px solid $divider;
+  margin-top: $space-xs;
+}
+
 // ── Error ─────────────────────────────────────────────────────────────────────
 .calc-error {
   display: flex;

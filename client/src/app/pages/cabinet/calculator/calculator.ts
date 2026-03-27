@@ -5,6 +5,7 @@ import {
   CalculatorService,
   CustomsBreakdown,
   FuelTypeCalc,
+  CalcCountry,
 } from '../../../core/services/calculator.service';
 import { AppButtonComponent } from '../../../shared/components/button/button.component';
 import { AppInputComponent } from '../../../shared/components/input/input.component';
@@ -14,6 +15,38 @@ interface FuelOption {
   value: FuelTypeCalc;
   label: string;
 }
+
+interface CountryOption {
+  value: string;
+  label: string;
+}
+
+const DELIVERY_TABLE: Record<string, Record<CalcCountry, number>> = {
+  belgium:     { russia: 1200, belarus: 800 },
+  netherlands: { russia: 1200, belarus: 800 },
+  germany:     { russia: 1100, belarus: 700 },
+  france:      { russia: 1300, belarus: 900 },
+  italy:       { russia: 1400, belarus: 1000 },
+  spain:       { russia: 1500, belarus: 1100 },
+  poland:      { russia: 900,  belarus: 500 },
+  lithuania:   { russia: 800,  belarus: 400 },
+};
+
+const ORIGIN_COUNTRIES: CountryOption[] = [
+  { value: 'belgium', label: 'Бельгия' },
+  { value: 'netherlands', label: 'Нидерланды' },
+  { value: 'germany', label: 'Германия' },
+  { value: 'france', label: 'Франция' },
+  { value: 'italy', label: 'Италия' },
+  { value: 'spain', label: 'Испания' },
+  { value: 'poland', label: 'Польша' },
+  { value: 'lithuania', label: 'Литва' },
+];
+
+const DEST_COUNTRIES: CountryOption[] = [
+  { value: 'russia', label: 'Россия' },
+  { value: 'belarus', label: 'Беларусь' },
+];
 
 @Component({
   selector: 'app-calculator',
@@ -27,12 +60,14 @@ export class CalculatorComponent {
   private readonly calculatorService = inject(CalculatorService);
 
   // Form
+  country: CalcCountry = 'russia';
   carPrice = 0;
   year = new Date().getFullYear() - 3;
   engineVolume = 1600;
   fuelType: FuelTypeCalc = 'petrol';
-  deliveryCost = 800;
-  companyCost = 0;
+  originCountry = '';
+  destinationCountry = '';
+  deliveryCost = 0;
 
   // State
   loading = false;
@@ -40,6 +75,8 @@ export class CalculatorComponent {
   error = '';
 
   readonly currentYear = new Date().getFullYear();
+  readonly originCountries = ORIGIN_COUNTRIES;
+  readonly destCountries = DEST_COUNTRIES;
 
   get fuelOptions(): FuelOption[] {
     return [
@@ -48,6 +85,31 @@ export class CalculatorComponent {
       { value: 'hybrid', label: this.ls.t('fuel.hybrid') },
       { value: 'electric', label: this.ls.t('fuel.electric') },
     ];
+  }
+
+  onCountryChange(): void {
+    this.destinationCountry = this.country;
+    this.updateDeliveryCost();
+    this.reset();
+  }
+
+  onOriginChange(): void {
+    this.updateDeliveryCost();
+  }
+
+  onDestinationChange(): void {
+    this.updateDeliveryCost();
+  }
+
+  private updateDeliveryCost(): void {
+    if (this.originCountry && this.destinationCountry) {
+      const entry = DELIVERY_TABLE[this.originCountry];
+      if (entry && entry[this.destinationCountry as CalcCountry] !== undefined) {
+        this.deliveryCost = entry[this.destinationCountry as CalcCountry];
+        return;
+      }
+    }
+    this.deliveryCost = 0;
   }
 
   calculate(): void {
@@ -62,12 +124,14 @@ export class CalculatorComponent {
 
     this.calculatorService
       .calculateCustoms({
+        country: this.country,
         carPrice: this.carPrice,
         year: this.year,
         engineVolume: this.fuelType === 'electric' ? 0 : this.engineVolume,
         fuelType: this.fuelType,
+        originCountry: this.originCountry || undefined,
+        destinationCountry: this.destinationCountry || undefined,
         deliveryCost: this.deliveryCost,
-        companyCost: this.companyCost,
       })
       .subscribe({
         next: (res) => {
@@ -90,7 +154,7 @@ export class CalculatorComponent {
     return this.fuelType === 'electric';
   }
 
-  getAgeText(years: number, coeff: number): string {
-    return this.ls.t('calc.result.age').replace('{n}', String(years)).replace('{c}', String(coeff));
+  getAgeText(years: number): string {
+    return this.ls.t('calc.result.age').replace('{n}', String(years));
   }
 }

@@ -3,28 +3,30 @@ import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 
 export type FuelTypeCalc = 'petrol' | 'diesel' | 'hybrid' | 'electric';
+export type CalcCountry = 'russia' | 'belarus';
 
 export interface CalculateCustomsRequest {
+  country: CalcCountry;
   carPrice: number;
   year: number;
   engineVolume: number;
   fuelType: FuelTypeCalc;
+  originCountry?: string;
+  destinationCountry?: string;
   deliveryCost?: number;
-  companyCost?: number;
 }
 
 export interface CustomsBreakdown {
   carPrice: number;
-  exciseTax: number;
-  importDuty: number;
-  vat: number;
-  pensionFund: number;
-  totalCustoms: number;
-  deliveryCost: number;
+  customsDuty: number;
+  recyclingFee: number;
+  customsProcessingFee: number;
   companyCost: number;
+  deliveryCost: number;
+  totalCustoms: number;
   totalCost: number;
   ageYears: number;
-  ageCoefficient: number;
+  country: CalcCountry;
 }
 
 @Injectable({ providedIn: 'root' })

@@ -12,6 +12,29 @@
       <h2 class="calc-form__title">{{ ls.t('calc.form.title') }}</h2>
 
       <div class="calc-form__grid">
+        <!-- Country tabs -->
+        <div class="calc-field">
+          <label class="calc-label">{{ ls.t('calc.country') }}</label>
+          <div class="fuel-tabs">
+            <button
+              type="button"
+              class="fuel-tab"
+              [class.fuel-tab--active]="country === 'russia'"
+              (click)="country = 'russia'; onCountryChange()"
+            >
+              {{ ls.t('calc.country.russia') }}
+            </button>
+            <button
+              type="button"
+              class="fuel-tab"
+              [class.fuel-tab--active]="country === 'belarus'"
+              (click)="country = 'belarus'; onCountryChange()"
+            >
+              {{ ls.t('calc.country.belarus') }}
+            </button>
+          </div>
+        </div>
+
         <div class="calc-field">
           <label class="calc-label">{{ ls.t('calc.carPrice') }}</label>
           <app-input
@@ -63,25 +86,47 @@
           </div>
         }
 
+        <!-- Delivery section -->
+        <div class="calc-divider">{{ ls.t('calc.deliverySection') }}</div>
+
         <div class="calc-field">
-          <label class="calc-label">{{ ls.t('calc.delivery') }}</label>
+          <label class="calc-label">{{ ls.t('calc.originCountry') }}</label>
+          <select
+            class="calc-select"
+            [(ngModel)]="originCountry"
+            name="originCountry"
+            (ngModelChange)="onOriginChange()"
+          >
+            <option value="">{{ ls.t('calc.selectCountry') }}</option>
+            @for (c of originCountries; track c.value) {
+              <option [value]="c.value">{{ c.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="calc-field">
+          <label class="calc-label">{{ ls.t('calc.destinationCountry') }}</label>
+          <select
+            class="calc-select"
+            [(ngModel)]="destinationCountry"
+            name="destinationCountry"
+            (ngModelChange)="onDestinationChange()"
+          >
+            <option value="">{{ ls.t('calc.selectCountry') }}</option>
+            @for (c of destCountries; track c.value) {
+              <option [value]="c.value">{{ c.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="calc-field">
+          <label class="calc-label">{{ ls.t('calc.deliveryCost') }}</label>
           <app-input
             type="number"
             [placeholder]="ls.t('calc.ph.delivery')"
             icon="local_shipping"
             [(ngModel)]="deliveryCost"
             name="deliveryCost"
-          />
-        </div>
-
-        <div class="calc-field">
-          <label class="calc-label">{{ ls.t('calc.company') }}</label>
-          <app-input
-            type="number"
-            [placeholder]="ls.t('calc.ph.company')"
-            icon="business_center"
-            [(ngModel)]="companyCost"
-            name="companyCost"
           />
         </div>
       </div>
@@ -111,7 +156,7 @@
         <div class="calc-result__header">
           <h2 class="calc-result__title">{{ ls.t('calc.result.title') }}</h2>
           <span class="calc-result__age">
-            {{ getAgeText(result.ageYears, result.ageCoefficient) }}
+            {{ getAgeText(result.ageYears) }}
           </span>
         </div>
 
@@ -123,26 +168,19 @@
 
           <div class="result-divider">{{ ls.t('calc.result.customs') }}</div>
 
-          @if (result.exciseTax > 0) {
-            <div class="result-row">
-              <span class="result-row__label">{{ ls.t('calc.result.excise') }}</span>
-              <span class="result-row__value result-row__value--tax">{{ result.exciseTax | number:'1.0-0' }} EUR</span>
-            </div>
-          }
-
           <div class="result-row">
             <span class="result-row__label">{{ ls.t('calc.result.duty') }}</span>
-            <span class="result-row__value result-row__value--tax">{{ result.importDuty | number:'1.0-0' }} EUR</span>
+            <span class="result-row__value result-row__value--tax">{{ result.customsDuty | number:'1.0-0' }} EUR</span>
           </div>
 
           <div class="result-row">
-            <span class="result-row__label">{{ ls.t('calc.result.vat') }}</span>
-            <span class="result-row__value result-row__value--tax">{{ result.vat | number:'1.0-0' }} EUR</span>
+            <span class="result-row__label">{{ ls.t('calc.result.recycling') }}</span>
+            <span class="result-row__value result-row__value--tax">{{ result.recyclingFee | number:'1.0-0' }} EUR</span>
           </div>
 
           <div class="result-row">
-            <span class="result-row__label">{{ ls.t('calc.result.pension') }}</span>
-            <span class="result-row__value result-row__value--tax">{{ result.pensionFund | number:'1.0-0' }} EUR</span>
+            <span class="result-row__label">{{ ls.t('calc.result.processing') }}</span>
+            <span class="result-row__value result-row__value--tax">{{ result.customsProcessingFee | number:'1.0-0' }} EUR</span>
           </div>
 
           <div class="result-row result-row--subtotal">
@@ -150,20 +188,19 @@
             <span class="result-row__value">{{ result.totalCustoms | number:'1.0-0' }} EUR</span>
           </div>
 
+          <div class="result-divider">{{ ls.t('calc.result.extra') }}</div>
+
           @if (result.deliveryCost > 0) {
-            <div class="result-divider">{{ ls.t('calc.result.extra') }}</div>
             <div class="result-row">
               <span class="result-row__label">{{ ls.t('calc.result.delivery') }}</span>
               <span class="result-row__value">{{ result.deliveryCost | number:'1.0-0' }} EUR</span>
             </div>
           }
 
-          @if (result.companyCost > 0) {
-            <div class="result-row">
-              <span class="result-row__label">{{ ls.t('calc.result.company') }}</span>
-              <span class="result-row__value">{{ result.companyCost | number:'1.0-0' }} EUR</span>
-            </div>
-          }
+          <div class="result-row">
+            <span class="result-row__label">{{ ls.t('calc.result.company') }}</span>
+            <span class="result-row__value">{{ result.companyCost | number:'1.0-0' }} EUR</span>
+          </div>
         </div>
 
         <div class="calc-result__total">
