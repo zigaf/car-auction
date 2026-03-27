@@ -17,6 +17,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { LotService } from './lot.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -37,6 +38,7 @@ export class LotController {
   // --- Public endpoints ---
 
   @Get()
+  @UseGuards(OptionalJwtAuthGuard)
   async findAll(
     @Query('page') page?: number,
     @Query('limit') limit?: number,
@@ -58,8 +60,9 @@ export class LotController {
     @Query('status') status?: string,
     @Query('dateFrom') dateFrom?: string,
     @Query('dateTo') dateTo?: string,
+    @CurrentUser() user?: User,
   ) {
-    return this.lotService.findAll({
+    const result = await this.lotService.findAll({
       page,
       limit,
       brand,
@@ -81,6 +84,16 @@ export class LotController {
       dateFrom,
       dateTo,
     });
+
+    const privileged = user && [Role.BROKER, Role.ADMIN, Role.MANAGER].includes(user.role as Role);
+    if (!privileged) {
+      result.data.forEach(lot => {
+        delete lot.vin;
+        delete lot.lotNumber;
+      });
+    }
+
+    return result;
   }
 
   @Get('brands')
@@ -99,11 +112,22 @@ export class LotController {
   }
 
   @Get(':id')
-  async findById(@Param('id', ParseUUIDPipe) id: string) {
+  @UseGuards(OptionalJwtAuthGuard)
+  async findById(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user?: User,
+  ) {
     const lot = await this.lotService.findById(id);
     if (!lot) {
       throw new NotFoundException('Lot not found');
     }
+
+    const privileged = user && [Role.BROKER, Role.ADMIN, Role.MANAGER].includes(user.role as Role);
+    if (!privileged) {
+      delete lot.vin;
+      delete lot.lotNumber;
+    }
+
     return lot;
   }
 
