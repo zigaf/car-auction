@@ -7,6 +7,7 @@ import {
   Min,
   Max,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export enum FuelTypeCalc {
   PETROL = 'petrol',
@@ -24,15 +25,18 @@ export class CalculateCustomsDto {
   @IsEnum(CalcCountry)
   country: CalcCountry;
 
+  @Type(() => Number)
   @IsNumber()
   @IsPositive()
   carPrice: number;
 
+  @Type(() => Number)
   @IsNumber()
   @Min(1990)
   @Max(new Date().getFullYear())
   year: number;
 
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
   @Max(8000)
@@ -50,6 +54,7 @@ export class CalculateCustomsDto {
   destinationCountry?: string;
 
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
   deliveryCost?: number;
