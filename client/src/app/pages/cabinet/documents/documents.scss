@@ -452,6 +452,41 @@
     font-size: $fs-xs;
     color: $text-tertiary;
   }
+
+  &__files {
+    display: flex;
+    flex-direction: column;
+    gap: $space-xs;
+    width: 100%;
+  }
+
+  &__file {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $space-xs $space-sm;
+    background: $bg-elevated;
+    border-radius: $radius-base;
+    font-size: $fs-sm;
+    color: $text-primary;
+  }
+
+  &__remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: $text-tertiary;
+    cursor: pointer;
+    padding: 2px;
+    border-radius: $radius-sm;
+    transition: color $transition-fast;
+
+    &:hover { color: $status-red; }
+
+    .material-symbols-rounded { font-size: 16px; }
+  }
 }
 
 .upload-error {

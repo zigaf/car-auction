@@ -25,16 +25,14 @@ export class DocumentsComponent implements OnInit {
   // Upload modal
   showUploadModal = false;
   uploadType: DocumentType = DocumentType.PASSPORT;
-  selectedFile: File | null = null;
-  selectedFileName = '';
+  selectedFiles: File[] = [];
+  selectedFileNames: string[] = [];
   uploading = false;
   uploadError = '';
 
   get documentTypes() {
     return [
       { value: DocumentType.PASSPORT, label: this.ls.t('docs.type.passport') },
-      { value: DocumentType.INVOICE, label: this.ls.t('docs.type.invoice') },
-      { value: DocumentType.CUSTOMS_DOC, label: this.ls.t('docs.type.customs') },
       { value: DocumentType.POWER_OF_ATTORNEY, label: this.ls.t('docs.type.poa') },
       { value: DocumentType.OTHER, label: this.ls.t('docs.type.other') },
     ];
@@ -65,8 +63,8 @@ export class DocumentsComponent implements OnInit {
   uploadRequired(type: DocumentType): void {
     this.uploadType = type;
     this.showUploadModal = true;
-    this.selectedFile = null;
-    this.selectedFileName = '';
+    this.selectedFiles = [];
+    this.selectedFileNames = [];
     this.uploadError = '';
   }
 
@@ -95,8 +93,8 @@ export class DocumentsComponent implements OnInit {
   openUploadModal(): void {
     this.showUploadModal = true;
     this.uploadType = DocumentType.PASSPORT;
-    this.selectedFile = null;
-    this.selectedFileName = '';
+    this.selectedFiles = [];
+    this.selectedFileNames = [];
     this.uploadError = '';
   }
 
@@ -107,34 +105,52 @@ export class DocumentsComponent implements OnInit {
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      const file = input.files[0];
-      if (file.size > 10 * 1024 * 1024) {
-        this.uploadError = this.ls.t('docs.error.fileSize');
-        return;
+      const files = Array.from(input.files);
+      for (const file of files) {
+        if (file.size > 10 * 1024 * 1024) {
+          this.uploadError = this.ls.t('docs.error.fileSize');
+          return;
+        }
       }
-      this.selectedFile = file;
-      this.selectedFileName = file.name;
+      this.selectedFiles = files;
+      this.selectedFileNames = files.map(f => f.name);
       this.uploadError = '';
     }
   }
 
+  removeFile(index: number): void {
+    this.selectedFiles.splice(index, 1);
+    this.selectedFileNames.splice(index, 1);
+  }
+
   submitUpload(): void {
-    if (!this.selectedFile || this.uploading) return;
+    if (this.selectedFiles.length === 0 || this.uploading) return;
 
     this.uploading = true;
     this.uploadError = '';
 
-    this.documentsService.uploadFile(this.selectedFile, this.uploadType).subscribe({
-      next: (doc) => {
-        this.documents.unshift(doc);
-        this.uploading = false;
-        this.showUploadModal = false;
-      },
-      error: () => {
-        this.uploadError = this.ls.t('docs.error.upload');
-        this.uploading = false;
-      },
-    });
+    let completed = 0;
+    let hasError = false;
+
+    for (const file of this.selectedFiles) {
+      this.documentsService.uploadFile(file, this.uploadType).subscribe({
+        next: (doc) => {
+          this.documents.unshift(doc);
+          completed++;
+          if (completed === this.selectedFiles.length) {
+            this.uploading = false;
+            this.showUploadModal = false;
+          }
+        },
+        error: () => {
+          if (!hasError) {
+            hasError = true;
+            this.uploadError = this.ls.t('docs.error.upload');
+            this.uploading = false;
+          }
+        },
+      });
+    }
   }
 
   // ─── Download ─────────────────────────────────────────────────────────

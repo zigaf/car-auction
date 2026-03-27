@@ -123,12 +123,21 @@
       <div class="upload-field">
         <label class="upload-field__label">{{ ls.t('docs.modal.file') }}</label>
         <div class="upload-dropzone" (click)="fileInput.click()">
-          <input #fileInput type="file" class="upload-dropzone__input"
+          <input #fileInput type="file" class="upload-dropzone__input" multiple
             accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
             (change)="onFileSelected($event)">
-          @if (selectedFileName) {
+          @if (selectedFileNames.length > 0) {
             <span class="material-symbols-rounded upload-dropzone__icon upload-dropzone__icon--done">check_circle</span>
-            <span class="upload-dropzone__text">{{ selectedFileName }}</span>
+            <div class="upload-dropzone__files">
+              @for (name of selectedFileNames; track name; let i = $index) {
+                <div class="upload-dropzone__file">
+                  <span>{{ name }}</span>
+                  <button type="button" class="upload-dropzone__remove" (click)="removeFile(i); $event.stopPropagation()">
+                    <span class="material-symbols-rounded">close</span>
+                  </button>
+                </div>
+              }
+            </div>
           } @else {
             <span class="material-symbols-rounded upload-dropzone__icon">cloud_upload</span>
             <span class="upload-dropzone__text">{{ ls.t('docs.modal.click') }}</span>
@@ -147,7 +156,7 @@
 
     <div class="upload-modal__footer">
       <app-button type="button" variant="secondary" (click)="closeUploadModal()">{{ ls.t('docs.modal.cancel') }}</app-button>
-      <app-button type="button" variant="primary" [disabled]="!selectedFile || uploading" (click)="submitUpload()">
+      <app-button type="button" variant="primary" [disabled]="selectedFiles.length === 0 || uploading" (click)="submitUpload()">
         @if (uploading) {
           <span class="material-symbols-rounded spin">progress_activity</span>
           {{ ls.t('docs.modal.uploading') }}
