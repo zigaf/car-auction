@@ -88,8 +88,8 @@ export class LotController {
     const privileged = user && [Role.BROKER, Role.ADMIN, Role.MANAGER].includes(user.role as Role);
     if (!privileged) {
       result.data.forEach(lot => {
-        delete lot.vin;
-        delete lot.lotNumber;
+        (lot as any).vin = undefined;
+        (lot as any).lotNumber = undefined;
       });
     }
 
@@ -124,8 +124,8 @@ export class LotController {
 
     const privileged = user && [Role.BROKER, Role.ADMIN, Role.MANAGER].includes(user.role as Role);
     if (!privileged) {
-      delete lot.vin;
-      delete lot.lotNumber;
+      (lot as any).vin = undefined;
+      (lot as any).lotNumber = undefined;
     }
 
     return lot;
