@@ -98,6 +98,7 @@ export class UserService {
       preferredLanguage: user.preferredLanguage,
       preferredCurrency: user.preferredCurrency,
       referralCode: user.referralCode,
+      brokerId: user.brokerId ?? null,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
