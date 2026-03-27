@@ -2,7 +2,6 @@ import {
   Injectable,
   ConflictException,
   UnauthorizedException,
-  ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -40,8 +39,7 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
     const referralCode = randomUUID().slice(0, 8).toUpperCase();
-    const verificationToken = randomBytes(32).toString('hex');
-    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
 
     const user = this.userRepository.create({
       email: dto.email,
@@ -50,20 +48,11 @@ export class AuthService {
       lastName: dto.lastName,
       phone: dto.phone ?? undefined,
       referralCode,
-      emailVerificationToken: verificationToken,
-      emailVerificationExpires: verificationExpires,
+      status: UserStatus.ACTIVE,
     });
     await this.userRepository.save(user);
 
-    const verificationLink = `${process.env.CLIENT_URL}/verify-email?token=${verificationToken}`;
-    this.emailService.send(
-      EmailEventType.EMAIL_VERIFICATION,
-      user.email,
-      user.preferredLanguage,
-      { firstName: user.firstName, verificationLink },
-    ).catch(() => {});
-
-    return { message: 'Registration successful. Please check your email to verify your account.' };
+    return { message: 'Registration successful.' };
   }
 
   async login(dto: LoginDto) {
@@ -81,10 +70,6 @@ export class AuthService {
     const isValid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!isValid) {
       throw new UnauthorizedException('Invalid email or password');
-    }
-
-    if (user.status === UserStatus.PENDING) {
-      throw new ForbiddenException({ message: 'Email not verified', code: 'EMAIL_NOT_VERIFIED' });
     }
 
     const tokens = await this.generateTokens(user);
