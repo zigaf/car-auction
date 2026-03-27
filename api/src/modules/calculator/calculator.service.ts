@@ -35,7 +35,7 @@ export class CalculatorService {
     const ageYears = currentYear - dto.year;
 
     const customsDuty = this.calculateDuty(dto.carPrice, dto.engineVolume, ageYears);
-    const recyclingFee = this.calculateRecyclingFee(dto.country, ageYears);
+    const recyclingFee = this.calculateRecyclingFee(dto.country, ageYears, dto.engineVolume, dto.horsepower ?? 0);
     const customsProcessingFee = this.calculateProcessingFee(dto.country);
     const companyCost = dto.carPrice <= 10000 ? 500 : 1000;
     const deliveryCost = this.resolveDeliveryCost(dto);
@@ -103,14 +103,17 @@ export class CalculatorService {
     return this.round(engineVolume * rate[1]);
   }
 
-  private calculateRecyclingFee(country: CalcCountry, ageYears: number): number {
+  private calculateRecyclingFee(
+    country: CalcCountry,
+    ageYears: number,
+    engineVolume: number,
+    horsepower: number,
+  ): number {
     if (country === CalcCountry.RUSSIA) {
-      const baseRate = 20000;
-      const coeff = ageYears < 3 ? 0.17 : 0.26;
-      return this.round((baseRate * coeff) / RUB_PER_EUR);
+      return this.round(this.russiaRecyclingFee(ageYears, engineVolume, horsepower) / RUB_PER_EUR);
     }
 
-    // Belarus
+    // Belarus — fixed amounts in BYN
     let amountByn: number;
     if (ageYears < 3) {
       amountByn = 544.5;
@@ -120,6 +123,59 @@ export class CalculatorService {
       amountByn = 1225.1;
     }
     return this.round(amountByn / BYN_PER_EUR);
+  }
+
+  private russiaRecyclingFee(ageYears: number, engineVolume: number, hp: number): number {
+    const BASE = 20000;
+    const isNew = ageYears < 3;
+
+    // Preferential rate for individuals: engine ≤3000cc AND hp ≤200
+    if (engineVolume <= 3000 && hp <= 200) {
+      return BASE * (isNew ? 0.17 : 0.26);
+    }
+
+    // Commercial-level coefficients (2026, post Decree 1713)
+    // Simplified table by engine volume + HP brackets
+    const coeff = this.getRecyclingCoeff(engineVolume, hp, isNew);
+    return BASE * coeff;
+  }
+
+  private getRecyclingCoeff(vol: number, hp: number, isNew: boolean): number {
+    // Engine ≤1000cc
+    if (vol <= 1000) {
+      if (hp <= 200) return isNew ? 4.06 : 6.15;
+      return isNew ? 10.36 : 12.56;
+    }
+
+    // Engine 1000-2000cc
+    if (vol <= 2000) {
+      if (hp <= 200) return isNew ? 15.03 : 18.84;
+      if (hp <= 300) return isNew ? 42.24 : 50.69;
+      return isNew ? 63.95 : 74.25;
+    }
+
+    // Engine 2000-3000cc
+    if (vol <= 3000) {
+      if (hp <= 200) return isNew ? 18.84 : 26.44;
+      if (hp <= 300) return isNew ? 84.22 : 100.5;
+      if (hp <= 400) return isNew ? 114.26 : 136.97;
+      return isNew ? 137.36 : 165.84;
+    }
+
+    // Engine 3000-3500cc
+    if (vol <= 3500) {
+      if (hp <= 200) return isNew ? 42.24 : 50.69;
+      if (hp <= 300) return isNew ? 114.26 : 136.97;
+      if (hp <= 400) return isNew ? 137.36 : 165.84;
+      return isNew ? 169.78 : 199.72;
+    }
+
+    // Engine >3500cc
+    if (hp <= 200) return isNew ? 42.24 : 50.69;
+    if (hp <= 300) return isNew ? 137.36 : 165.84;
+    if (hp <= 400) return isNew ? 169.78 : 199.72;
+    if (hp <= 500) return isNew ? 199.72 : 228.07;
+    return isNew ? 228.07 : 267.43;
   }
 
   private calculateProcessingFee(country: CalcCountry): number {

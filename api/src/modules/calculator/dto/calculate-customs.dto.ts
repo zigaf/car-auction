@@ -46,6 +46,13 @@ export class CalculateCustomsDto {
   fuelType: FuelTypeCalc;
 
   @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  @Max(2000)
+  horsepower?: number;
+
+  @IsOptional()
   @IsString()
   originCountry?: string;
 

@@ -86,6 +86,19 @@
           </div>
         }
 
+        @if (!isElectric) {
+          <div class="calc-field">
+            <label class="calc-label">{{ ls.t('calc.horsepower') }}</label>
+            <app-input
+              type="number"
+              [placeholder]="ls.t('calc.ph.hp')"
+              icon="bolt"
+              [(ngModel)]="horsepower"
+              name="horsepower"
+            />
+          </div>
+        }
+
         <!-- Delivery section -->
         <div class="calc-divider">{{ ls.t('calc.deliverySection') }}</div>
 

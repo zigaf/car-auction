@@ -65,6 +65,7 @@ export class CalculatorComponent {
   year = new Date().getFullYear() - 3;
   engineVolume = 1600;
   fuelType: FuelTypeCalc = 'petrol';
+  horsepower = 150;
   originCountry = '';
   destinationCountry = '';
   deliveryCost = 0;
@@ -129,6 +130,7 @@ export class CalculatorComponent {
         year: this.year,
         engineVolume: this.fuelType === 'electric' ? 0 : this.engineVolume,
         fuelType: this.fuelType,
+        horsepower: this.horsepower || undefined,
         originCountry: this.originCountry || undefined,
         destinationCountry: this.destinationCountry || undefined,
         deliveryCost: this.deliveryCost,

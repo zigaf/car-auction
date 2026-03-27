@@ -11,6 +11,7 @@ export interface CalculateCustomsRequest {
   year: number;
   engineVolume: number;
   fuelType: FuelTypeCalc;
+  horsepower?: number;
   originCountry?: string;
   destinationCountry?: string;
   deliveryCost?: number;
